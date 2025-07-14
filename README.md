@@ -1,6 +1,6 @@
 # LILYGO T-Dongle S3 Wireless Digital Picture Frame Adapter
 
-This project transforms a LILYGO T-Dongle-S3 into a wireless adapter for a digital picture frame, enabling you to
+This project transforms a [LILYGO T-Dongle-S3][1] into a wireless adapter for a digital picture frame, enabling you to
 upload pictures and manage files remotely. It offers two modes of operation: an SFTP server for wireless file
 transfers and a USB Mass Storage mode for direct computer access.
 
@@ -99,3 +99,5 @@ This project is licensed under the [Apache License 2.0](./LICENSE).
 ## :pencil: Author
 
 This project was started in 2025 by [Nicholas Wilde](https://github.com/nicholaswilde/).
+
+[1]: <https://lilygo.cc/products/t-dongle-s3>
