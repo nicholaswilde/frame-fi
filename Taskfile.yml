@@ -6,6 +6,10 @@ tasks:
     desc: Compile sketch
     cmds:
       - arduino-cli compile
+  dump:
+    desc: Dump the profile
+    cmds:
+      - arduino-cli compile --dump-profile --fqbn esp32:esp32:esp32s3
   list:
     desc: List
     cmds:
