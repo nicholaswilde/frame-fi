@@ -1,0 +1,14 @@
+---
+default_profile: lilygo
+
+profiles:
+  lilygo:
+    fqbn: esp32:esp32:esp32s3
+    platforms:
+      - platform: esp32:esp32 (3.2.1)
+    libraries:
+      - OneButton (2.6.1)
+      - FastLED (3.10.1)
+    port: /dev/ttyACM0
+    port_config:
+      baudrate: 921600

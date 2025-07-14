@@ -1,0 +1,20 @@
+---
+version: '3'
+
+tasks:
+  compile:
+    desc: Compile sketch
+    cmds:
+      - arduino-cli compile
+  list:
+    desc: List
+    cmds:
+      - arduino-cli board list
+  update:
+    desc: Update index
+    cmds:
+      - arduino-cli core update-index
+  default:
+    cmds:
+      - task -l
+    silent: true
