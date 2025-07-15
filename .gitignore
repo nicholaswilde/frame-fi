@@ -19,3 +19,4 @@
 *.spiffs.bin
 captures/
 *.log
+secrets.h
