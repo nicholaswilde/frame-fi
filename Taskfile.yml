@@ -2,38 +2,39 @@
 version: '3'
 
 tasks:
-  compile:
-    desc: Compile sketch
+  build:
+    desc: Build the project
     cmds:
-      - arduino-cli compile
-  dump:
-    desc: Dump the profile
+      - pio run
+  clean:
+    desc: Clean build files
     cmds:
-      - arduino-cli compile --dump-profile --fqbn esp32:esp32:esp32s3
-  list:
-    desc: List
+      - pio run --target clean
+  upload:
+    desc: Upload the firmware
     cmds:
-      - arduino-cli board list
+      - pio run --target upload
   monitor:
-    desc: Monitor the output
+    desc: Monitor the serial output
     cmds:
-      - arduino-cli monitor
-  poi:
-    desc: Platform.io
+      - pio device monitor
+  list-devices:
+    desc: List connected serial devices
     cmds:
-      - pio run --environment LILYGO-T-Dongle-S3
+      - pio device list
+  update-packages:
+    desc: Update project dependencies
+    cmds:
+      - pio pkg update
+  verbose-build:
+    desc: Build with verbose output
+    cmds:
+      - pio run --verbose
   reset:
     desc: Reset the Dongle by flashing the default fimrware.
     cmds:
-      - ./reference/firmware/flash.sh
-  update:
-    desc: Update index
-    cmds:
-      - arduino-cli core update-index
-  upload:
-    desc: Upload the sketch
-    cmds:
-      - arduino-cli upload
+      - task: flash
+        dir: ./reference/firmware
   default:
     cmds:
       - task -l

@@ -1,0 +1,21 @@
+# VS Code
+.vscode/
+
+# PlatformIO
+.pio/
+
+# macOS
+.DS_Store
+
+# Firmware binaries
+*.elf
+*.hex
+
+# Build artifacts
+/build/
+/firmware/
+
+# Other
+*.spiffs.bin
+captures/
+*.log

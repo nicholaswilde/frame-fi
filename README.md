@@ -26,22 +26,16 @@ transfers and a USB Mass Storage mode for direct computer access.
 
 ## :floppy_disk: Software Dependencies
 
-- **Arduino IDE** or **Arduino CLI**
-- **ESP32 Board Package:** Ensure you have the latest version installed.
-- **SimpleFTPServer Library:** Install this from the Arduino Library Manager.
+- **PlatformIO:** This project is built using the PlatformIO ecosystem. You can install it as a [VSCode Extension](https://platformio.org/install/ide?install=vscode) or use the [PlatformIO Core (CLI)](https://platformio.org/install/cli).
+- **Task:** A task runner / build tool. Installation instructions can be found [here](https://taskfile.dev/installation/).
 
 ## :gear: Setup & Configuration
 
-1.  **Install Dependencies:** Make sure all the software dependencies listed above are installed.
-
-```shell
-pip install --upgrade platformio
-```
-
-2.  **Board Configuration:** In the Arduino IDE or your `sketch.yaml` file, select the following settings:
-    - **Board:** `ESP32S3 Dev Module`
-    - **USB Mode:** `Hardware CDC and JTAG`
-3.  **Configure Credentials:** Open the `digital-picture-frame.ino` file and update the following variables with your
+1.  **Install PlatformIO:**
+    ```shell
+    pip install --upgrade platformio
+    ```
+2.  **Configure Credentials:** Open the `digital-picture-frame.ino` file and update the following variables with your
     information:
     ```cpp
     // --- User Configuration ---
@@ -51,7 +45,7 @@ pip install --upgrade platformio
     const char* ftp_pass = "esp32";             // SFTP password
     // --- End of User Configuration ---
     ```
-4.  **Insert microSD Card:** Insert a FAT32 formatted microSD card into the T-Dongle-S3.
+3.  **Insert microSD Card:** Insert a FAT32 formatted microSD card into the T-Dongle-S3.
 
 ## :rocket: Usage
 
@@ -71,41 +65,47 @@ The device's mode is determined by the state of the BOOT button (GPIO0) on start
 
 ## :hammer_and_wrench: Building
 
-This project uses `Taskfile.yml` for common development tasks. You can use the [Task](https://taskfile.dev/) build
-tool to execute them.
+This project uses a `Taskfile.yml` for common development tasks. After installing [Task](https://taskfile.dev/), you can run the following commands:
 
-- **Compile the sketch:**
+- **Build the project:**
   ```shell
-  task compile
+  task build
   ```
-- **List connected boards:**
+- **Upload the firmware:**
   ```shell
-  task list
+  task upload
   ```
-- **Update the core index:**
+- **Monitor the serial output:**
   ```shell
-  task update
+  task monitor
+  ```
+- **Clean build files:**
+  ```shell
+  task clean
+  ```
+- **List all available tasks:**
+  ```shell
+  task -l
   ```
 
-Alternatively, you can use the `arduino-cli` directly:
+Alternatively, you can use the `platformio` CLI directly:
 
-Compile the sketch.
-
-```shell
-arduino-cli compile
-```
-
-Upload the sketch (replace `/dev/ttyACM0` with your board's port)
-
-```shell
-arduino-cli upload -p /dev/ttyACM0 --fqbn esp32:esp32:esp32s3
-```
-
-Platform.io
-
-```shell
-pio run --environment LILYGO-T-Dongle-S3 
-```
+- **Build the project:**
+  ```shell
+  pio run
+  ```
+- **Upload the firmware:**
+  ```shell
+  pio run --target upload
+  ```
+- **Clean build files:**
+  ```shell
+  pio run --target clean
+  ```
+- **Monitor the serial output:**
+  ```shell
+  pio device monitor
+  ```
 
 ## :balance_scale: License
 
