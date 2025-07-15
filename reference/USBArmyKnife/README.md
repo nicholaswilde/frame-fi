@@ -2,6 +2,14 @@
 
 https://github.com/i-am-shodan/USBArmyKnife
 
+## Usage
+
+```shell
+./flash.sh
+```
+
+## Update
+
 ```shell
 wget https://github.com/espressif/arduino-esp32/raw/refs/heads/master/tools/partitions/boot_app0.bin
 ```
