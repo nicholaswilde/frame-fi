@@ -1,4 +1,5 @@
 #include "pin_config.h"
+#include "secrets.h"
 
 // The BOOT button is on GPIO0
 #define BOOT_BUTTON_PIN 0
