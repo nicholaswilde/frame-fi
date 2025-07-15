@@ -14,10 +14,22 @@ tasks:
     desc: List
     cmds:
       - arduino-cli board list
+  monitor:
+    desc: Monitor the output
+    cmds:
+      - arduino-cli monitor
+  reset:
+    desc: Reset the Dongle by flashing the default fimrware.
+    cmds:
+      - ./reference/firmware/flash.sh
   update:
     desc: Update index
     cmds:
       - arduino-cli core update-index
+  upload:
+    desc: Upload the sketch
+    cmds:
+      - arduino-cli upload
   default:
     cmds:
       - task -l
