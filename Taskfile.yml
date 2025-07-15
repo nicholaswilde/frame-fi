@@ -18,6 +18,10 @@ tasks:
     desc: Monitor the output
     cmds:
       - arduino-cli monitor
+  poi:
+    desc: Platform.io
+    cmds:
+      - pio run --environment LILYGO-T-Dongle-S3
   reset:
     desc: Reset the Dongle by flashing the default fimrware.
     cmds:
