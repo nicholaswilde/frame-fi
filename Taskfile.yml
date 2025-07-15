@@ -2,6 +2,12 @@
 version: '3'
 
 tasks:
+  init:
+    desc: Init the project
+    preconditions:
+      - test -f secrets.h.tmpl
+    cmds:
+      - cp secrets.h.tmpl secrets.h
   build:
     desc: Build the project
     cmds:
