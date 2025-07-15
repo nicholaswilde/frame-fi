@@ -1,10 +1,10 @@
-# Firmare
+# Firmware
 
 Reset the T-Dongle with the default firmware
 
 ## Usage
 
-``shell
+```shell
 ./flash
 ```
 
