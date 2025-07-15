@@ -33,6 +33,11 @@ transfers and a USB Mass Storage mode for direct computer access.
 ## :gear: Setup & Configuration
 
 1.  **Install Dependencies:** Make sure all the software dependencies listed above are installed.
+
+```shell
+pip install --upgrade platformio
+```
+
 2.  **Board Configuration:** In the Arduino IDE or your `sketch.yaml` file, select the following settings:
     - **Board:** `ESP32S3 Dev Module`
     - **USB Mode:** `Hardware CDC and JTAG`
@@ -84,12 +89,22 @@ tool to execute them.
 
 Alternatively, you can use the `arduino-cli` directly:
 
-```shell
-# Compile the sketch
-arduino-cli compile
+Compile the sketch.
 
-# Upload the sketch (replace /dev/ttyACM0 with your board's port)
+```shell
+arduino-cli compile
+```
+
+Upload the sketch (replace `/dev/ttyACM0` with your board's port)
+
+```shell
 arduino-cli upload -p /dev/ttyACM0 --fqbn esp32:esp32:esp32s3
+```
+
+Platform.io
+
+```shell
+pio run --environment LILYGO-T-Dongle-S3 
 ```
 
 ## :balance_scale: License
