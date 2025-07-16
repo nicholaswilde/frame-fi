@@ -1,4 +1,3 @@
-#include "pin_config.h"
 #include "secrets.h"
 
 void setup() {
