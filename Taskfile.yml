@@ -5,9 +5,21 @@ tasks:
   init:
     desc: Init the project
     preconditions:
-      - test -f secrets.h.tmpl
+      - test -f include/secrets.h.tmpl
     cmds:
-      - cp secrets.h.tmpl secrets.h
+      - cp include/secrets.h.tmpl include/secrets.h
+  encrypt:
+    desc: Encrypt secrets.h
+    preconditions:
+      - test -f include/secrets.h
+    cmds:
+      - sops -e include/secrets.h > include/secrets.h.enc
+  decrypt:
+    desc: Decrypt secrets.h
+    preconditions:
+      - test -f include/secrets.h.enc
+    cmds:
+      - sops -d include/secrets.h.enc > include/secrets.h
   build:
     desc: Build the project
     cmds:
