@@ -12,6 +12,6 @@ void setup() {
 }
 
 void loop() {
-  Serial.print("IP address");
-  delay(5);
+  Serial.println("IP address");
+  delay(1000);
 }
