@@ -138,7 +138,8 @@ void setup() {
   MSC.onRead(onRead);
   MSC.onWrite(onWrite);
   MSC.mediaPresent(true);
-  MSC.begin(card->csd.capacity, card->csd.sector_size);
+  MSC.begin();
+  // MSC.begin(card->csd.capacity, card->csd.sector_size);
   USBSerial.begin();
   USB.begin();
 
@@ -150,5 +151,6 @@ void setup() {
 
 void loop() { // Put your main code here, to run repeatedly:
   button.tick();
+  USBSerial.println("Loop");
   delay(5);
 }
