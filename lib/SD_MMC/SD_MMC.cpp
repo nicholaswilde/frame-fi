@@ -30,7 +30,7 @@
 #include "diskio.h"
 #include "soc/sdmmc_pins.h"
 #include "ff.h"
-#include "esp32-hal-periman.h"
+#include <esp32-hal-periman.h>
 
 #if SOC_SDMMC_IO_POWER_EXTERNAL
 #include "sd_pwr_ctrl_by_on_chip_ldo.h"
