@@ -4,7 +4,6 @@
 #include "driver/sdmmc_host.h"
 #include "driver/sdspi_host.h"
 #include "esp_vfs_fat.h"
-#include "pin_config.h"
 #include "sdmmc_cmd.h"
 
 /* external library */
@@ -13,9 +12,9 @@
 #include <FastLED.h>   // https://github.com/FastLED/FastLED
 
 CRGB leds;
-OneButton button(BTN_PIN, true);
 USBMSC MSC;
 USBCDC USBSerial;
+OneButton button(BTN_PIN, true);
 #define HWSerial    Serial0
 #define MOUNT_POINT "/sdcard"
 sdmmc_card_t *card;
@@ -107,30 +106,16 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
   if (event_base == ARDUINO_USB_EVENTS) {
     arduino_usb_event_data_t *data = (arduino_usb_event_data_t *)event_data;
     switch (event_id) {
-    case ARDUINO_USB_STARTED_EVENT:
-      HWSerial.println("USB PLUGGED");
-      break;
-    case ARDUINO_USB_STOPPED_EVENT:
-      HWSerial.println("USB UNPLUGGED");
-      break;
-    case ARDUINO_USB_SUSPEND_EVENT:
-      HWSerial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en);
-      break;
-    case ARDUINO_USB_RESUME_EVENT:
-      HWSerial.println("USB RESUMED");
-      break;
-
-    default:
-      break;
+    case ARDUINO_USB_STARTED_EVENT: HWSerial.println("USB PLUGGED"); break;
+    case ARDUINO_USB_STOPPED_EVENT: HWSerial.println("USB UNPLUGGED"); break;
+    case ARDUINO_USB_SUSPEND_EVENT: HWSerial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en); break;
+    case ARDUINO_USB_RESUME_EVENT: HWSerial.println("USB RESUMED"); break;
+    default: break;
     }
   }
 }
 
-void setup() {
-  HWSerial.begin(115200);
-  HWSerial.setDebugOutput(true);
-  sd_init();
-  USB.onEvent(usbEventCallback);
+void msc_init(void) {
   MSC.vendorID("LILYGO");       // max 8 chars
   MSC.productID("T-Dongle-S3"); // max 16 chars
   MSC.productRevision("1.0");   // max 4 chars
@@ -138,8 +123,16 @@ void setup() {
   MSC.onRead(onRead);
   MSC.onWrite(onWrite);
   MSC.mediaPresent(true);
-  // MSC.begin();
-  MSC.begin(card->csd.capacity, card->csd.sector_size);
+  MSC.begin(card->csd.capacity, card->csd.sector_size);  
+}
+
+void setup() {
+  HWSerial.begin(115200);
+  HWSerial.setDebugOutput(true);
+  sd_init();
+  USB.onEvent(usbEventCallback);
+  msc_init();
+
   USBSerial.begin();
   USB.begin();
 
