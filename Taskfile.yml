@@ -2,6 +2,10 @@
 version: '3'
 
 tasks:
+  prune:
+    desc: Prune the system
+    cmds:
+      - pio system prune
   init:
     desc: Init the project
     preconditions:
@@ -28,6 +32,10 @@ tasks:
     desc: Clean build files
     cmds:
       - pio run --target clean
+  fullclean:
+    desc: Perform a full clean of build files
+    cmds:
+      - pio run --target fullclean
   upload:
     desc: Upload the firmware
     cmds:
