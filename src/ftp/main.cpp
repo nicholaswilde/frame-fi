@@ -98,15 +98,15 @@ void setup(){
   while (!Serial) {
     // Wait for serial port to connect (required for native USB ports)
   }
-
+  
   // Connect to WiFi network
-  Serial.println("Connecting to WiFi...");
+  Serial.println("Connecting to Wi-Fi...");
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("\nWiFi connected!");
+  Serial.println("\nWi-Fi connected!");
   Serial.printf("Connected to: %s\n", WIFI_SSID);
   Serial.printf("IP Address: %s\n", WiFi.localIP().toString().c_str());
 

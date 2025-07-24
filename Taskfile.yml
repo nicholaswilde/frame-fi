@@ -40,6 +40,10 @@ tasks:
     desc: Upload the firmware
     cmds:
       - pio run --target upload
+  uploadm:
+    desc: Upload the firmware and monitor
+    cmds:
+      - pio run -t upload -t monitor
   monitor:
     desc: Monitor the serial output
     cmds:
