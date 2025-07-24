@@ -11,8 +11,8 @@ Modified the following:
 ```diff
 // esp32 configuration
 #ifndef DEFAULT_FTP_SERVER_NETWORK_TYPE_ESP32
-  - #define DEFAULT_STORAGE_TYPE_ESP32 STORAGE_FFAT
-  + #define DEFAULT_STORAGE_TYPE_ESP32 STORAGE_SD
+-   #define DEFAULT_STORAGE_TYPE_ESP32 STORAGE_FFAT
++   #define DEFAULT_STORAGE_TYPE_ESP32 STORAGE_SD
 ```
 
 ### `FtpServer.h`
