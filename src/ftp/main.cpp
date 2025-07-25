@@ -1,8 +1,8 @@
 /******************************************
  * ftp
  * ----------------
- * Use a button to switch between mock FTP
- * and MSC modes.
+ * Run an FTP server that can connect to
+ * the SD card.
  *
  * @author Nicholas Wilde, 0xb299a622
  * @date 25 Jul 2025
