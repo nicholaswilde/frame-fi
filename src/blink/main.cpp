@@ -1,3 +1,14 @@
+/*************************************
+ * blink
+ * ----------------
+ * Blink an LED
+ *
+ * @author Nicholas Wilde, 0xb299a622
+ * @date 25 Jul 2025
+ * @version 0.1.0
+ *
+ *************************************/
+
 #include <Arduino.h>
 #include <FastLED.h>
 
