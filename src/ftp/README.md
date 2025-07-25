@@ -8,6 +8,10 @@ AP needs to be `WPA2-Personal` and not `WPA2/WPA3-Personal`.
 
 `lib/SimpleFTPServer` needs to modified to work with `SD_MMC`.
 
+```shell
+lftp -u <username>,<password> <ftp_server_address> -e "ls -l; bye"
+```
+
 ## :link: References
 
 - <https://github.com/xreef/SimpleFTPServer/tree/master/examples>
