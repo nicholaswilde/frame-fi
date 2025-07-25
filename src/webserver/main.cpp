@@ -40,6 +40,9 @@ void loop(){
   server.handleClient();
 }
 
+/**
+ * @brief Connects to the WiFi network and provides visual feedback.
+ */
 void connectToWiFi() {
   Serial.println("Connecting to WiFi...");
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
