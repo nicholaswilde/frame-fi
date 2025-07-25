@@ -1,4 +1,4 @@
-# FTP
+# :inbox_tray: FTP
 
 Run an FTP server that can connect to the SD card.
 
