@@ -1,6 +1,6 @@
 # :desktop_computer: TFT
 
-Print stuff to the display.
+Print stuff to the dongle display.
 
 ## :pencil: Usage
 
