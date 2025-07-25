@@ -22,7 +22,6 @@ bool enterFtpMode();
 void handleStatus();
 void handleSwitchToMSC();
 void handleSwitchToFTP();
-// void toggleMode();
 
 void setup(){
   Serial.begin(115200);
