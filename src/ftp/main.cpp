@@ -1,22 +1,14 @@
-/*
- * Simple FTP Server Example with SD Card on ESP32
+/******************************************
+ * button
+ * ----------------
+ * Use a button to switch between mock FTP
+ * and MSC modes.
  *
- * AUTHOR: Renzo Mischianti
- * URL: https://www.mischianti.org
+ * @author Nicholas Wilde, 0xb299a622
+ * @date 25 Jul 2025
+ * @version 0.1.0
  *
- * DESCRIPTION:
- * This example demonstrates how to use the SimpleFTPServer library
- * with an ESP32 and an SD card module. The ESP32 connects to a WiFi network
- * and initializes an FTP server for file transfers.
- *
- * FEATURES:
- * - WiFi connection to local network
- * - SD card initialization for file storage
- * - FTP server setup for file uploads and downloads
- *
- * https://www.mischianti.org/2020/02/08/ftp-server-on-esp8266-and-esp32
- *
- */
+ ******************************************/ 
 
 #include <WiFi.h>
 #include <SimpleFTPServer.h>
