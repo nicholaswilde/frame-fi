@@ -1,4 +1,4 @@
-# :desktop: TFT
+# :desktop_computer: TFT
 
 Print stuff to the display.
 
