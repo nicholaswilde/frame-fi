@@ -12,13 +12,13 @@ Get the current mode:
 curl -X GET http://<ip-address>/
 ```
 
-Switch to FTP mode
+Switch to FTP mode:
 
 ```shell
 curl -X POST http://<ip-address>/ftp
 ```
 
-Switch to MSC mode
+Switch to MSC mode:
 
 ```shell
 curl -X POST http://<ip-address>/msc
