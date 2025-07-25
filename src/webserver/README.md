@@ -1,6 +1,6 @@
 # webserver
 
-Run a webserver to switch between USB MSC and FTP modes.
+Run a webserver to switch between mock USB MSC and FTP modes.
 
 ## :pencil: Usage
 
