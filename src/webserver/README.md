@@ -4,7 +4,9 @@ Run a webserver to switch between mock USB MSC and FTP modes.
 
 ## :pencil: Usage
 
-Get the current mode
+Get the IP address from the serial output.
+
+Get the current mode:
 
 ```shell
 curl -X GET http://<ip-address>/
