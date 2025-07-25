@@ -1,5 +1,5 @@
 /******************************************
- * button
+ * ftp
  * ----------------
  * Use a button to switch between mock FTP
  * and MSC modes.
