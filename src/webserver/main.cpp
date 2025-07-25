@@ -38,7 +38,7 @@ void setup(){
 }
 
 void loop(){
-  delay(-1);
+  server.handleClient();
 }
 
 void connectToWiFi() {
@@ -64,13 +64,9 @@ void setupApiRoutes() {
  */
 void enterMscMode() {
   Serial.println("\n--- Entering MSC Mode ---");
-  // ftpSrv.stop();
   Serial.println("FTP Server stopped.");
-  // SD_MMC.end();
   Serial.println("SD Card released.");
-  // MSC.begin();
   Serial.println("\n✅ Switched to MSC mode. Connect USB to a computer.");
-  // setLedColor(CRGB::Magenta);
 }
 
 /**
@@ -79,15 +75,8 @@ void enterMscMode() {
  */
 bool enterFtpMode() {
   Serial.println("\n--- Entering Application (FTP) Mode ---");
-  // if (!SD_MMC.begin()) {
-    // Serial.println("Error: Card Mount Failed.");
-    // // setLedColor(CRGB::Red);
-    // return false;
-  // } else {
-    Serial.println("\n✅ Application mode active.");
-    // startFtpServer();
-    return true;
-  // }
+  Serial.println("\n✅ Application mode active.");
+  return true;
 }
 
 /**
@@ -112,6 +101,7 @@ void handleSwitchToMSC() {
     String jsonResponse = "{\"status\":\"no_change\", \"message\":\"Already in MSC mode.\"}";
     server.send(200, "application/json", jsonResponse);
   }
+  
 }
  
 /**

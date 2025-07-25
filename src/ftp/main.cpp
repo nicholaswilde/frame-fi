@@ -110,13 +110,32 @@ void setup(){
   Serial.printf("Connected to: %s\n", WIFI_SSID);
   Serial.printf("IP Address: %s\n", WiFi.localIP().toString().c_str());
 
+  Serial.print("Board MAC Address: ");
+  byte mac[6];
+  WiFi.macAddress(mac);
+
+    // 3. Loop through the array and print each byte
+  for (int i = 0; i < 6; i++) {
+    // Print a leading '0' if the byte is less than 16 (0x10)
+    if (mac[i] < 0x10) {
+      Serial.print("0");
+    }
+    // Print the byte in hexadecimal format
+    Serial.print(mac[i], HEX);
+
+    // Print a colon after each byte except the last one
+    if (i < 5) {
+      Serial.print(":");
+    }
+  }
+  Serial.println();
+
   // Wait for a short delay before initializing SD card
   delay(1000);
 
   // Initialize SD card
   Serial.print("Initializing SD card...");
   SD_MMC.setPins(SD_MMC_CLK_PIN, SD_MMC_CMD_PIN, SD_MMC_D0_PIN, SD_MMC_D1_PIN, SD_MMC_D2_PIN, SD_MMC_D3_PIN);
-  // if (!SD.begin()) {
   if (!SD_MMC.begin("/sdcard", true)) {
     Serial.println("Card Mount Failed");
     return;
