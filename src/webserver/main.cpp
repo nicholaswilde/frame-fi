@@ -52,6 +52,9 @@ void connectToWiFi() {
   Serial.printf("IP Address: %s\n", WiFi.localIP().toString().c_str());
 }
 
+/**
+ * @brief Defines the web server API endpoints.
+ */
 void setupApiRoutes() {
   server.on("/", HTTP_GET, handleStatus);
   server.on("/msc", HTTP_POST, handleSwitchToMSC);
