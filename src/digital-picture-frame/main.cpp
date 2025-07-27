@@ -49,16 +49,18 @@ USBCDC USBSerial;
 sdmmc_card_t *card;
 
 // A flag to track the current mode
-bool isInMscMode = false;
+bool isInMscMode = true;
 
 // Function prototypes
 void connectToWiFi();
 void setupApiRoutes();
+void setupSerial();
 void enterMscMode();
 bool enterFtpMode();
 void handleStatus();
 void handleSwitchToMSC();
 void handleSwitchToFTP();
+void handleRestart();
 void toggleMode();
 void led_task(void *param);
 void msc_init();
@@ -68,12 +70,20 @@ static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufs
 static bool onStartStop(uint8_t power_condition, bool start, bool load_eject);
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
-void setup(){
+void setupSerial() {
   Serial.begin(115200);
-  while(!Serial) {
-    delay(10);
+  unsigned long start = millis();
+  while (!Serial) {
+    if (millis() - start > 2000) { // 2-second timeout
+      break;
+    }
   }
   HWSerial.setDebugOutput(true);
+  delay(100);
+}
+
+void setup(){
+  setupSerial();
   
   // --- Initialize Button ---
   button.attachClick(toggleMode);
@@ -87,10 +97,18 @@ void setup(){
   HWSerial.println("HTTP server started.");
   xTaskCreatePinnedToCore(led_task, "led_task", 1024, NULL, 1, NULL, 0);
   
-  if (isInMscMode) {
-    enterMscMode();
+  // Start in MSC mode
+  sd_init();
+  HWSerial.println("SD Card initialized for MSC.");
+
+  if (card) {
+    USB.onEvent(usbEventCallback);
+    msc_init();
+    USBSerial.begin();
+    USB.begin();
+    HWSerial.println("\n✅ Started in MSC mode. Connect USB to a computer.");
   } else {
-    enterFtpMode();
+    HWSerial.println("\n❌ Failed to start in MSC mode. SD Card not found.");
   }
 }
 
@@ -167,7 +185,7 @@ static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t 
 static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize) {
   // HWSerial.printf("MSC READ: lba: %u, offset: %u, bufsize: %u\n", lba, offset, bufsize);
   uint32_t count = (bufsize / card->csd.sector_size);
-  sdmmc_read_sectors(card, buffer + offset, lba, count);
+  sdmmc_read_sectors(card, (uint8_t*)buffer + offset, lba, count);
   return bufsize;
 }
 
@@ -248,6 +266,7 @@ void setupApiRoutes() {
   server.on("/", HTTP_GET, handleStatus);
   server.on("/msc", HTTP_POST, handleSwitchToMSC);
   server.on("/ftp", HTTP_POST, handleSwitchToFTP);
+  server.on("/restart", HTTP_POST, handleRestart);
 }
 
 /**
@@ -361,8 +380,19 @@ void handleSwitchToFTP() {
       String jsonResponse = "{\"status\":\"error\", \"message\":\"Failed to re-initialize SD card.\"}";
       server.send(500, "application/json", jsonResponse);
     }
-  } else {
+  }
+  else {
     String jsonResponse = "{\"status\":\"no_change\", \"message\":\"Already in Application (FTP) mode.\"}";
     server.send(200, "application/json", jsonResponse);
   }
+}
+
+/**
+ * @brief Handles the POST request to restart the device.
+ */
+void handleRestart() {
+  String jsonResponse = "{\"status\":\"success\", \"message\":\"Restarting device...\"}";
+  server.send(200, "application/json", jsonResponse);
+  delay(1000); // Give the server time to send the response
+  ESP.restart();
 }

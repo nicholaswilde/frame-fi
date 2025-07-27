@@ -1,7 +1,26 @@
 ---
 version: '3'
 
+vars:
+  IP: "192.168.2.169"
+
 tasks:
+  ping:
+    desc: Ping the device
+    cmds:
+      - ping {{.IP}}
+  msc:
+    desc: Switch to MSC mode
+    cmds:
+      - curl -X POST http://{{.IP}}/msc
+  ftp:
+    desc: Switch to FTP mode
+    cmds:
+      - curl -X POST http://{{.IP}}/ftp
+  get:
+    desc: curl -X GET
+    cmds:
+      - curl -X GET http://{{.IP}}
   prune:
     desc: Prune the system
     cmds:
