@@ -49,7 +49,7 @@ USBCDC USBSerial;
 sdmmc_card_t *card;
 
 // A flag to track the current mode
-bool isInMscMode = true;
+bool isInMscMode = false;
 
 // Function prototypes
 void connectToWiFi();
@@ -86,29 +86,20 @@ void setup(){
   server.begin();
   HWSerial.println("HTTP server started.");
   xTaskCreatePinnedToCore(led_task, "led_task", 1024, NULL, 1, NULL, 0);
-  if (!isInMscMode) {
-    SD_MMC.setPins(SD_MMC_CLK_PIN, SD_MMC_CMD_PIN, SD_MMC_D0_PIN, SD_MMC_D1_PIN, SD_MMC_D2_PIN, SD_MMC_D3_PIN);
-    if (!SD_MMC.begin("/sdcard", true)) {
-      HWSerial.println("Card Mount Failed");
-      return;
-    }
-    ftpServer.begin(FTP_USER, FTP_PASSWORD); // Replace with your desired FTP credentials
+  
+  if (isInMscMode) {
+    enterMscMode();
   } else {
-    sd_init();
-    USB.onEvent(usbEventCallback);
-    msc_init();
-    USBSerial.begin();
-    USB.begin();
+    enterFtpMode();
   }
 }
 
 void loop(){
+  button.tick();
+  server.handleClient();
   if (!isInMscMode) {
     ftpServer.handleFTP(); // Continuously process FTP requests  
   }
-  server.handleClient();
-  USBSerial.println("Loop");
-  button.tick();
 }
 
 void sd_init(void) {
@@ -244,10 +235,8 @@ void connectToWiFi() {
 void toggleMode() {
   HWSerial.println("Button clicked! Toggling mode...");
   if (isInMscMode) {
-    isInMscMode = false;
     enterFtpMode();
   } else {
-    isInMscMode = true;
     enterMscMode();
   }
 }
@@ -266,11 +255,32 @@ void setupApiRoutes() {
  */
 void enterMscMode() {
   if (isInMscMode) return; // Already in this mode
-  isInMscMode = true;
+  
   HWSerial.println("\n--- Entering MSC Mode ---");
+  
+  // Stop FTP Server
+  ftpServer.end();
   HWSerial.println("FTP Server stopped.");
-  HWSerial.println("SD Card released.");
-  HWSerial.println("\n✅ Switched to MSC mode. Connect USB to a computer.");
+
+  // Unmount SD_MMC
+  SD_MMC.end();
+  HWSerial.println("SD Card unmounted from SD_MMC.");
+
+  // Initialize SD for MSC
+  sd_init();
+  HWSerial.println("SD Card initialized for MSC.");
+
+  // Initialize USB MSC
+  if (card) {
+    USB.onEvent(usbEventCallback);
+    msc_init();
+    USBSerial.begin();
+    USB.begin();
+    HWSerial.println("\n✅ Switched to MSC mode. Connect USB to a computer.");
+    isInMscMode = true;
+  } else {
+    HWSerial.println("\n❌ Failed to switch to MSC mode. SD Card not found.");
+  }
 }
 
 /**
@@ -279,14 +289,39 @@ void enterMscMode() {
  */
 bool enterFtpMode() {
   if (!isInMscMode) return true; // Already in this mode
-  isInMscMode = false;
+
   HWSerial.println("\n--- Entering Application (FTP) Mode ---");
+
+  // Stop USB MSC
+  MSC.end();
+  USBSerial.end();
+  HWSerial.println("USB MSC stopped.");
+
+  // Unmount SD from VFS
+  if (card) {
+    esp_vfs_fat_sdcard_unmount(MOUNT_POINT, card);
+    HWSerial.println("SD Card unmounted from VFS.");
+  }
+
+  // Initialize SD_MMC
+  SD_MMC.setPins(SD_MMC_CLK_PIN, SD_MMC_CMD_PIN, SD_MMC_D0_PIN, SD_MMC_D1_PIN, SD_MMC_D2_PIN, SD_MMC_D3_PIN);
+  if (!SD_MMC.begin("/sdcard", true)) {
+    HWSerial.println("Card Mount Failed");
+    return false;
+  }
+  HWSerial.println("SD Card mounted with SD_MMC.");
+
+  // Start FTP Server
+  ftpServer.begin(FTP_USER, FTP_PASSWORD);
+  HWSerial.println("FTP Server started.");
+
   HWSerial.println("\n✅ Application mode active.");
+  isInMscMode = false;
   return true;
 }
 
 /**
- * @brief Handles requests to the root URL ("/"). Sends a JSON status object.
+ * @brief Handles requests to the root URL (")/"). Sends a JSON status object.
  */
 void handleStatus() {
   const char* modeString = isInMscMode ? MODE_MSC_DESC : MODE_FTP_DESC;
@@ -298,14 +333,18 @@ void handleStatus() {
  * @brief Handles the POST request to switch to MSC mode.
  */
 void handleSwitchToMSC() {
-  if (!isInMscMode) {
-    isInMscMode = true;
-    enterMscMode();
-    String jsonResponse = "{\"status\":\"success\", \"message\":\"Switched to MSC mode.\"}";
-    server.send(200, "application/json", jsonResponse);
-  } else {
+  if (isInMscMode) {
     String jsonResponse = "{\"status\":\"no_change\", \"message\":\"Already in MSC mode.\"}";
     server.send(200, "application/json", jsonResponse);
+  } else {
+    enterMscMode();
+    if (isInMscMode) {
+      String jsonResponse = "{\"status\":\"success\", \"message\":\"Switched to MSC mode.\"}";
+      server.send(200, "application/json", jsonResponse);
+    } else {
+      String jsonResponse = "{\"status\":\"error\", \"message\":\"Failed to switch to MSC mode.\"}";
+      server.send(500, "application/json", jsonResponse);
+    }
   }
   
 }
@@ -315,7 +354,6 @@ void handleSwitchToMSC() {
  */
 void handleSwitchToFTP() {
   if (isInMscMode) {
-    isInMscMode = false;
     if (enterFtpMode()) {
       String jsonResponse = "{\"status\":\"success\", \"message\":\"Switched to Application (FTP) mode.\"}";
       server.send(200, "application/json", jsonResponse);
