@@ -14,12 +14,23 @@
 #include "Arduino.h"
 #include <WiFi.h>
 #include <WebServer.h>
+#include <SimpleFTPServer.h>
+#include <SPI.h>
+#include <SD.h>
+#include <SD_MMC.h>
+#include "USB.h"
+#include "USBMSC.h"
+#include "driver/sdmmc_host.h"
+#include "driver/sdspi_host.h"
+#include "esp_vfs_fat.h"
+#include "sdmmc_cmd.h"
 
 #include "secrets.h" // Import sensitive data
 
 // External libraries
 #include <OneButton.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
+#include <FastLED.h>   // https://github.com/FastLED/FastLED
 
 // --- Mode Descriptions ---
 const char* MODE_MSC_DESC = "USB MSC";
@@ -28,9 +39,17 @@ const char* MODE_FTP_DESC = "Application (FTP Server)";
 // Create objects
 WebServer server(80);
 OneButton button(BTN_PIN, true); // true for active low
+FtpServer ftpServer;
+CRGB leds;
+USBMSC MSC;
+USBCDC USBSerial;
+
+#define HWSerial    Serial0
+#define MOUNT_POINT "/sdcard"
+sdmmc_card_t *card;
 
 // A flag to track the current mode
-bool isInMscMode = false;
+bool isInMscMode = true;
 
 // Function prototypes
 void connectToWiFi();
@@ -41,13 +60,21 @@ void handleStatus();
 void handleSwitchToMSC();
 void handleSwitchToFTP();
 void toggleMode();
+void led_task(void *param);
+void msc_init();
+void sd_init();
+static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize);
+static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize);
+static bool onStartStop(uint8_t power_condition, bool start, bool load_eject);
+static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
 void setup(){
   Serial.begin(115200);
   while(!Serial) {
     delay(10);
   }
-
+  HWSerial.setDebugOutput(true);
+  
   // --- Initialize Button ---
   button.attachClick(toggleMode);
   
@@ -57,31 +84,157 @@ void setup(){
   // --- Setup and start Web Server ---
   setupApiRoutes();
   server.begin();
-  Serial.println("HTTP server started.");
+  HWSerial.println("HTTP server started.");
+  xTaskCreatePinnedToCore(led_task, "led_task", 1024, NULL, 1, NULL, 0);
+  if (!isInMscMode) {
+    SD_MMC.setPins(SD_MMC_CLK_PIN, SD_MMC_CMD_PIN, SD_MMC_D0_PIN, SD_MMC_D1_PIN, SD_MMC_D2_PIN, SD_MMC_D3_PIN);
+    if (!SD_MMC.begin("/sdcard", true)) {
+      HWSerial.println("Card Mount Failed");
+      return;
+    }
+    ftpServer.begin(FTP_USER, FTP_PASSWORD); // Replace with your desired FTP credentials
+  } else {
+    sd_init();
+    USB.onEvent(usbEventCallback);
+    msc_init();
+    USBSerial.begin();
+    USB.begin();
+  }
 }
 
 void loop(){
+  if (!isInMscMode) {
+    ftpServer.handleFTP(); // Continuously process FTP requests  
+  }
   server.handleClient();
+  USBSerial.println("Loop");
   button.tick();
+}
+
+void sd_init(void) {
+  esp_err_t ret;
+  const char mount_point[] = MOUNT_POINT;
+  esp_vfs_fat_sdmmc_mount_config_t mount_config = {.format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024};
+
+  sdmmc_host_t host = {
+      .flags = SDMMC_HOST_FLAG_4BIT | SDMMC_HOST_FLAG_DDR,
+      .slot = SDMMC_HOST_SLOT_1,
+      .max_freq_khz = SDMMC_FREQ_DEFAULT,
+      .io_voltage = 3.3f,
+      .init = &sdmmc_host_init,
+      .set_bus_width = &sdmmc_host_set_bus_width,
+      .get_bus_width = &sdmmc_host_get_slot_width,
+      .set_bus_ddr_mode = &sdmmc_host_set_bus_ddr_mode,
+      .set_card_clk = &sdmmc_host_set_card_clk,
+      .do_transaction = &sdmmc_host_do_transaction,
+      .deinit = &sdmmc_host_deinit,
+      .io_int_enable = sdmmc_host_io_int_enable,
+      .io_int_wait = sdmmc_host_io_int_wait,
+      .command_timeout_ms = 0,
+  };
+  sdmmc_slot_config_t slot_config = {
+      .clk = (gpio_num_t)SD_MMC_CLK_PIN,
+      .cmd = (gpio_num_t)SD_MMC_CMD_PIN,
+      .d0 = (gpio_num_t)SD_MMC_D0_PIN,
+      .d1 = (gpio_num_t)SD_MMC_D1_PIN,
+      .d2 = (gpio_num_t)SD_MMC_D2_PIN,
+      .d3 = (gpio_num_t)SD_MMC_D3_PIN,
+      .cd = SDMMC_SLOT_NO_CD,
+      .wp = SDMMC_SLOT_NO_WP,
+      .width = 4, // SDMMC_SLOT_WIDTH_DEFAULT,
+      .flags = SDMMC_SLOT_FLAG_INTERNAL_PULLUP,
+  };
+
+  gpio_set_pull_mode((gpio_num_t)SD_MMC_CMD_PIN, GPIO_PULLUP_ONLY); // CMD, needed in 4- and 1- line modes
+  gpio_set_pull_mode((gpio_num_t)SD_MMC_D0_PIN, GPIO_PULLUP_ONLY);  // D0, needed in 4- and 1-line modes
+  gpio_set_pull_mode((gpio_num_t)SD_MMC_D1_PIN, GPIO_PULLUP_ONLY);  // D1, needed in 4-line mode only
+  gpio_set_pull_mode((gpio_num_t)SD_MMC_D2_PIN, GPIO_PULLUP_ONLY);  // D2, needed in 4-line mode only
+  gpio_set_pull_mode((gpio_num_t)SD_MMC_D3_PIN, GPIO_PULLUP_ONLY);  // D3, needed in 4- and 1-line modes
+
+  ret = esp_vfs_fat_sdmmc_mount(mount_point, &host, &slot_config, &mount_config, &card);
+
+  if (ret != ESP_OK) {
+    if (ret == ESP_FAIL) {
+      USBSerial.println("Failed to mount filesystem. "
+                        "If you want the card to be formatted, set the EXAMPLE_FORMAT_IF_MOUNT_FAILED menuconfig option.");
+    } else {
+      USBSerial.printf("Failed to initialize the card (%s). "
+                       "Make sure SD card lines have pull-up resistors in place.",
+                       esp_err_to_name(ret));
+    }
+    return;
+  }
+}
+
+static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize) {
+  // HWSerial.printf("MSC WRITE: lba: %u, offset: %u, bufsize: %u\n", lba, offset, bufsize);
+  uint32_t count = (bufsize / card->csd.sector_size);
+  sdmmc_write_sectors(card, buffer + offset, lba, count);
+  return bufsize;
+}
+
+static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize) {
+  // HWSerial.printf("MSC READ: lba: %u, offset: %u, bufsize: %u\n", lba, offset, bufsize);
+  uint32_t count = (bufsize / card->csd.sector_size);
+  sdmmc_read_sectors(card, buffer + offset, lba, count);
+  return bufsize;
+}
+
+static bool onStartStop(uint8_t power_condition, bool start, bool load_eject) {
+  HWSerial.printf("MSC START/STOP: power: %u, start: %u, eject: %u\n", power_condition, start, load_eject);
+  return true;
+}
+
+static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+  if (event_base == ARDUINO_USB_EVENTS) {
+    arduino_usb_event_data_t *data = (arduino_usb_event_data_t *)event_data;
+    switch (event_id) {
+    case ARDUINO_USB_STARTED_EVENT: HWSerial.println("USB PLUGGED"); break;
+    case ARDUINO_USB_STOPPED_EVENT: HWSerial.println("USB UNPLUGGED"); break;
+    case ARDUINO_USB_SUSPEND_EVENT: HWSerial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en); break;
+    case ARDUINO_USB_RESUME_EVENT: HWSerial.println("USB RESUMED"); break;
+    default: break;
+    }
+  }
+}
+
+void msc_init(void) {
+  MSC.vendorID("LILYGO");       // max 8 chars
+  MSC.productID("T-Dongle-S3"); // max 16 chars
+  MSC.productRevision("1.0");   // max 4 chars
+  MSC.onStartStop(onStartStop);
+  MSC.onRead(onRead);
+  MSC.onWrite(onWrite);
+  MSC.mediaPresent(true);
+  MSC.begin(card->csd.capacity, card->csd.sector_size);
+}
+
+void led_task(void *param) {
+  while (1) {
+    static uint8_t hue = 0;
+    leds = CHSV(hue++, 0XFF, 100);
+    FastLED.show();
+    delay(50);
+  }
 }
 
 /**
  * @brief Connects to the WiFi network and provides visual feedback.
  */
 void connectToWiFi() {
-  Serial.println("Connecting to WiFi...");
+  HWSerial.println("Connecting to WiFi...");
   WiFi.mode(WIFI_STA);
   WiFiManager wm;
   wm.setConfigPortalTimeout(180); // 3 minutes
   bool res = wm.autoConnect(WIFI_AP_SSID, WIFI_AP_PASSWORD);
   if(!res) {
-    Serial.println("Failed to connect and hit timeout. Restarting...");
+    HWSerial.println("Failed to connect and hit timeout. Restarting...");
     ESP.restart();
   }
   else {
-    Serial.println("\nWiFi connected!");
-    Serial.printf("Connected to: %s\n", WIFI_SSID);
-    Serial.printf("IP Address: %s\n", WiFi.localIP().toString().c_str());
+    HWSerial.println("\nWiFi connected!");
+    HWSerial.printf("Connected to: %s\n", WIFI_SSID);
+    HWSerial.printf("IP Address: %s\n", WiFi.localIP().toString().c_str());
   }
 }
 
@@ -89,7 +242,7 @@ void connectToWiFi() {
  * @brief Toggles between FTP and MSC modes when the button is pressed.
  */
 void toggleMode() {
-  Serial.println("Button clicked! Toggling mode...");
+  HWSerial.println("Button clicked! Toggling mode...");
   if (isInMscMode) {
     isInMscMode = false;
     enterFtpMode();
@@ -112,10 +265,12 @@ void setupApiRoutes() {
  * @brief Stops FTP, unmounts SD, and enables USB MSC mode.
  */
 void enterMscMode() {
-  Serial.println("\n--- Entering MSC Mode ---");
-  Serial.println("FTP Server stopped.");
-  Serial.println("SD Card released.");
-  Serial.println("\n✅ Switched to MSC mode. Connect USB to a computer.");
+  if (isInMscMode) return; // Already in this mode
+  isInMscMode = true;
+  HWSerial.println("\n--- Entering MSC Mode ---");
+  HWSerial.println("FTP Server stopped.");
+  HWSerial.println("SD Card released.");
+  HWSerial.println("\n✅ Switched to MSC mode. Connect USB to a computer.");
 }
 
 /**
@@ -123,8 +278,10 @@ void enterMscMode() {
  * @return true if successful, false otherwise.
  */
 bool enterFtpMode() {
-  Serial.println("\n--- Entering Application (FTP) Mode ---");
-  Serial.println("\n✅ Application mode active.");
+  if (!isInMscMode) return true; // Already in this mode
+  isInMscMode = false;
+  HWSerial.println("\n--- Entering Application (FTP) Mode ---");
+  HWSerial.println("\n✅ Application mode active.");
   return true;
 }
 
