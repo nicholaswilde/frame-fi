@@ -84,7 +84,7 @@ The microSD card must be formatted as **FAT32**.
 
 The device boots into **USB Mass Storage (MSC) mode** by default. You can switch between modes by pressing the onboard button or by using the web API.
 
-### :sleuth_or_spy: Modes of Operation
+### :detective: Modes of Operation
 
 - **USB Mass Storage Mode (Default):**
     1.  Plug the T-Dongle-S3 into your computer's USB port.
