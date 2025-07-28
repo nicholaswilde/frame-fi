@@ -109,10 +109,10 @@ The onboard LED provides visual feedback on the device's status:
 
 | Color  | Meaning                               |
 | :----- | :------------------------------------ |
-| Red    | Initializing on boot                  |
-| Blue   | Connecting to Wi-Fi or in setup mode  |
-| Green  | USB Mass Storage (MSC) mode active    |
-| Orange | FTP mode active                       |
+| :red_circle: Red    | Initializing on boot                  |
+| :large_blue_circle: Blue   | Connecting to Wi-Fi or in setup mode  |
+| :green_circle: Green  | USB Mass Storage (MSC) mode active    |
+| :orange_circle: Orange | FTP mode active                       |
 
 ### :globe_with_meridians: Web API
 
