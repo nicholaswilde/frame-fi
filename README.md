@@ -1,8 +1,6 @@
-# :framed_picture: LILYGO T-Dongle S3 Wireless Digital Picture Frame Adapter :signal_strength:
+# :framed_picture: FrameFi: Wireless Adapter for Digital Picture Frames :signal_strength:
 
-This project transforms a [LILYGO T-Dongle-S3][1] into a wireless adapter for a digital picture frame, enabling you to
-upload pictures and manage files remotely. It offers two modes of operation: an FTP server for wireless file
-transfers and a USB Mass Storage mode for direct computer access.
+FrameFi transforms a [LILYGO T-Dongle-S3][1] into a versatile adapter for any digital picture frame. It enables you to remotely manage your photo library via FTP or access the SD card directly in USB Mass Storage mode.
 
 ## :sparkles: Features
 
