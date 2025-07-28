@@ -2,7 +2,7 @@
 
 Print stuff to the dongle display.
 
-Status: ` in progress`
+Status: `in progress`
 
 ## :pencil: Usage
 
