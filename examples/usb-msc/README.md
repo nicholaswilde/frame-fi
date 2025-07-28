@@ -1,4 +1,4 @@
-# USB-MSC
+# :electric_plug: USB-MSC
 
 Serve the SD card as a USB thumb drive.
 
