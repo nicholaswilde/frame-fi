@@ -2,7 +2,7 @@
 
 Serve the SD card as a USB thumb drive.
 
-Status: :heavy_check_mark: `working`
+Status: :ballot_box_with_check: `working`
 
 ## :pencil: Usage
 
