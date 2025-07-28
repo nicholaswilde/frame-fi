@@ -2,7 +2,7 @@
 
 Blink the LED using the FastLED library.
 
-Status: `working`
+Status: :ballot_box_with_check: `working`
 
 ## :link: References
 
