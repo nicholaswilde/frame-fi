@@ -2,6 +2,8 @@
 
 Use an AP to serve a web configuration portal.
 
+Status: :heavy_check_mark: `working`
+
 ## :pencil: Usage
 
 Start sketch.
