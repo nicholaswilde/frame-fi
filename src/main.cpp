@@ -86,9 +86,10 @@ void setup(){
 
   // --- Initialize the LED pin as an output
   FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, NUM_LEDS);
+  FastLED.setBrightness(13);
 
   // Turn the LED on
-  leds[0] = CRGB(5,0,0);
+  leds[0] = CRGB::Red;
   FastLED.show();
     
   // --- Initialize Button ---
@@ -108,7 +109,7 @@ void setup(){
 
   if (card) {
     // Turn the LED on
-    leds[0] = CRGB(0,5,0);
+    leds[0] = CRGB::Green;
     FastLED.show();
     USB.onEvent(usbEventCallback);
     msc_init();
@@ -235,7 +236,7 @@ void connectToWiFi() {
   WiFiManager wm;
   
   // Turn the LED on
-  leds[0] = CRGB(0,0,5);
+  leds[0] = CRGB::Blue;
   FastLED.show();
     
   wm.setConfigPortalTimeout(180); // 3 minutes
@@ -282,7 +283,7 @@ void enterMscMode() {
   HWSerial.println("\n--- Entering MSC Mode ---");
 
   // Turn the LED on
-  leds[0] = CRGB(0,5,0);
+  leds[0] = CRGB::Green;
   FastLED.show();
     
   // Stop FTP Server
@@ -320,13 +321,14 @@ bool enterFtpMode() {
   HWSerial.println("\n--- Entering Application (FTP) Mode ---");
 
   // Turn the LED on
-  leds[0] = CRGB(5,3,0);
+  leds[0] = CRGB::Purple;
   FastLED.show();
   
   // Stop USB MSC
   MSC.end();
   USBSerial.end();
   HWSerial.println("USB MSC stopped.");
+
 
   // Unmount SD from VFS
   if (card) {
