@@ -1,5 +1,4 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 # ==============================================================================
 #
 # sync.sh
@@ -9,7 +8,7 @@
 #
 # Dependencies:
 #   - lftp: A sophisticated command-line FTP client.
-#     Install on Debian/Ubuntu: sudo apt-get install lftp
+#     Install on Debian/Ubuntu: sudo apt install lftp
 #     Install on macOS (Homebrew): brew install lftp
 #
 # Usage:
@@ -18,6 +17,10 @@
 #
 # Example:
 #   FTP_HOST="192.168.1.123" LOCAL_DIR="./my_pictures" ./scripts/sync.sh
+#
+# @author Nicholas Wilde, 0xb299a622
+# @date 28 Jul 2025
+# @version 0.1.0
 #
 # ==============================================================================
 
@@ -31,39 +34,52 @@
 
 # --- Pre-flight Checks ---
 # Check if lftp is installed
-if ! command -v lftp &> /dev/null; then
+function check_lftp(){
+  if ! command -v lftp &> /dev/null; then
     echo "Error: lftp is not installed."
     echo "Please install it to use this script."
     echo "  - Debian/Ubuntu: sudo apt-get install lftp"
     echo "  - macOS (Homebrew): brew install lftp"
     exit 1
-fi
+  fi
+}
 
 # Check if the local directory exists
-if [ ! -d "$LOCAL_DIR" ]; then
+function check_dir(){
+  if [ ! -d "$LOCAL_DIR" ]; then
     echo "Error: Local directory '$LOCAL_DIR' not found."
     echo "Please create it or specify a different LOCAL_DIR."
     exit 1
-fi
+  fi
+}
 
 # --- Main Sync Logic ---
-echo "Starting FTP sync..."
-echo "  - Host: $FTP_HOST"
-echo "  - User: $FTP_USER"
-echo "  - Local Dir: $LOCAL_DIR"
-echo "  - Remote Dir: $REMOTE_DIR"
-echo ""
+function start_sync(){
+  echo "Starting FTP sync..."
+  echo "  - Host: $FTP_HOST"
+  echo "  - User: $FTP_USER"
+  echo "  - Local Dir: $LOCAL_DIR"
+  echo "  - Remote Dir: $REMOTE_DIR"
+  echo ""
 
-# Use lftp to mirror the directory.
-# -R: Reverse mirror (uploads from local to remote)
-# --delete: Deletes files on the remote that are not present locally
-# --verbose: Shows detailed transfer information
-# --parallel=1: Disables parallel transfers to avoid overloading the ESP32
-lftp -c "
-set ftp:ssl-allow no;
-open -u '$FTP_USER','$FTP_PASS' '$FTP_HOST';
-mirror -R --delete --verbose --parallel=1 '$LOCAL_DIR' '$REMOTE_DIR';
-"
+  # Use lftp to mirror the directory.
+  # -R: Reverse mirror (uploads from local to remote)
+  # --delete: Deletes files on the remote that are not present locally
+  # --verbose: Shows detailed transfer information
+  # --parallel=1: Disables parallel transfers to avoid overloading the ESP32
+  lftp -c "
+  set ftp:ssl-allow no;
+  open -u '$FTP_USER','$FTP_PASS' '$FTP_HOST';
+  mirror -R --delete --verbose --parallel=1 '$LOCAL_DIR' '$REMOTE_DIR';
+  "
+}
 
-echo ""
-echo "Sync complete."
+function main(){
+  check_lftp
+  check_dir
+  start_sync
+  echo ""
+  echo "Sync complete."  
+}
+
+main "@"
