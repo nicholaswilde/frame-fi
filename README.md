@@ -2,6 +2,15 @@
 
 FrameFi transforms a [LILYGO T-Dongle-S3][1] into a versatile adapter for any digital picture frame. It enables you to remotely manage your photo library via FTP or access the SD card directly in USB Mass Storage mode.
 
+## :stopwatch: TL;DR
+
+FrameFi turns a [LILYGO T-Dongle-S3][1] into a wireless adapter for your digital picture frame. You can manage photos on an SD card via FTP or plug it into a computer to use it as a standard USB drive.
+
+**Mode Switching:** A button or API call switches between FTP and USB Mass Storage modes.
+
+> [!WARNING]
+> This project requires hardware modification. It is configured for the high-speed `SD_MMC` interface, but the T-Dongle-S3 board is wired for SPI. You must re-route the SD card pins for this to work.
+
 ## :sparkles: Features
 
 - **Dual-Mode Operation:** Seamlessly switch between a USB Mass Storage (MSC) device and an FTP server.
@@ -17,11 +26,8 @@ FrameFi transforms a [LILYGO T-Dongle-S3][1] into a versatile adapter for any di
 - **LILYGO T-Dongle-S3:** This project is specifically designed for this board.
 - **microSD Card:** A FAT32 formatted microSD card is required to store pictures and files. The sketch has been tested with a 16GB card.
 
-> [!WARNING]
-> This sketch is configured to use the `SD_MMC` library, which requires the microSD card slot to be wired to the
-> ESP32-S3's dedicated SD_MMC pins. Most T-Dongle-S3 boards have the integrated slot wired for SPI only. This code
-> will likely fail to initialize the SD card unless you have custom hardware that routes the SD card to the correct
-> SD_MMC pins as defined in `pin_config.h`.
+> [!DANGER]
+> This project is configured for the high-speed `SD_MMC` interface. Most T-Dongle-S3 boards have the microSD slot wired for the slower SPI interface. This code **will not work** on a standard T-Dongle-S3 without hardware modification. You must manually re-route the SD card connections to the pins defined in `pin_config.h` for SD_MMC operation.
 
 ## :floppy_disk: Software Dependencies
 
@@ -78,7 +84,7 @@ The microSD card must be formatted as **FAT32**.
     #define FTP_PASSWORD "password"
     ```
 > [!NOTE]
-> The `WIFI_SSID` and `WIFI_PASSWORD` fields are not currently used, as the device uses `WiFiManager` to handle Wi-Fi connections through a captive portal. They are included for potential future use.
+> This project uses `WiFiManager` to handle Wi-Fi connections via a captive portal, so you don't need to hardcode your network credentials. The `WIFI_SSID` and `WIFI_PASSWORD` fields in `secrets.h` are placeholders for a potential future feature and are not currently used.
 
 ## :rocket: Usage
 
@@ -109,15 +115,31 @@ The onboard LED provides visual feedback on the device's status:
 
 ### :globe_with_meridians: Web API
 
-The device hosts a simple web server with the following endpoints:
+The device hosts a simple web server that allows you to check status and switch modes.
 
 - **`GET /`**: Returns the current mode.
+  ```sh
+  curl http://<DEVICE_IP>/
+  ```
+  *Example Response:*
   ```json
   {"mode":"USB MSC"}
   ```
-- **`POST /msc`**: Switches the device to MSC mode.
+
+- **`POST /msc`**: Switches the device to USB Mass Storage (MSC) mode.
+  ```sh
+  curl -X POST http://<DEVICE_IP>/msc
+  ```
+
 - **`POST /ftp`**: Switches the device to FTP mode.
+  ```sh
+  curl -X POST http://<DEVICE_IP>/ftp
+  ```
+
 - **`POST /restart`**: Restarts the device.
+  ```sh
+  curl -X POST http://<DEVICE_IP>/restart
+  ```
 
 ## :hammer_and_wrench: Building
 
