@@ -7,3 +7,5 @@ Print stuff to the dongle display.
 WIP
 
 ## :link: References
+
+- <https://github.com/Xinyuan-LilyGO/T-Dongle-S3/tree/main/example/TFT>
