@@ -2,7 +2,7 @@
 
 Print stuff to the dongle display.
 
-Status: `in progress`
+Status: :negative_squared_cross_mark: `not working`
 
 ## :pencil: Usage
 
