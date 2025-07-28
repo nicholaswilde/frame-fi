@@ -40,7 +40,7 @@ const char* MODE_FTP_DESC = "Application (FTP Server)";
 WebServer server(80);
 OneButton button(BTN_PIN, true); // true for active low
 FtpServer ftpServer;
-CRGB leds;
+CRGB leds[NUM_LEDS];
 USBMSC MSC;
 USBCDC USBSerial;
 
@@ -62,7 +62,6 @@ void handleSwitchToMSC();
 void handleSwitchToFTP();
 void handleRestart();
 void toggleMode();
-void led_task(void *param);
 void msc_init();
 void sd_init();
 static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize);
@@ -84,7 +83,14 @@ void setupSerial() {
 
 void setup(){
   setupSerial();
-  
+
+  // --- Initialize the LED pin as an output
+  FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, NUM_LEDS);
+
+  // Turn the LED on
+  leds[0] = CRGB(5,0,0);
+  FastLED.show();
+    
   // --- Initialize Button ---
   button.attachClick(toggleMode);
   
@@ -95,13 +101,15 @@ void setup(){
   setupApiRoutes();
   server.begin();
   HWSerial.println("HTTP server started.");
-  xTaskCreatePinnedToCore(led_task, "led_task", 1024, NULL, 1, NULL, 0);
   
   // Start in MSC mode
   sd_init();
   HWSerial.println("SD Card initialized for MSC.");
 
   if (card) {
+    // Turn the LED on
+    leds[0] = CRGB(0,5,0);
+    FastLED.show();
     USB.onEvent(usbEventCallback);
     msc_init();
     USBSerial.begin();
@@ -218,15 +226,6 @@ void msc_init(void) {
   MSC.begin(card->csd.capacity, card->csd.sector_size);
 }
 
-void led_task(void *param) {
-  while (1) {
-    static uint8_t hue = 0;
-    leds = CHSV(hue++, 0XFF, 100);
-    FastLED.show();
-    delay(50);
-  }
-}
-
 /**
  * @brief Connects to the WiFi network and provides visual feedback.
  */
@@ -234,6 +233,11 @@ void connectToWiFi() {
   HWSerial.println("Connecting to WiFi...");
   WiFi.mode(WIFI_STA);
   WiFiManager wm;
+  
+  // Turn the LED on
+  leds[0] = CRGB(0,0,5);
+  FastLED.show();
+    
   wm.setConfigPortalTimeout(180); // 3 minutes
   bool res = wm.autoConnect(WIFI_AP_SSID, WIFI_AP_PASSWORD);
   if(!res) {
@@ -276,7 +280,11 @@ void enterMscMode() {
   if (isInMscMode) return; // Already in this mode
   
   HWSerial.println("\n--- Entering MSC Mode ---");
-  
+
+  // Turn the LED on
+  leds[0] = CRGB(0,5,0);
+  FastLED.show();
+    
   // Stop FTP Server
   ftpServer.end();
   HWSerial.println("FTP Server stopped.");
@@ -311,6 +319,10 @@ bool enterFtpMode() {
 
   HWSerial.println("\n--- Entering Application (FTP) Mode ---");
 
+  // Turn the LED on
+  leds[0] = CRGB(5,3,0);
+  FastLED.show();
+  
   // Stop USB MSC
   MSC.end();
   USBSerial.end();
