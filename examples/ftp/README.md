@@ -2,7 +2,7 @@
 
 Run an FTP server that can connect to the SD card.
 
-Status: `working`
+Status: :ballot_box_with_check: `working`
 
 ## :pencil: Usage
 
