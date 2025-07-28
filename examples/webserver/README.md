@@ -2,7 +2,7 @@
 
 Run a webserver to switch between mock USB MSC and FTP modes.
 
-Status: :heavy_check_mark: `working`
+Status: :ballot_box_with_check: `working`
 
 ## :pencil: Usage
 
