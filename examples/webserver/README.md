@@ -2,6 +2,8 @@
 
 Run a webserver to switch between mock USB MSC and FTP modes.
 
+Status: :heavy_check_mark: `working`
+
 ## :pencil: Usage
 
 Get the IP address from the serial output.
