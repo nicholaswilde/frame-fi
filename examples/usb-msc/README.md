@@ -2,6 +2,8 @@
 
 Serve the SD card as a USB thumb drive.
 
+Status: :heavy_check_mark: `working`
+
 ## :pencil: Usage
 
 Plug the dongle into the USB port.
