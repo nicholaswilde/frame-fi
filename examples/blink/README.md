@@ -1,4 +1,4 @@
-# blink
+# :rotating_light: blink
 
 Blink the LED using the FastLED library.
 
