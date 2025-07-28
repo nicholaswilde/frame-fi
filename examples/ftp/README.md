@@ -2,6 +2,8 @@
 
 Run an FTP server that can connect to the SD card.
 
+Status: `working`
+
 ## :pencil: Usage
 
 Grab the IP address from the serial output.
