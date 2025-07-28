@@ -2,7 +2,7 @@
 
 Used to debug `tft`.
 
-Status: `not working`
+Status: :negative_squared_cross_mark: `not working`
 
 ## :link: References 
 
