@@ -2,6 +2,8 @@
 
 Blink the LED using the FastLED library.
 
+Status: `working`
+
 ## :link: References
 
 - <https://registry.platformio.org/libraries/fastled/FastLED/examples/Blink/Blink.ino>
