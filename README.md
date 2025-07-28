@@ -170,6 +170,7 @@ Alternatively, you can use the `platformio` CLI directly:
     - IP address in FTP mode.
     - The current mode name.
     - File count, used space percentage, and free space on the SD card in USB MSC mode.
+- [ ] Use hard coded W-Fi credentials in addition to the captive portal.
 
 ## :balance_scale: License
 
