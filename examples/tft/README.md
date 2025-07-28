@@ -2,6 +2,8 @@
 
 Print stuff to the dongle display.
 
+Status: ` in progress`
+
 ## :pencil: Usage
 
 WIP
