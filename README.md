@@ -172,6 +172,14 @@ Alternatively, you can use the `platformio` CLI directly:
     - File count, used space percentage, and free space on the SD card in USB MSC mode.
 - [ ] Use hard coded W-Fi credentials in addition to the captive portal.
 
+## :bulb: Inspiration 
+
+This project was inspired by the following projects.
+
+- <https://github.com/espressif/arduino-esp32>
+- <https://github.com/Xinyuan-LilyGO/T-Dongle-S3>
+- <https://github.com/i-am-shodan/USBArmyKnife>
+
 ## :balance_scale: License
 
 This project is licensed under the [Apache License 2.0](./LICENSE).
