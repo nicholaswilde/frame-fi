@@ -2,7 +2,7 @@
 
 Use an AP to serve a web configuration portal.
 
-Status: :heavy_check_mark: `working`
+Status: :ballot_box_with_check: `working`
 
 ## :pencil: Usage
 
