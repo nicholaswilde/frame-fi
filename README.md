@@ -24,9 +24,6 @@ FrameFi turns a [LILYGO T-Dongle-S3][1] into a wireless adapter for your digital
 - **LILYGO T-Dongle-S3:** This project is specifically designed for this board.
 - **microSD Card:** A FAT32 formatted microSD card is required to store pictures and files. The sketch has been tested with a 16GB card.
 
-> [!CAUTION]
-> This project is configured for the high-speed `SD_MMC` interface. Most T-Dongle-S3 boards have the microSD slot wired for the slower SPI interface. This code **will not work** on a standard T-Dongle-S3 without hardware modification. You must manually re-route the SD card connections to the pins defined in `pin_config.h` for SD_MMC operation.
-
 ## :floppy_disk: Software Dependencies
 
 - **PlatformIO:** This project is built using the PlatformIO ecosystem. You can install it as a [VSCode Extension](https://platformio.org/install/ide?install=vscode) or use the [PlatformIO Core (CLI)](https://platformio.org/install/cli).
