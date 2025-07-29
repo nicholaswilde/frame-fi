@@ -194,7 +194,7 @@ Alternatively, you can use the `platformio` CLI directly:
     - The current mode name.
     - File count, used space percentage, and free space on the SD card in USB MSC mode.
 - [ ] Use hard coded W-Fi credentials in addition to the captive portal.
-- [ ] Implement versioning and releasing of `bin` files via Github Actions.
+- [ ] Implement versioning and releasing of `bin` files via Github Actions.[#8] (https://github.com/nicholaswilde/frame-fi/issues/8)
 
 ## :bulb: Inspiration 
 
