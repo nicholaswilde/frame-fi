@@ -192,9 +192,9 @@ Alternatively, you can use the `platformio` CLI directly:
     - Wi-Fi information in AP mode.
     - IP address in FTP mode.
     - The current mode name.
-    - File count, used space percentage, and free space on the SD card in USB MSC mode.
+    - File count, used space percentage, and free space on the SD card in USB MSC mode. https://github.com/nicholaswilde/frame-fi/issues/7
 - [ ] Use hard coded W-Fi credentials in addition to the captive portal.
-- [ ] Implement versioning and releasing of `bin` files via Github Actions.[#8] (https://github.com/nicholaswilde/frame-fi/issues/8)
+- [ ] Implement versioning and releasing of `bin` files via Github Actions. https://github.com/nicholaswilde/frame-fi/issues/8
 
 ## :bulb: Inspiration 
 
