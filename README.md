@@ -33,6 +33,9 @@ FrameFi turns a [LILYGO T-Dongle-S3][1] into a wireless adapter for your digital
 
 Before building, you need to configure your credentials and format your SD card.
 
+<details>
+<summary>Formatting the microSD Card</summary>
+
 ### :floppy_disk: Formatting the microSD Card
 
 The microSD card must be formatted as **FAT32**.
@@ -59,6 +62,10 @@ The microSD card must be formatted as **FAT32**.
     2.  Open a terminal and run `lsblk` to identify the device name (e.g., `/dev/sdX`).
     3.  Unmount the card if it's auto-mounted: `sudo umount /dev/sdX*`.
     4.  Format the card: `sudo mkfs.vfat -F 32 /dev/sdX1` (assuming the partition is `/dev/sdX1`).
+</details>
+
+<details>
+<summary>Configure Credentials</summary>
 
 ### :key: Configure Credentials
 
@@ -80,6 +87,36 @@ The microSD card must be formatted as **FAT32**.
     ```
 > [!NOTE]
 > This project uses `WiFiManager` to handle Wi-Fi connections via a captive portal, so you don't need to hardcode your network credentials. The `WIFI_SSID` and `WIFI_PASSWORD` fields in `secrets.h` are placeholders for a potential future feature and are not currently used.
+</details>
+
+<details>
+<summary>Secrets Management</summary>
+
+### :lock: Secrets Management
+
+This project uses [sops](https://github.com/getsops/sops) for encrypting and decrypting secrets. The following files are encrypted:
+
+- `include/secrets.h`
+- `scripts/.env`
+
+#### Decrypting Secrets
+
+To decrypt the files, run the following command:
+
+```shell
+sops -d include/secrets.h.enc > include/secrets.h
+sops -d scripts/.env.enc > scripts/.env
+```
+
+#### Encrypting Secrets
+
+To encrypt the files after making changes, run the following command:
+
+```shell
+sops -e include/secrets.h > include/secrets.h.enc
+sops -e scripts/.env > scripts/.env.enc
+```
+</details>
 
 ## :rocket: Usage
 
@@ -97,6 +134,9 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
     1.  Press the onboard button to switch from MSC to FTP mode.
     2.  Use an FTP client to connect to the device's IP address (visible in the Serial Monitor) using the `FTP_USER` and `FTP_PASSWORD` you set in `include/secrets.h`.
 
+<details>
+<summary>LED Status Indicators</summary>
+
 ### :art: LED Status Indicators
 
 The onboard LED provides visual feedback on the device's status:
@@ -107,6 +147,10 @@ The onboard LED provides visual feedback on the device's status:
 | :large_blue_circle: Blue   | Connecting to Wi-Fi or in setup mode  |
 | :green_circle: Green  | USB Mass Storage (MSC) mode active    |
 | :orange_circle: Orange | FTP mode active                       |
+</details>
+
+<details>
+<summary>Web API</summary>
 
 ### :globe_with_meridians: Web API
 
@@ -135,6 +179,10 @@ The device hosts a simple web server that allows you to check status and switch 
   ```sh
   curl -X POST http://<DEVICE_IP>/restart
   ```
+</details>
+
+<details>
+<summary>Building</summary>
 
 ## :hammer_and_wrench: Building
 
@@ -179,6 +227,83 @@ Alternatively, you can use the `platformio` CLI directly:
   ```shell
   pio device monitor
   ```
+</details>
+
+<details>
+<summary>Flashing the Firmware</summary>
+
+## :inbox_tray: Flashing the Firmware
+
+If you don't want to build the project from source, you can flash a pre-compiled release directly to your device.
+
+1.  **Download the Latest Release:**
+    - Go to the [Releases page](https://github.com/nicholaswilde/frame-fi/releases).
+    - Download the `LILYGO-T-Dongle-S3-Firmware-binaries.zip` file from the latest release.
+    - Unzip the archive. It will contain `firmware.bin`, `partitions.bin`, and `bootloader.bin`.
+
+2.  **Install esptool:**
+    If you have PlatformIO installed, you already have `esptool.py`. If not, you can install it with pip:
+    ```shell
+    pip install esptool
+    ```
+
+3.  **Flash the Device:**
+    - Put your T-Dongle-S3 into bootloader mode. You can usually do this by holding down the `BOOT` button (the one on the side), plugging it into your computer, and then releasing the button.
+    - Find the serial port of your device. It will be something like `COM3` on Windows, `/dev/ttyUSB0` on Linux, or `/dev/cu.usbserial-XXXX` on macOS.
+    - Run the following command, replacing `<YOUR_SERIAL_PORT>` with your device's port:
+      ```shell
+      esptool.py --chip esp32s3 --port <YOUR_SERIAL_PORT> --before default_reset --after hard_reset write_flash \
+      0x0000 bootloader.bin \
+      0x8000 partitions.bin \
+      0x10000 firmware.bin
+      ```
+
+    > [!TIP]
+    > If you have PlatformIO installed, you can use the `pio run --target upload` command, which handles the flashing process automatically.
+</details>
+
+<details>
+<summary>Synchronizing Files</summary>
+
+## :arrow_right_hook: Synchronizing Files
+
+The `scripts/sync.sh` script provides an easy way to synchronize a local directory with the device's microSD card over FTP. It uses `lftp` to mirror the contents, deleting any files on the device that are not present locally.
+
+### Dependencies
+
+You must have `lftp` installed on your system.
+
+- **Debian/Ubuntu:**
+  ```shell
+  sudo apt-get install lftp
+  ```
+- **macOS (Homebrew):**
+  ```shell
+  brew install lftp
+  ```
+
+### Usage
+
+1.  Make sure the device is in **FTP Server Mode**.
+2.  Set the `FTP_HOST` environment variable to the device's IP address.
+3.  (Optional) Set `LOCAL_DIR` to the path of your local directory to sync (defaults to `./data`).
+4.  Run the script:
+
+    ```shell
+    ./scripts/sync.sh
+    ```
+
+**Example:**
+
+```shell
+FTP_HOST="192.168.1.100" LOCAL_DIR="path/to/your/pictures" ./scripts/sync.sh
+```
+
+This command will upload the contents of `path/to/your/pictures` to the root of the microSD card.
+</details>
+
+<details>
+<summary>To Do</summary>
 
 ## :white_check_mark: To Do
 
@@ -189,6 +314,10 @@ Alternatively, you can use the `platformio` CLI directly:
     - File count, used space percentage, and free space on the SD card in USB MSC mode. https://github.com/nicholaswilde/frame-fi/issues/7
 - [ ] Use hard-coded Wi-Fi credentials in addition to the captive portal. https://github.com/nicholaswilde/frame-fi/issues/9
 - [ ] Implement versioning and releasing of `bin` files via Github Actions. https://github.com/nicholaswilde/frame-fi/issues/8
+</details>
+
+<details>
+<summary>Inspiration</summary>
 
 ## :bulb: Inspiration 
 
@@ -197,6 +326,7 @@ This project was inspired by the following projects.
 - <https://github.com/espressif/arduino-esp32>
 - <https://github.com/Xinyuan-LilyGO/T-Dongle-S3>
 - <https://github.com/i-am-shodan/USBArmyKnife>
+</details>
 
 ## :balance_scale: License
 
