@@ -60,7 +60,7 @@ The microSD card must be formatted as **FAT32**.
     3.  Unmount the card if it's auto-mounted: `sudo umount /dev/sdX*`.
     4.  Format the card: `sudo mkfs.vfat -F 32 /dev/sdX1` (assuming the partition is `/dev/sdX1`).
 
-### Configure Credentials
+### :key: Configure Credentials
 
 1.  **Create `secrets.h`:** In the `include/` directory, create a file named `secrets.h`.
 2.  **Add Credentials:** Copy the contents of `include/secrets.h.tmpl` into your new `secrets.h` file and update the values. This file contains the credentials for the Wi-Fi Manager Access Point and the FTP server.
