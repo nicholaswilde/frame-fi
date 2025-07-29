@@ -9,9 +9,6 @@ FrameFi turns a [LILYGO T-Dongle-S3][1] into a wireless adapter for your digital
 
 **Mode Switching:** A button or API call switches between FTP and USB Mass Storage modes.
 
-> [!WARNING]
-> This project requires hardware modification. It is configured for the high-speed `SD_MMC` interface, but the T-Dongle-S3 board is wired for SPI. You must re-route the SD card pins for this to work.
-
 ## :sparkles: Features
 
 - **Dual-Mode Operation:** Seamlessly switch between a USB Mass Storage (MSC) device and an FTP server.
