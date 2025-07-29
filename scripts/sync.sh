@@ -28,7 +28,7 @@
 # (Can be overridden by environment variables)
 : "${FTP_HOST:?FTP_HOST is not set. Please set the device IP address.}"
 : "${FTP_USER:="user"}"
-: "${FTP_PASS:="password"}"
+: "${FTP_PASSWORD:="password"}"
 : "${LOCAL_DIR:="data"}" # Default local directory to sync
 : "${REMOTE_DIR:="/"}"   # Default remote directory on the device
 
@@ -69,7 +69,7 @@ function start_sync(){
   # --parallel=1: Disables parallel transfers to avoid overloading the ESP32
   lftp -c "
   set ftp:ssl-allow no;
-  open -u '$FTP_USER','$FTP_PASS' '$FTP_HOST';
+  open -u '$FTP_USER','$FTP_PASSWORD' '$FTP_HOST';
   mirror -R --delete --verbose --parallel=1 '$LOCAL_DIR' '$REMOTE_DIR';
   "
 }
