@@ -20,3 +20,4 @@
 captures/
 *.log
 **/secrets.h
+**/.env
