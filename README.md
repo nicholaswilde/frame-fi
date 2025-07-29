@@ -142,7 +142,7 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
 The onboard LED provides visual feedback on the device's status:
 
 | Color  | Meaning                               |
-| :----- | :------------------------------------ |
+| :----: | :------------------------------------ |
 | :red_circle:    | Initializing on boot                  |
 | :large_blue_circle:   | Connecting to Wi-Fi or in setup mode  |
 | :green_circle:  | USB Mass Storage (MSC) mode active    |
