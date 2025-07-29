@@ -32,6 +32,15 @@
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <FastLED.h>   // https://github.com/FastLED/FastLED
 
+// --- LED Configuration ---
+#define NUM_LEDS 1
+#define LED_DI_PIN 40
+#define LED_CI_PIN 39
+#define BRIGHTNESS 13 // 5% of 255
+
+// --- Button Configuration ---
+#define BTN_PIN 0
+
 // --- Mode Descriptions ---
 const char* MODE_MSC_DESC = "USB MSC";
 const char* MODE_FTP_DESC = "Application (FTP Server)";
@@ -64,6 +73,7 @@ void handleRestart();
 void toggleMode();
 void msc_init();
 void sd_init();
+void ftp_transfer_callback(FtpTransferOperation ftpOperation, const char* name, unsigned int transferredSize);
 static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize);
 static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize);
 static bool onStartStop(uint8_t power_condition, bool start, bool load_eject);
@@ -86,10 +96,10 @@ void setup(){
 
   // --- Initialize the LED pin as an output
   FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, NUM_LEDS);
-  FastLED.setBrightness(13);
+  FastLED.setBrightness(BRIGHTNESS);
 
   // Turn the LED on
-  leds[0] = CRGB::Red;
+  leds[0] = CRGB::Yellow;
   FastLED.show();
     
   // --- Initialize Button ---
@@ -235,17 +245,34 @@ void connectToWiFi() {
   WiFi.mode(WIFI_STA);
   WiFiManager wm;
   
-  // Turn the LED on
-  leds[0] = CRGB::Blue;
-  FastLED.show();
-    
-  wm.setConfigPortalTimeout(180); // 3 minutes
-  bool res = wm.autoConnect(WIFI_AP_SSID, WIFI_AP_PASSWORD);
-  if(!res) {
+  // Set up a callback for when the captive portal is entered
+  wm.setAPCallback([](WiFiManager *myWiFiManager) {
+    HWSerial.println("Entered config mode");
+    HWSerial.println(WiFi.softAPIP());
+    HWSerial.println(myWiFiManager->getConfigPortalSSID());
+    leds[0] = CRGB::Blue; // Solid blue for captive portal
+    FastLED.show();
+  });
+
+  // Blink blue while connecting
+  unsigned long startConnecting = millis();
+  bool connecting = true;
+  while (connecting && (millis() - startConnecting < 180000)) { // 3-minute timeout
+    leds[0] = CRGB::Blue;
+    FastLED.show();
+    delay(100);
+    leds[0] = CRGB::Black;
+    FastLED.show();
+    delay(400);
+    if (wm.autoConnect(WIFI_AP_SSID, WIFI_AP_PASSWORD)) {
+      connecting = false;
+    }
+  }
+
+  if (WiFi.status() != WL_CONNECTED) {
     HWSerial.println("Failed to connect and hit timeout. Restarting...");
     ESP.restart();
-  }
-  else {
+  } else {
     HWSerial.println("\nWiFi connected!");
     HWSerial.printf("Connected to: %s\n", WIFI_SSID);
     HWSerial.printf("IP Address: %s\n", WiFi.localIP().toString().c_str());
@@ -321,7 +348,7 @@ bool enterFtpMode() {
   HWSerial.println("\n--- Entering Application (FTP) Mode ---");
 
   // Turn the LED on
-  leds[0] = CRGB::Purple;
+  leds[0] = CRGB::Orange;
   FastLED.show();
   
   // Stop USB MSC
@@ -346,6 +373,7 @@ bool enterFtpMode() {
 
   // Start FTP Server
   ftpServer.begin(FTP_USER, FTP_PASSWORD);
+  ftpServer.setTransferCallback(ftp_transfer_callback);
   HWSerial.println("FTP Server started.");
 
   HWSerial.println("\n✅ Application mode active.");
@@ -409,4 +437,22 @@ void handleRestart() {
   server.send(200, "application/json", jsonResponse);
   delay(1000); // Give the server time to send the response
   ESP.restart();
+}
+
+/**
+ * @brief Callback function for FTP transfers. Blinks the LED.
+ */
+void ftp_transfer_callback(FtpTransferOperation ftpOperation, const char* name, unsigned int transferredSize) {
+  if (ftpOperation == FTP_UPLOAD) {
+    // Blink LED
+    leds[0] = CRGB::Orange;
+    FastLED.show();
+    delay(50);
+    leds[0] = CRGB::Black;
+    FastLED.show();
+  } else if (ftpOperation == FTP_UPLOAD_STOP) {
+    // Set LED back to solid orange
+    leds[0] = CRGB::Orange;
+    FastLED.show();
+  }
 }
