@@ -24,7 +24,7 @@ FrameFi turns a [LILYGO T-Dongle-S3][1] into a wireless adapter for your digital
 - **LILYGO T-Dongle-S3:** This project is specifically designed for this board.
 - **microSD Card:** A FAT32 formatted microSD card is required to store pictures and files. The sketch has been tested with a 16GB card.
 
-## :floppy_disk: Software Dependencies
+## :package: Software Dependencies
 
 - **PlatformIO:** This project is built using the PlatformIO ecosystem. You can install it as a [VSCode Extension](https://platformio.org/install/ide?install=vscode) or use the [PlatformIO Core (CLI)](https://platformio.org/install/cli).
 - **Task:** A task runner / build tool. Installation instructions can be found [here](https://taskfile.dev/installation/).
@@ -33,7 +33,7 @@ FrameFi turns a [LILYGO T-Dongle-S3][1] into a wireless adapter for your digital
 
 Before building, you need to configure your credentials and format your SD card.
 
-### Formatting the microSD Card
+### :floppy_disk: Formatting the microSD Card
 
 The microSD card must be formatted as **FAT32**.
 
