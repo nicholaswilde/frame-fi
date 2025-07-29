@@ -258,8 +258,8 @@ If you don't want to build the project from source, you can flash a pre-compiled
       0x10000 firmware.bin
       ```
 
-    > [!TIP]
-    > If you have PlatformIO installed, you can use the `pio run --target upload` command, which handles the flashing process automatically.
+> [!TIP]
+> If you have PlatformIO installed, you can use the `pio run --target upload` command, which handles the flashing process automatically.
 </details>
 
 <details>
