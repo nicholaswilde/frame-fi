@@ -3,6 +3,7 @@
 
 // External libraries
 #include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
+#include "catppuccin_colors.h" // Include our custom color palette
 
 TFT_eSPI tft = TFT_eSPI();
 
