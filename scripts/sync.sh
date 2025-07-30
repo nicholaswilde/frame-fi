@@ -25,8 +25,11 @@
 #
 # ==============================================================================
 
+# Get the absolute path of the directory where the script is located.
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 # Source the .env file
-[ -f ".env" ] && source ".env"
+[ -f "${SCRIPT_DIR}/.env" ] && source "${SCRIPT_DIR}/.env"
 
 # --- Configuration ---
 # (Can be overridden by environment variables)
@@ -42,7 +45,7 @@ function check_lftp(){
   if ! command -v lftp &> /dev/null; then
     echo "Error: lftp is not installed."
     echo "Please install it to use this script."
-    echo "  - Debian/Ubuntu: sudo apt-get install lftp"
+    echo "  - Debian/Ubuntu: sudo apt install lftp"
     echo "  - macOS (Homebrew): brew install lftp"
     exit 1
   fi
@@ -50,8 +53,8 @@ function check_lftp(){
 
 # Check if the local directory exists
 function check_dir(){
-  if [ ! -d "$LOCAL_DIR" ]; then
-    echo "Error: Local directory '$LOCAL_DIR' not found."
+  if [ ! -d "${SCRIPT_DIR}/$LOCAL_DIR" ]; then
+    echo "Error: Local directory '${SCRIPT_DIR}/$LOCAL_DIR' not found."
     echo "Please create it or specify a different LOCAL_DIR."
     exit 1
   fi
@@ -62,7 +65,7 @@ function start_sync(){
   echo "Starting FTP sync..."
   echo "  - Host: $FTP_HOST"
   echo "  - User: $FTP_USER"
-  echo "  - Local Dir: $LOCAL_DIR"
+  echo "  - Local Dir: ${SCRIPT_DIR}/$LOCAL_DIR"
   echo "  - Remote Dir: $REMOTE_DIR"
   echo ""
 
@@ -74,7 +77,7 @@ function start_sync(){
   lftp -c "
   set ftp:ssl-allow no;
   open -u '$FTP_USER','$FTP_PASSWORD' '$FTP_HOST';
-  mirror -R --delete --verbose --parallel=1 '$LOCAL_DIR' '$REMOTE_DIR';
+  mirror -R --delete --verbose --parallel=1 '$REMOTE_DIR' '$LOCAL_DIR';
   "
 }
 

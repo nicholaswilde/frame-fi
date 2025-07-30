@@ -5,6 +5,10 @@ vars:
   IP: "192.168.2.169"
 
 tasks:
+  sync:
+    desc: 'Runs the sync script.'
+    cmds:
+      - ./scripts/sync.sh
   ping:
     desc: Ping the device
     cmds:
