@@ -244,6 +244,8 @@ void connectToWiFi() {
   HWSerial.println("Connecting to WiFi...");
   WiFi.mode(WIFI_STA);
   WiFiManager wm;
+
+  // wm.resetSettings(); // wipe settings
   
   // Set up a callback for when the captive portal is entered
   wm.setAPCallback([](WiFiManager *myWiFiManager) {
