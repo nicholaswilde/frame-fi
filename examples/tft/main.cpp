@@ -19,7 +19,6 @@ void setup(){
 
 void loop(){ 
   tft.setCursor(0, 0, 2);
-  // tft.setTextColor(TFT_WHITE,TFT_BLACK);  tft.setTextSize(1);
   tft.println("Hello World!");
   Serial.println("test");
   delay(1000);
