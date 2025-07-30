@@ -15,9 +15,10 @@ TFT_eSPI tft = TFT_eSPI();
   } while (0);
 
 // Prototypes
-void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
 void drawHeader(const char* title);
 void drawStorageInfo(int files, float totalSizeMB, float freeSizeMB);
+void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
+void drawFtpModeScreen(const char* ip, const char* mac, int files, float totalSizeMB, float freeSizeMB);
 
 void setup(){
   int32_t x, y;
@@ -96,5 +97,39 @@ void drawApModeScreen(const char* ap_ssid, const char* ap_ip) {
   
   tft.setTextColor(CATPPUCCIN_GREEN);
   tft.drawCentreString(ap_ip, 80, y_pos, 2);
+}
+
+void drawFtpModeScreen(const char* ip, const char* mac, int files, float totalSizeMB, float freeSizeMB) {
+  tft.fillScreen(CATPPUCCIN_BASE);
+  drawHeader("FrameFi");
+  tft.drawFastVLine(80, 22, 56, CATPPUCCIN_LAVENDER);
+
+  // Left Column: Network Info
+  int y_pos = 25;
+  int x_pos = 5;
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("Mode: ");
+  tft.setTextColor(CATPPUCCIN_GREEN); // Use green for active mode
+  tft.print("FTP");
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("IP: ");
+  tft.setTextColor(CATPPUCCIN_TEXT);
+  tft.print(ip);
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("MAC:");
+  y_pos += 10;
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_TEXT);
+  tft.print(mac);
+
+  // Right Column: Storage Info
+  drawStorageInfo(files, totalSizeMB, freeSizeMB);
 }
 
