@@ -39,7 +39,7 @@ curl -X POST http://<DEVICE_IP>/ftp
 curl -X POST http://<DEVICE_IP>/msc
 ```
 
-**FTP Mode:** Upload pictures to the dongle via FTP using `lftp`.
+**FTP Mode:** Upload pictures to the dongle via FTP using `lftp` or `scripts/sync.sh`.
 
 ```shell
 lftp -c "
