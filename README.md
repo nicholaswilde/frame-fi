@@ -5,9 +5,19 @@ FrameFi transforms a [LILYGO T-Dongle-S3][1] into a versatile adapter for any di
 
 ## :stopwatch: TL;DR
 
-FrameFi turns a [LILYGO T-Dongle-S3][1] into a wireless adapter for your digital picture frame. You can manage photos on an SD card via FTP or plug it into a computer to use it as a standard USB drive.
+**Secrets:** Create `include/secrets.h` and update variables.
+
+**Computer:** Plug in the LILYGO T-Dongle-S3 to a computer USB port while holding the button to put it into boot mode.
+
+**Upload Sketch:** Upload the sketch to the LILYGO T-Dongle-S3.
+
+**Wi-Fi Credentials:** Connect to `AutoCoonnectAP-Frame-Fi` access point and enter WiFi credentials.
+
+**Digital Picture Frame:** Plug in dongle to digital picture frame.
 
 **Mode Switching:** A button or API call switches between FTP and USB Mass Storage modes.
+
+**FTP Mode:** Upload pictures to the dongle via FTP.
 
 ## :sparkles: Features
 
