@@ -25,7 +25,7 @@ or
 pio run --target upload
 ```
 
-**Wi-Fi Credentials:** Connect to `AutoCoonnectAP-Frame-Fi` access point and enter WiFi credentials. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
+**Wi-Fi Credentials:** Connect to `AutoConnectAP-Frame-Fi` access point and enter WiFi credentials. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
 
 **Digital Picture Frame:** Plug in dongle to digital picture frame.
 
