@@ -147,7 +147,7 @@ To decrypt the files, run the following command:
 
 ```shell
 sops -d include/secrets.h.enc > include/secrets.h
-sops -d scripts/.env.enc > scripts/.env
+sops -d --input-type dotenv --output-type dotenv scripts/.env.enc > scripts/.env
 ```
 
 #### Encrypting Secrets
@@ -156,7 +156,8 @@ To encrypt the files after making changes, run the following command:
 
 ```shell
 sops -e include/secrets.h > include/secrets.h.enc
-sops -e scripts/.env > scripts/.env.enc
+sops -e --input-type dotenv --output-type dotenv scripts/.env > scripts/.env.enc
+
 ```
 </details>
 
