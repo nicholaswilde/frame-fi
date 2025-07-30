@@ -7,15 +7,17 @@
 
 TFT_eSPI tft = TFT_eSPI();
 
-// Prototypes
-void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
-
 #define PRINT_STR(str, x, y)                                                                                                                         \
   do {                                                                                                                                               \
     Serial.println(str);                                                                                                                             \
     tft.drawString(str, x, y);                                                                                                                       \
     y += 8;                                                                                                                                          \
   } while (0);
+
+// Prototypes
+void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
+void drawHeader(const char* title);
+void drawStorageInfo(int files, float totalSizeMB, float freeSizeMB);
 
 void setup(){
   int32_t x, y;
@@ -35,6 +37,43 @@ void setup(){
 void loop(){ 
   Serial.println("test");
   delay(1000);
+}
+
+// Draws the top header bar
+void drawHeader(const char* title) {
+  tft.fillRect(0, 0, 160, 20, CATPPUCCIN_BLUE);
+  tft.setTextColor(CATPPUCCIN_CRUST);
+  tft.setTextSize(2);
+  tft.drawCentreString(title, 80, 2, 1); // x-center, y, font
+  tft.setTextSize(1);
+}
+
+// Draws the right column with storage statistics
+void drawStorageInfo(int files, float totalSizeMB, float freeSizeMB) {
+  int y_pos = 25;
+  int x_pos = 85;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_PEACH);
+  tft.print("Files: ");
+  tft.setTextColor(CATPPUCCIN_TEXT);
+  tft.print(files);
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_PEACH);
+  tft.print("Size: ");
+  tft.setTextColor(CATPPUCCIN_TEXT);
+  tft.print(totalSizeMB, 1);
+  tft.print("MB");
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_PEACH);
+  tft.print("Free: ");
+  tft.setTextColor(CATPPUCCIN_TEXT);
+  tft.print(freeSizeMB, 1);
+  tft.print("MB");
 }
 
 void drawApModeScreen(const char* ap_ssid, const char* ap_ip) {
