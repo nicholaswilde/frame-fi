@@ -30,8 +30,6 @@ void setup(){
 }
 
 void loop(){ 
-  // tft.setCursor(0, 0, 2);
-  // tft.println("Hello World!");
   Serial.println("test");
   delay(1000);
 }
