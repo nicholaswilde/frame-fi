@@ -273,7 +273,7 @@ If you don't want to build the project from source, you can flash a pre-compiled
 
 The `scripts/sync.sh` script provides an easy way to synchronize a local directory with the device's microSD card over FTP. It uses `lftp` to mirror the contents, deleting any files on the device that are not present locally.
 
-### :container: Dependencies
+### :package: Dependencies
 
 You must have `lftp` installed on your system.
 
