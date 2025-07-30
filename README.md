@@ -81,7 +81,7 @@ The microSD card must be formatted as **FAT32**.
     #define WIFI_SSID "YourWiFiNetworkName"
     #define WIFI_PASSWORD "YourWiFiPassword"
 
-    #define WIFI_AP_SSID "AutoConnectAP-T-Dongle"
+    #define WIFI_AP_SSID "AutoConnectAP-Frame-Fi"
     #define WIFI_AP_PASSWORD "password"
 
     #define FTP_USER "user"
