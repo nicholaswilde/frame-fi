@@ -46,7 +46,7 @@ lftp -c "
 set ftp:ssl-allow no;
 open -u '<FTP_USER>','<FTP_PASSWORD>' '<FTP_HOST>';
 mirror -R --delete --verbose --parallel=1 '<REMOTE_DIR>' '<LOCAL_DIR>';
-  "
+"
 ```
 
 ## :sparkles: Features
