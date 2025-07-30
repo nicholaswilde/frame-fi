@@ -1,7 +1,7 @@
 # :framed_picture: FrameFi: Wireless Adapter for Digital Picture Frames :signal_strength:
 [![task](https://img.shields.io/badge/Task-Enabled-brightgreen?style=for-the-badge&logo=task&logoColor=white)](https://taskfile.dev/#/)
 
-FrameFi transforms a [LILYGO T-Dongle-S3][1] into a versatile adapter for any digital picture frame. It enables you to remotely manage your photo library via FTP or access the SD card directly in USB Mass Storage mode.
+FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any digital picture frame. It enables you to remotely manage your photo library via FTP or access the SD card directly in USB Mass Storage mode.
 
 ## :stopwatch: TL;DR
 
@@ -11,9 +11,9 @@ FrameFi transforms a [LILYGO T-Dongle-S3][1] into a versatile adapter for any di
 cp includes/secrets.h.tmpl includes/secrets.h
 ```
 
-**Computer:** Plug in the LILYGO T-Dongle-S3 to a computer USB port while holding the button to put it into boot mode.
+**Computer:** Plug in the LILYGO T-Dongle S3 to a computer USB port while holding the button to put it into boot mode.
 
-**Upload Sketch:** Upload the sketch to the LILYGO T-Dongle-S3.
+**Upload Sketch:** Upload the sketch to the dongle.
 
 ```shell
 task upload
@@ -25,7 +25,7 @@ or
 pio run --target upload
 ```
 
-**Wi-Fi Credentials:** Connect to `AutoCoonnectAP-Frame-Fi` access point and enter WiFi credentials. `192.168.4.1`
+**Wi-Fi Credentials:** Connect to `AutoCoonnectAP-Frame-Fi` access point and enter WiFi credentials. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
 
 **Digital Picture Frame:** Plug in dongle to digital picture frame.
 
