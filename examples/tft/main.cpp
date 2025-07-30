@@ -42,10 +42,10 @@ void loop(){
 
 // Draws the top header bar
 void drawHeader(const char* title) {
-  tft.fillRect(0, 0, 160, 20, CATPPUCCIN_BLUE);
+  tft.fillRect(0, 0, TFT_HEIGHT, 20, CATPPUCCIN_BLUE);
   tft.setTextColor(CATPPUCCIN_CRUST);
   tft.setTextSize(2);
-  tft.drawCentreString(title, 80, 2, 1); // x-center, y, font
+  tft.drawCentreString(title, TFT_WIDTH, 2, 1); // x-center, y, font
   tft.setTextSize(1);
 }
 
