@@ -24,7 +24,7 @@ void setup(){
   tft.fillScreen(CATPPUCCIN_BASE);
   digitalWrite(38, 0);
   tft.setTextFont(1);
-  tft.setTextColor(TFT_GREEN, CATPPUCCIN_BASE);
+  tft.setTextColor(CATPPUCCIN_TEXT, CATPPUCCIN_BASE);
   PRINT_STR("Hello World!", x, y)
   PRINT_STR("Hello World2!", x, y)
 }
