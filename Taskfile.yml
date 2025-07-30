@@ -33,8 +33,10 @@ tasks:
     desc: Init the project
     preconditions:
       - test -f include/secrets.h.tmpl
+      - test -f scripts/.env.tmpl
     cmds:
       - cp include/secrets.h.tmpl include/secrets.h
+      - cp scripts/.env.tmpl scripts/.env
   encrypt:
     desc: Encrypt secrets
     preconditions:
