@@ -162,7 +162,7 @@ The device hosts a simple web server that allows you to check status and switch 
 
 - **`GET /`**: Returns the current mode.
   ```sh
-  curl http://<DEVICE_IP>/
+  curl -X GET http://<DEVICE_IP>/
   ```
   *Example Response:*
   ```json
@@ -173,15 +173,27 @@ The device hosts a simple web server that allows you to check status and switch 
   ```sh
   curl -X POST http://<DEVICE_IP>/msc
   ```
+  *Example Response:*
+  ```json
+  WIP
+  ```
 
 - **`POST /ftp`**: Switches the device to FTP mode.
   ```sh
   curl -X POST http://<DEVICE_IP>/ftp
   ```
+  *Example Response:*
+  ```json
+  WIP
+  ```
 
 - **`POST /restart`**: Restarts the device.
   ```sh
   curl -X POST http://<DEVICE_IP>/restart
+  ```
+  *Example Response:*
+  ```json
+  WIP
   ```
 </details>
 
