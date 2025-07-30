@@ -14,6 +14,8 @@ FrameFi turns a [LILYGO T-Dongle-S3][1] into a wireless adapter for your digital
 - **Dual-Mode Operation:** Seamlessly switch between a USB Mass Storage (MSC) device and an FTP server.
 - **Web Interface & API:** A built-in web server provides an API to check the device's status and switch between modes.
 - **Wireless File Management:** In FTP mode, you can connect to the device over your Wi-Fi network to add, remove, and manage files on the microSD card.
+> [!CAUTION]
+> FTP is an insecure protocol. Only use this feature on a trusted network.
 - **USB Mass Storage Mode:** In MSC mode, the device mounts the microSD card as a standard USB thumb drive, allowing for high-speed file transfers directly from your computer.
 - **Fast Data Transfer:** Utilizes the `SD_MMC` interface for the microSD card, offering significantly faster read/write speeds compared to the standard SPI interface.
 - **Dynamic WiFi Configuration:** Uses `WiFiManager` to create a captive portal for easy Wi-Fi setup without hardcoding credentials.
@@ -133,6 +135,8 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
 - **FTP Server Mode:**
     1.  Press the onboard button to switch from MSC to FTP mode.
     2.  Use an FTP client to connect to the device's IP address (visible in the Serial Monitor) using the `FTP_USER` and `FTP_PASSWORD` you set in `include/secrets.h`.
+> [!CAUTION]
+> FTP is an insecure protocol. Only use this feature on a trusted network.
 
 <details>
 <summary>LED Status Indicators</summary>
