@@ -21,10 +21,10 @@ void setup(){
   pinMode(38, OUTPUT);
   tft.init();
   tft.setRotation(1);
-  tft.fillScreen(TFT_BLACK);
+  tft.fillScreen(CATPPUCCIN_BASE);
   digitalWrite(38, 0);
   tft.setTextFont(1);
-  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.setTextColor(TFT_GREEN, CATPPUCCIN_BASE);
   PRINT_STR("Hello World!", x, y)
   PRINT_STR("Hello World2!", x, y)
 }
