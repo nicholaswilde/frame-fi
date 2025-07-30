@@ -1,6 +1,5 @@
 #include "Arduino.h"
 #include "secrets.h"
-// #include "pin_config.h"
 
 // External libraries
 #include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
