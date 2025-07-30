@@ -32,17 +32,21 @@ tasks:
     cmds:
       - cp include/secrets.h.tmpl include/secrets.h
   encrypt:
-    desc: Encrypt secrets.h
+    desc: Encrypt secrets
     preconditions:
       - test -f include/secrets.h
+      - test -f scripts/.env
     cmds:
       - sops -e include/secrets.h > include/secrets.h.enc
+      - sops -e --input-type dotenv --output-type dotenv scripts/.env > scripts/.env.enc
   decrypt:
-    desc: Decrypt secrets.h
+    desc: Decrypt secrets
     preconditions:
       - test -f include/secrets.h.enc
+      - test -f scripts/.env.enc
     cmds:
       - sops -d include/secrets.h.enc > include/secrets.h
+      - sops -d --input-type dotenv --output-type dotenv scripts/.env.enc > scripts/.env
   build:
     desc: Build the project
     cmds:

@@ -275,31 +275,46 @@ You must have `lftp` installed on your system.
 
 - **Debian/Ubuntu:**
   ```shell
-  sudo apt-get install lftp
+  sudo apt install lftp
   ```
 - **macOS (Homebrew):**
   ```shell
   brew install lftp
   ```
 
+### Configuration
+
+There are two ways to configure the script:
+
+1.  **`.env` File (Recommended):**
+    - Copy the template: `cp scripts/.env.tmpl scripts/.env`
+    - Edit `scripts/.env` with your device's IP address and other settings.
+      ```dotenv
+      FTP_HOST="192.168.1.100"
+      FTP_USER="user"
+      FTP_PASSWORD="password"
+      LOCAL_DIR="data"
+      REMOTE_DIR="/"
+      ```
+
+2.  **Command-Line Arguments:**
+    - You can override the `.env` file settings by passing environment variables directly.
+
 ### Usage
 
 1.  Make sure the device is in **FTP Server Mode**.
-2.  Set the `FTP_HOST` environment variable to the device's IP address.
-3.  (Optional) Set `LOCAL_DIR` to the path of your local directory to sync (defaults to `./data`).
-4.  Run the script:
-
+2.  Run the script from the project root:
     ```shell
     ./scripts/sync.sh
     ```
 
-**Example:**
+**Example with Command-Line Arguments:**
+
+This command syncs a specific local directory to the device, overriding any settings in `.env`.
 
 ```shell
 FTP_HOST="192.168.1.100" LOCAL_DIR="path/to/your/pictures" ./scripts/sync.sh
 ```
-
-This command will upload the contents of `path/to/your/pictures` to the root of the microSD card.
 </details>
 
 <details>

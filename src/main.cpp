@@ -440,18 +440,20 @@ void handleRestart() {
 }
 
 /**
- * @brief Callback function for FTP transfers. Blinks the LED.
+ * @brief Callback function for FTP transfers. Blinks the LED during transfer
+ *        and leaves it solid on when complete.
  */
 void ftp_transfer_callback(FtpTransferOperation ftpOperation, const char* name, unsigned int transferredSize) {
-  if (ftpOperation == FTP_UPLOAD) {
-    // Blink LED
-    leds[0] = CRGB::Orange;
-    FastLED.show();
-    delay(50);
+  if (ftpOperation == FTP_UPLOAD || ftpOperation == FTP_DOWNLOAD) {
+    // Blink LED by turning it OFF briefly, then back ON.
+    // This leaves the LED in the ON state after the pulse.
     leds[0] = CRGB::Black;
     FastLED.show();
-  } else if (ftpOperation == FTP_UPLOAD_STOP) {
-    // Set LED back to solid orange
+    delay(50);
+    leds[0] = CRGB::Orange;
+    FastLED.show();
+  } else if (ftpOperation == FTP_UPLOAD_STOP || ftpOperation == FTP_DOWNLOAD_STOP || ftpOperation == FTP_TRANSFER_ERROR) {
+    // Ensure LED is solid orange after any transfer completion or error.
     leds[0] = CRGB::Orange;
     FastLED.show();
   }

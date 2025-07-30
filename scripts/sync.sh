@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 # ==============================================================================
 #
 # sync.sh
@@ -18,11 +19,14 @@
 # Example:
 #   FTP_HOST="192.168.1.123" LOCAL_DIR="./my_pictures" ./scripts/sync.sh
 #
-# @author Nicholas Wilde, 0xb299a622
-# @date 28 Jul 2025
-# @version 0.1.0
+# @author Nicholas Wilde, 0xb299a622                                                        │
+# @date 28 Jul 2025  
+# @version 0.2.0
 #
 # ==============================================================================
+
+# Source the .env file
+[ -f ".env" ] && source ".env"
 
 # --- Configuration ---
 # (Can be overridden by environment variables)
