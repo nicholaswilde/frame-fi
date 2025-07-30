@@ -7,17 +7,41 @@ FrameFi transforms a [LILYGO T-Dongle-S3][1] into a versatile adapter for any di
 
 **Secrets:** Create `include/secrets.h` and update variables.
 
+```shell
+cp includes/secrets.h.tmpl includes/secrets.h
+```
+
 **Computer:** Plug in the LILYGO T-Dongle-S3 to a computer USB port while holding the button to put it into boot mode.
 
 **Upload Sketch:** Upload the sketch to the LILYGO T-Dongle-S3.
 
-**Wi-Fi Credentials:** Connect to `AutoCoonnectAP-Frame-Fi` access point and enter WiFi credentials.
+```shell
+task upload
+```
+
+or
+
+```shell
+pio run --target upload
+```
+
+**Wi-Fi Credentials:** Connect to `AutoCoonnectAP-Frame-Fi` access point and enter WiFi credentials. `192.168.4.1`
 
 **Digital Picture Frame:** Plug in dongle to digital picture frame.
 
 **Mode Switching:** A button or API call switches between FTP and USB Mass Storage modes.
 
+```sh
+curl -X POST http://<DEVICE_IP>/ftp
+```
+
+```sh
+curl -X POST http://<DEVICE_IP>/msc
+```
+
 **FTP Mode:** Upload pictures to the dongle via FTP.
+
+
 
 ## :sparkles: Features
 
