@@ -2,7 +2,7 @@
 
 Print stuff to the dongle display.
 
-Status: :negative_squared_cross_mark: `not working`
+Status: :ballot_box_with_check: `working`
 
 ## :pencil: Usage
 
