@@ -60,6 +60,7 @@ mirror -R --delete --verbose --parallel=1 '<REMOTE_DIR>' '<LOCAL_DIR>';
 - **Fast Data Transfer:** Utilizes the `SD_MMC` interface for the microSD card, offering significantly faster read/write speeds compared to the standard SPI interface.
 - **Dynamic WiFi Configuration:** Uses `WiFiManager` to create a captive portal for easy Wi-Fi setup without hardcoding credentials.
 - **LED Status Indicators:** A built-in LED provides at-a-glance status updates for different modes.
+- **LCD Display:** Displays relevant information on the LCD display depending on the mode. It also utilizes catppuccin color schemes.
 
 ## :electric_plug: Hardware Requirements
 
