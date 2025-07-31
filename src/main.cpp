@@ -86,7 +86,9 @@ void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
 void drawUsbMscModeScreen(const char* mac, int files, int totalSizeMB, float freeSizeMB);
 
-
+/**
+ * @brief 
+ */
 void setup(){
   setupSerial();
 
@@ -135,6 +137,9 @@ void loop(){
   }
 }
 
+/**
+ * @brief 
+ */
 void setupSerial() {
   Serial.begin(115200);
   unsigned long start = millis();
@@ -147,7 +152,9 @@ void setupSerial() {
   delay(100);
 }
 
-
+/**
+ * @brief 
+ */
 void sd_init(void) {
   esp_err_t ret;
   const char mount_point[] = MOUNT_POINT;
@@ -203,6 +210,9 @@ void sd_init(void) {
   }
 }
 
+/**
+ * @brief 
+ */
 static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize) {
   // HWSerial.printf("MSC WRITE: lba: %u, offset: %u, bufsize: %u\n", lba, offset, bufsize);
   uint32_t count = (bufsize / card->csd.sector_size);
@@ -210,6 +220,9 @@ static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t 
   return bufsize;
 }
 
+/**
+ * @brief 
+ */
 static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize) {
   // HWSerial.printf("MSC READ: lba: %u, offset: %u, bufsize: %u\n", lba, offset, bufsize);
   uint32_t count = (bufsize / card->csd.sector_size);
@@ -217,11 +230,17 @@ static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufs
   return bufsize;
 }
 
+/**
+ * @brief 
+ */
 static bool onStartStop(uint8_t power_condition, bool start, bool load_eject) {
   HWSerial.printf("MSC START/STOP: power: %u, start: %u, eject: %u\n", power_condition, start, load_eject);
   return true;
 }
 
+/**
+ * @brief 
+ */
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base == ARDUINO_USB_EVENTS) {
     arduino_usb_event_data_t *data = (arduino_usb_event_data_t *)event_data;
@@ -235,6 +254,9 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
   }
 }
 
+/**
+ * @brief 
+ */
 void msc_init(void) {
   MSC.vendorID("LILYGO");       // max 8 chars
   MSC.productID("T-Dongle-S3"); // max 16 chars
@@ -468,4 +490,151 @@ void ftp_transfer_callback(FtpTransferOperation ftpOperation, const char* name, 
     leds[0] = CRGB::Orange;
     FastLED.show();
   }
+}
+
+/*---------------------*
+ * --- LCD Display --- *
+ *---------------------*/
+
+/**
+ * @brief Draws the top header bar
+ */
+void drawHeader(const char* title) {
+  tft.fillRect(0, 0, TFT_HEIGHT, 12, CATPPUCCIN_BLUE);
+  tft.setTextColor(CATPPUCCIN_CRUST);
+  tft.setTextSize(1);
+  tft.drawCentreString(title, TFT_WIDTH, 2, 1); // x-center, y, font
+  tft.setTextSize(1);
+}
+
+/**
+ * @brief Draws the right column with storage statistics
+ */
+void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB) {
+  int y_pos = 53;
+  int x_pos = 5;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("Size:  ");
+  tft.setTextColor(CATPPUCCIN_PEACH);
+  tft.print(totalSizeMB);
+  tft.print("MB");
+
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print(" Files: ");
+  tft.setTextColor(CATPPUCCIN_PEACH);
+  tft.print(files);
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("Free:  ");
+  tft.setTextColor(CATPPUCCIN_PEACH);
+  tft.print(freeSizeMB, 0);
+  tft.print("MB");
+}
+
+/**
+ * @brief 
+ */
+void drawApModeScreen(const char* ap_ssid, const char* ap_ip) {
+  tft.fillScreen(CATPPUCCIN_BASE);
+  drawHeader("FrameFi Setup");
+
+  // Left Column: Network Info
+  int y_pos = 17;
+  int x_pos = 5;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("Mode:  ");
+  tft.setTextColor(CATPPUCCIN_GREEN); // Use green for active mode
+  tft.print("AP");
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("AP IP: ");
+  tft.setTextColor(CATPPUCCIN_YELLOW); // Use green for active mode
+  tft.print(ap_ip);
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("SSID:  ");
+  y_pos += 12;
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_YELLOW); // Use green for active mode
+  tft.print(ap_ssid);
+}
+
+/**
+ * @brief
+ */
+void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
+  tft.fillScreen(CATPPUCCIN_BASE);
+  drawHeader("FrameFi");
+
+  // Left Column: Network Info
+  int y_pos = 17;
+  int x_pos = 5;
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("Mode:  ");
+  tft.setTextColor(CATPPUCCIN_GREEN); // Use green for active mode
+  tft.print("FTP");
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("IP:    ");
+  tft.setTextColor(CATPPUCCIN_YELLOW);
+  tft.print(ip);
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("MAC:   ");
+  // y_pos += 10;
+  // tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_YELLOW);
+  tft.print(mac);
+
+  // Right Column: Storage Info
+  drawStorageInfo(files, totalSizeMB, freeSizeMB);
+}
+
+/**
+ * @brief 
+ */
+void drawUsbMscModeScreen(const char* mac, int files, int totalSizeMB, float freeSizeMB) {
+  tft.fillScreen(CATPPUCCIN_BASE);
+  drawHeader("FrameFi");
+
+  // Left Column: Network Info
+  int y_pos = 17;
+  int x_pos = 5;
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("Mode:  ");
+  tft.setTextColor(CATPPUCCIN_GREEN);
+  tft.print("USB MSC");
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("IP:    ");
+  tft.setTextColor(CATPPUCCIN_YELLOW);
+  tft.print("N/A");
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("MAC:   ");
+  tft.setTextColor(CATPPUCCIN_YELLOW);
+  tft.print(mac);
+
+  // Right Column: Storage Info
+  drawStorageInfo(files, totalSizeMB, freeSizeMB);
 }
