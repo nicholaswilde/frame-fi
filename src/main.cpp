@@ -80,6 +80,11 @@ static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t 
 static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize);
 static bool onStartStop(uint8_t power_condition, bool start, bool load_eject);
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
+void drawHeader(const char* title);
+void drawStorageInfo(int files, float totalSizeMB, float freeSizeMB);
+void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
+void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
+void drawUsbMscModeScreen(const char* mac, int files, int totalSizeMB, float freeSizeMB);
 
 void setupSerial() {
   Serial.begin(115200);
