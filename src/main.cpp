@@ -86,17 +86,6 @@ void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
 void drawUsbMscModeScreen(const char* mac, int files, int totalSizeMB, float freeSizeMB);
 
-void setupSerial() {
-  Serial.begin(115200);
-  unsigned long start = millis();
-  while (!Serial) {
-    if (millis() - start > 2000) { // 2-second timeout
-      break;
-    }
-  }
-  HWSerial.setDebugOutput(true);
-  delay(100);
-}
 
 void setup(){
   setupSerial();
@@ -145,6 +134,19 @@ void loop(){
     ftpServer.handleFTP(); // Continuously process FTP requests  
   }
 }
+
+void setupSerial() {
+  Serial.begin(115200);
+  unsigned long start = millis();
+  while (!Serial) {
+    if (millis() - start > 2000) { // 2-second timeout
+      break;
+    }
+  }
+  HWSerial.setDebugOutput(true);
+  delay(100);
+}
+
 
 void sd_init(void) {
   esp_err_t ret;
