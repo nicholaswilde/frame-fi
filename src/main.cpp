@@ -277,7 +277,7 @@ void msc_init(void) {
 }
 
 /*---------------------*
- * ---  --- *
+ * --- WiFiManager --- *
  *---------------------*/
 
 /**
@@ -324,9 +324,9 @@ void connectToWiFi() {
   }
 }
 
-/*---------------------*
- * ---  --- *
- *---------------------*/
+/*----------------*
+ * --- Button --- *
+ *----------------*/
 
 /**
  * @brief Toggles between FTP and MSC modes when the button is pressed.
@@ -339,6 +339,10 @@ void toggleMode() {
     enterMscMode();
   }
 }
+
+/*-------------------*
+ * --- Webserver --- *
+ *-------------------*/
 
 /**
  * @brief Defines the web server API endpoints.
