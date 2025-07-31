@@ -25,7 +25,9 @@
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
 
+// Personal header files
 #include "secrets.h" // Import sensitive data
+#include "catppuccin_colors.h" // Include our custom color palette
 
 // External libraries
 #include <OneButton.h>
