@@ -25,11 +25,11 @@
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
 
-// Personal header files
+// --- Personal header files ---
 #include "secrets.h" // Import sensitive data
 #include "catppuccin_colors.h" // Include our custom color palette
 
-// External libraries
+// --- External libraries ---
 #include <OneButton.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <FastLED.h>   // https://github.com/FastLED/FastLED
@@ -47,7 +47,7 @@
 const char* MODE_MSC_DESC = "USB MSC";
 const char* MODE_FTP_DESC = "Application (FTP Server)";
  
-// Create objects
+// --- Create objects ---
 WebServer server(80);
 OneButton button(BTN_PIN, true); // true for active low
 FtpServer ftpServer;
@@ -59,10 +59,10 @@ USBCDC USBSerial;
 #define MOUNT_POINT "/sdcard"
 sdmmc_card_t *card;
 
-// A flag to track the current mode
+// --- A flag to track the current mode ---
 bool isInMscMode = true;
 
-// Function prototypes
+// --- Function prototypes ---
 void connectToWiFi();
 void setupApiRoutes();
 void setupSerial();
@@ -85,6 +85,10 @@ void drawStorageInfo(int files, float totalSizeMB, float freeSizeMB);
 void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
 void drawUsbMscModeScreen(const char* mac, int files, int totalSizeMB, float freeSizeMB);
+
+/*--------------------*
+ * --- Main Logic --- *
+ *--------------------*/
 
 /**
  * @brief 
@@ -136,6 +140,10 @@ void loop(){
     ftpServer.handleFTP(); // Continuously process FTP requests  
   }
 }
+
+/*---------------------*
+ * ---  --- *
+ *---------------------*/
 
 /**
  * @brief 
@@ -268,6 +276,10 @@ void msc_init(void) {
   MSC.begin(card->csd.capacity, card->csd.sector_size);
 }
 
+/*---------------------*
+ * ---  --- *
+ *---------------------*/
+
 /**
  * @brief Connects to the WiFi network and provides visual feedback.
  */
@@ -311,6 +323,10 @@ void connectToWiFi() {
     HWSerial.printf("IP Address: %s\n", WiFi.localIP().toString().c_str());
   }
 }
+
+/*---------------------*
+ * ---  --- *
+ *---------------------*/
 
 /**
  * @brief Toggles between FTP and MSC modes when the button is pressed.
