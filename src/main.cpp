@@ -36,9 +36,9 @@
 #include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
 
 // --- LED Configuration ---
-#define NUM_LEDS 1
-#define LED_DI_PIN 40
-#define LED_CI_PIN 39
+// #define NUM_LEDS 1
+// #define LED_DI_PIN 40
+// #define LED_CI_PIN 39
 #define BRIGHTNESS 13 // 5% of 255
 
 // --- Button Configuration ---
@@ -87,6 +87,7 @@ void drawStorageInfo(int files, float totalSizeMB, float freeSizeMB);
 void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
 void drawUsbMscModeScreen(const char* mac, int files, int totalSizeMB, float freeSizeMB);
+int countFiles(File dir);
 
 /*--------------------*
  * --- Main Logic --- *
@@ -108,6 +109,13 @@ void setup(){
     
   // --- Initialize Button ---
   button.attachClick(toggleMode);
+
+  // --- Initialize TFT Display ---
+  pinMode(38, OUTPUT);
+  tft.init();
+  tft.setRotation(1); // Adjust rotation as needed
+  tft.fillScreen(CATPPUCCIN_BASE);
+  digitalWrite(38, 0);
   
   // --- Connect to WiFi ---
   connectToWiFi();
@@ -130,6 +138,16 @@ void setup(){
     USBSerial.begin();
     USB.begin();
     HWSerial.println("\n✅ Started in MSC mode. Connect USB to a computer.");
+    // --- Display initial mode screen ---
+    enterMscMode();
+    
+    // --- Display MSC mode screen ---
+    File root = SD_MMC.open(MOUNT_POINT);
+    int numFiles = countFiles(root);
+    root.close();
+    uint64_t totalBytes = SD_MMC.cardSize();
+    uint64_t usedBytes = SD_MMC.usedBytes();
+    drawUsbMscModeScreen(WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
   } else {
     HWSerial.println("\n❌ Failed to start in MSC mode. SD Card not found.");
   }
@@ -303,6 +321,7 @@ void connectToWiFi() {
     HWSerial.println(myWiFiManager->getConfigPortalSSID());
     leds[0] = CRGB::Blue; // Solid blue for captive portal
     FastLED.show();
+    drawApModeScreen(myWiFiManager->getConfigPortalSSID().c_str(), WiFi.softAPIP().toString().c_str());
   });
 
   // Blink blue while connecting
@@ -392,6 +411,14 @@ void enterMscMode() {
     USB.begin();
     HWSerial.println("\n✅ Switched to MSC mode. Connect USB to a computer.");
     isInMscMode = true;
+
+    // --- Display MSC mode screen ---
+    File root = SD_MMC.open(MOUNT_POINT);
+    int numFiles = countFiles(root);
+    root.close();
+    uint64_t totalBytes = SD_MMC.cardSize();
+    uint64_t usedBytes = SD_MMC.usedBytes();
+    drawUsbMscModeScreen(WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
   } else {
     HWSerial.println("\n❌ Failed to switch to MSC mode. SD Card not found.");
   }
@@ -415,7 +442,6 @@ bool enterFtpMode() {
   USBSerial.end();
   HWSerial.println("USB MSC stopped.");
 
-
   // Unmount SD from VFS
   if (card) {
     esp_vfs_fat_sdcard_unmount(MOUNT_POINT, card);
@@ -424,7 +450,7 @@ bool enterFtpMode() {
 
   // Initialize SD_MMC
   SD_MMC.setPins(SD_MMC_CLK_PIN, SD_MMC_CMD_PIN, SD_MMC_D0_PIN, SD_MMC_D1_PIN, SD_MMC_D2_PIN, SD_MMC_D3_PIN);
-  if (!SD_MMC.begin("/sdcard", true)) {
+  if (!SD_MMC.begin(MOUNT_POINT, true)) {
     HWSerial.println("Card Mount Failed");
     return false;
   }
@@ -437,6 +463,15 @@ bool enterFtpMode() {
 
   HWSerial.println("\n✅ Application mode active.");
   isInMscMode = false;
+
+  // --- Display FTP mode screen ---
+  File root = SD_MMC.open(MOUNT_POINT);
+  int numFiles = countFiles(root);
+  root.close();
+  uint64_t totalBytes = SD_MMC.cardSize();
+  uint64_t usedBytes = SD_MMC.usedBytes();
+  drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
+  
   return true;
 }
 
@@ -521,6 +556,25 @@ void ftp_transfer_callback(FtpTransferOperation ftpOperation, const char* name, 
 /*---------------------*
  * --- LCD Display --- *
  *---------------------*/
+
+/**
+ * @brief Counts the number of files in a directory.
+ */
+int countFiles(File dir) {
+  int count = 0;
+  while (true) {
+    File entry = dir.openNextFile();
+    if (!entry) {
+      // no more files
+      break;
+    }
+    if (!entry.isDirectory()) {
+      count++;
+    }
+    entry.close();
+  }
+  return count;
+}
 
 /**
  * @brief Draws the top header bar
