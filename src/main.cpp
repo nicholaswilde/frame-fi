@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * digital-picture-frame
+ * FrameFi
  * ----------------
  * transforms a LILYGO T-Dongle-S3 into a wireless adapter for a digital
  * picture frame, enabling you to upload pictures and manage files remotely.
