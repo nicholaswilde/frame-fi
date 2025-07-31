@@ -100,7 +100,7 @@ void setup(){
   FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, NUM_LEDS);
   FastLED.setBrightness(BRIGHTNESS);
 
-  // Turn the LED on
+  // --- Turn the LED on ---
   leds[0] = CRGB::Yellow;
   FastLED.show();
     
@@ -115,7 +115,7 @@ void setup(){
   server.begin();
   HWSerial.println("HTTP server started.");
   
-  // Start in MSC mode
+  // --- Start in MSC mode ---
   sd_init();
   HWSerial.println("SD Card initialized for MSC.");
 
@@ -141,9 +141,9 @@ void loop(){
   }
 }
 
-/*---------------------*
- * ---  --- *
- *---------------------*/
+/*----------------*
+ * --- Serial --- *
+ *----------------*/
 
 /**
  * @brief 
@@ -159,6 +159,10 @@ void setupSerial() {
   HWSerial.setDebugOutput(true);
   delay(100);
 }
+
+/*----------------*
+ * --- USB MSC --- *
+ *----------------*/
 
 /**
  * @brief 
