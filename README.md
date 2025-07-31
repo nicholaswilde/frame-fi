@@ -214,28 +214,47 @@ The device hosts a simple web server that allows you to check status and switch 
   ```sh
   curl -X POST http://<DEVICE_IP>/msc
   ```
-  *Example Response:*
-  ```json
-  WIP
-  ```
+  *Example Responses:*
+  *   **Success (200 OK):**
+      ```json
+      {"status":"success","message":"Switched to MSC mode."}
+      ```
+  *   **No Change (200 OK):**
+      ```json
+      {"status":"no_change","message":"Already in MSC mode."}
+      ```
+  *   **Error (500 Internal Server Error):**
+      ```json
+      {"status":"error","message":"Failed to switch to MSC mode."}
+      ```
 
 - **`POST /ftp`**: Switches the device to FTP mode.
   ```sh
   curl -X POST http://<DEVICE_IP>/ftp
   ```
-  *Example Response:*
-  ```json
-  WIP
-  ```
+  *Example Responses:*
+  *   **Success (200 OK):**
+      ```json
+      {"status":"success","message":"Switched to Application (FTP) mode."}
+      ```
+  *   **No Change (200 OK):**
+      ```json
+      {"status":"no_change","message":"Already in Application (FTP) mode."}
+      ```
+  *   **Error (500 Internal Server Error):**
+      ```json
+      {"status":"error","message":"Failed to re-initialize SD card."}
+      ```
 
 - **`POST /restart`**: Restarts the device.
   ```sh
   curl -X POST http://<DEVICE_IP>/restart
   ```
   *Example Response:*
-  ```json
-  WIP
-  ```
+  *   **Success (200 OK):**
+      ```json
+      {"status":"success","message":"Restarting device..."}
+      ```
 </details>
 
 <details>

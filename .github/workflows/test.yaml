@@ -1,0 +1,52 @@
+---
+name: PlatformIO Test Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env:
+          - LILYGO-T-Dongle-S3
+          - blink
+          - ftp
+          - usb-msc
+          - webserver
+          - button
+          - tft
+          - wifimanager
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache PlatformIO Core
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio/packages
+          key: ${{ runner.os }}-${{ hashFiles('**/platformio.ini') }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - name: Build PlatformIO Project
+        run: pio run --environment ${{ matrix.env }}

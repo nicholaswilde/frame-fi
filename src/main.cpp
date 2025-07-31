@@ -33,6 +33,7 @@
 #include <OneButton.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <FastLED.h>   // https://github.com/FastLED/FastLED
+#include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
 
 // --- LED Configuration ---
 #define NUM_LEDS 1
@@ -54,6 +55,7 @@ FtpServer ftpServer;
 CRGB leds[NUM_LEDS];
 USBMSC MSC;
 USBCDC USBSerial;
+TFT_eSPI tft = TFT_eSPI();
 
 #define HWSerial    Serial0
 #define MOUNT_POINT "/sdcard"
