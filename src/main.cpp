@@ -24,6 +24,7 @@
 #include "driver/sdspi_host.h"
 #include "esp_vfs_fat.h"
 #include "sdmmc_cmd.h"
+#include <dirent.h>
 
 // --- Personal header files ---
 #include "secrets.h" // Import sensitive data
@@ -88,6 +89,7 @@ void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
 void drawUsbMscModeScreen(const char* mac, int files, int totalSizeMB, float freeSizeMB);
 int countFiles(File dir);
+int countFilesInPath(const char *path);
 
 /*--------------------*
  * --- Main Logic --- *
@@ -126,7 +128,7 @@ void setup(){
   HWSerial.println("HTTP server started.");
   
   // --- Start in MSC mode ---
-  sd_init();
+sd_init();
   HWSerial.println("SD Card initialized for MSC.");
 
   if (card) {
@@ -142,12 +144,13 @@ void setup(){
     enterMscMode();
     
     // --- Display MSC mode screen ---
-    File root = SD_MMC.open(MOUNT_POINT);
-    int numFiles = countFiles(root);
-    root.close();
-    uint64_t totalBytes = SD_MMC.cardSize();
-    uint64_t usedBytes = SD_MMC.usedBytes();
-    drawUsbMscModeScreen(WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
+    int numFiles = countFilesInPath(MOUNT_POINT);
+    FATFS *fs;
+    DWORD fre_clust;
+    f_getfree(MOUNT_POINT, &fre_clust, &fs);
+    uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
+    uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
+    drawUsbMscModeScreen(WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
   } else {
     HWSerial.println("\n❌ Failed to start in MSC mode. SD Card not found.");
   }
@@ -413,12 +416,13 @@ void enterMscMode() {
     isInMscMode = true;
 
     // --- Display MSC mode screen ---
-    File root = SD_MMC.open(MOUNT_POINT);
-    int numFiles = countFiles(root);
-    root.close();
-    uint64_t totalBytes = SD_MMC.cardSize();
-    uint64_t usedBytes = SD_MMC.usedBytes();
-    drawUsbMscModeScreen(WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
+    int numFiles = countFilesInPath(MOUNT_POINT);
+    FATFS *fs;
+    DWORD fre_clust;
+    f_getfree(MOUNT_POINT, &fre_clust, &fs);
+    uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
+    uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
+    drawUsbMscModeScreen(WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
   } else {
     HWSerial.println("\n❌ Failed to switch to MSC mode. SD Card not found.");
   }
@@ -556,6 +560,26 @@ void ftp_transfer_callback(FtpTransferOperation ftpOperation, const char* name, 
 /*---------------------*
  * --- LCD Display --- *
  *---------------------*/
+
+/**
+ * @brief Counts the number of files in a directory using VFS.
+ */
+int countFilesInPath(const char *path) {
+  DIR *dir = opendir(path);
+  if (!dir) {
+    HWSerial.printf("Error opening directory: %s\n", path);
+    return 0;
+  }
+  int count = 0;
+  struct dirent *entry;
+  while ((entry = readdir(dir)) != NULL) {
+    if (entry->d_type == DT_REG) { // DT_REG for file
+      count++;
+    }
+  }
+  closedir(dir);
+  return count;
+}
 
 /**
  * @brief Counts the number of files in a directory.
