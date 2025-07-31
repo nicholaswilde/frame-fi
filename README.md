@@ -70,7 +70,7 @@ mirror -R --delete --verbose --parallel=1 '<REMOTE_DIR>' '<LOCAL_DIR>';
 ## :package: Software Dependencies
 
 - **PlatformIO:** This project is built using the PlatformIO ecosystem. You can install it as a [VSCode Extension](https://platformio.org/install/ide?install=vscode) or use the [PlatformIO Core (CLI)](https://platformio.org/install/cli).
-- **Task:** A task runner / build tool. Installation instructions can be found [here](https://taskfile.dev/installation/).
+- **Task (optional):** A task runner / build tool. Installation instructions can be found [here](https://taskfile.dev/installation/).
 
 ## :gear: Setup & Configuration
 
