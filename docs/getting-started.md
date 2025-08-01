@@ -39,19 +39,11 @@ The microSD card must be formatted as **FAT32**.
 2.  **Add Credentials:** Copy the contents of `include/secrets.h.tmpl` into your new `secrets.h` file and update the values. This file contains the credentials for the Wi-Fi Manager Access Point and the FTP server.
 
 !!! abstract "include/secrets.h"
+
     ```cpp
-    #pragma once
-
-    // WiFi Credentials
-    #define WIFI_SSID "YourWiFiNetworkName"
-    #define WIFI_PASSWORD "YourWiFiPassword"
-
-    #define WIFI_AP_SSID "AutoConnectAP-Frame-Fi"
-    #define WIFI_AP_PASSWORD "password"
-
-    #define FTP_USER "user"
-    #define FTP_PASSWORD "password"
+    --8<-- "secrets.h.tmpl"
     ```
+    
 !!! note
     This project uses `WiFiManager` to handle Wi-Fi connections via a captive portal, so you don't need to hardcode your network credentials. The `WIFI_SSID` and `WIFI_PASSWORD` fields in `secrets.h` are placeholders for a potential future feature and are not currently used.
 
