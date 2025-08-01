@@ -1,1 +1,20 @@
- 
+---
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+site_name: FrameFi
+site_description: My notes on various things
+site_author: Nicholas Wilde
+site_url: https://nicholaswilde.io/frame-fi
+copyright: Copyright &copy; 2025 Nicholas Wilde
+dev_addr: '0.0.0.0:8000'
+
+# Repository
+repo_name: nicholaswilde/frame-fi
+repo_url: https://github.com/nicholaswilde/frame-fi
+edit_uri: "edit/main/docs/"
+
+exclude:
+  - GEMINI.md
+
+# Page tree
+nav:
+  - Home: index.md 
