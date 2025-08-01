@@ -5,6 +5,15 @@ vars:
   IP: "192.168.2.169"
 
 tasks:
+  serve:
+    desc: >-
+      Start development server on http://0.0.0.0:{{ .PORT }} using
+      Docker and mkdocs-material
+    cmds:
+      - >-
+        docker run --rm -it -p {{ .PORT }}:{{ .PORT}} -v ${PWD}:/docs
+        --platform linux/amd64 {{ .IMAGE }} serve
+        --dev-addr 0.0.0.0:{{ .PORT }} -f ./mkdocs.yml
   sync:
     desc: 'Runs the sync script.'
     cmds:
