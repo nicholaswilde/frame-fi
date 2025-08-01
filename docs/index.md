@@ -65,17 +65,6 @@ mirror -R --delete --verbose --parallel=1 '<REMOTE_DIR>' '<LOCAL_DIR>';
 - **LED Status Indicators:** A built-in LED provides at-a-glance status updates for different modes.
 - **LCD Display:** Displays relevant information on the LCD display depending on the mode, including a bar graph showing SD card usage. It also utilizes catppuccin color schemes.
 
-## :electric_plug: Hardware Requirements
-
-- **LILYGO T-Dongle-S3:** This project is specifically designed for this board.
-- **microSD Card:** A FAT32 formatted microSD card is required to store pictures and files. The sketch has been tested with a 16GB card.
-- **Digital Picture Frame:** A digital picture frame that can use a USB storage device to serve pictures.
-
-## :package: Software Dependencies
-
-- **PlatformIO:** This project is built using the PlatformIO ecosystem. You can install it as a [VSCode Extension](https://platformio.org/install/ide?install=vscode) or use the [PlatformIO Core (CLI)](https://platformio.org/install/cli).
-- **Task (optional):** A task runner / build tool. Installation instructions can be found [here](https://taskfile.dev/installation/).
-
 ## :bulb: Inspiration 
 
 This project was inspired by the following projects.
