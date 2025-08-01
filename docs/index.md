@@ -14,9 +14,11 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 
 **Secrets:** Create `include/secrets.h` and update variables.
 
-```shell
-cp includes/secrets.h.tmpl includes/secrets.h
-```
+!!! code""
+
+    ```shell
+    cp includes/secrets.h.tmpl includes/secrets.h
+    ```
 
 **Computer:** Plug in the LILYGO T-Dongle S3 to a computer USB port while holding the button to put it into boot mode.
 
