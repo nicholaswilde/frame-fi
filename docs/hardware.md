@@ -1,0 +1,7 @@
+---
+tags:
+  - hardware
+---
+# Hardware
+
+WIP
