@@ -1,4 +1,4 @@
-# :framed_picture: FrameFi: Wireless Adapter for Digital Picture Frames :signal_strength:
+# :signal_strength: FrameFi: Wireless Freedom for Digital Picture Frames :framed_picture:
 [![task](https://img.shields.io/badge/Task-Enabled-brightgreen?style=for-the-badge&logo=task&logoColor=white)](https://taskfile.dev/#/)
 [![test](https://img.shields.io/github/actions/workflow/status/nicholaswilde/frame-fi/test.yaml?label=test&style=for-the-badge&branch=main)](https://github.com/nicholaswilde/frame-fi/actions/workflows/test.yaml)
 
