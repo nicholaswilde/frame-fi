@@ -94,6 +94,14 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 - [ ] Use hard-coded Wi-Fi credentials in addition to the captive portal. https://github.com/nicholaswilde/frame-fi/issues/9
 - [ ] Implement versioning and releasing of `bin` files via Github Actions. https://github.com/nicholaswilde/frame-fi/issues/8
 
+## :scales: License
+
+[Apache License 2.0](https://raw.githubusercontent.com/nicholaswilde/homelab/refs/heads/main/docs/LICENSE)
+
+## :pencil:Author
+
+This project was started in 2025 by [Nicholas Wilde][2].
+
 ## :link: References
 
 - <https://github.com/espressif/arduino-esp32>
@@ -101,3 +109,4 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 - <https://github.com/i-am-shodan/USBArmyKnife>
 
 [1]: <https://lilygo.cc/products/t-dongle-s3>
+[2]: <https://github.com/nicholaswilde>
