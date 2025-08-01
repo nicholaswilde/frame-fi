@@ -64,6 +64,33 @@ mirror -R --delete --verbose --parallel=1 '<REMOTE_DIR>' '<LOCAL_DIR>';
 - **LED Status Indicators:** A built-in LED provides at-a-glance status updates for different modes.
 - **LCD Display:** Displays relevant information on the LCD display depending on the mode, including a bar graph showing SD card usage. It also utilizes catppuccin color schemes.
 
+## :art: Customization
+
+### :art: Theme
+
+The LCD display uses the [Catppuccin](https://github.com/catppuccin/catppuccin) color theme. You can change the active theme by editing `include/catppuccin_colors.h`.
+
+To change the theme, simply uncomment the block for the theme you wish to use and comment out the currently active theme.
+
+**Example: Switching from Mocha to Macchiato**
+
+1.  Open `include/catppuccin_colors.h`.
+2.  Find the `Mocha` theme block and comment it out.
+3.  Find the `Macchiato` theme block and uncomment it.
+4.  Rebuild and upload the firmware.
+
+```cpp
+// --- Theme: Mocha (Now commented out) ---
+/*
+#define CATPPUCCIN_ROSEWATER  0xF73B
+...
+*/
+
+// --- Theme: Macchiato (Now active) ---
+#define CATPPUCCIN_ROSEWATER  0xF73B
+...
+```
+
 ## :electric_plug: Hardware Requirements
 
 - **LILYGO T-Dongle-S3:** This project is specifically designed for this board.
