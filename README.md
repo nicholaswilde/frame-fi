@@ -1,5 +1,6 @@
 # :framed_picture: FrameFi: Wireless Adapter for Digital Picture Frames :signal_strength:
 [![task](https://img.shields.io/badge/Task-Enabled-brightgreen?style=for-the-badge&logo=task&logoColor=white)](https://taskfile.dev/#/)
+[![ci](https://img.shields.io/github/actions/workflow/status/nicholaswilde/frame-fi/test.yaml?label=ci&style=for-the-badge&branch=main)](https://github.com/nicholaswilde/frame-fi/actions/workflows/test.yaml)
 
 FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any digital picture frame. It enables you to remotely manage your photo library via FTP or access the SD card directly in USB Mass Storage mode.
 
