@@ -166,35 +166,12 @@ sops -e --input-type dotenv --output-type dotenv scripts/.env > scripts/.env.enc
 ```
 </details>
 
-## :rocket: Usage
-
-The device boots into **USB Mass Storage (MSC) mode** by default. You can switch between modes by pressing the onboard button or by using the web API.
-
-### :detective: Modes of Operation
-
-- **USB Mass Storage Mode (Default):**
-    1.  Plug the T-Dongle-S3 into your computer's USB port.
-    2. The device will connect to the configured Wi-Fi network. If no credentials are saved, it will create a Wi-Fi Access Point named "AutoConnectAP-Frame-Fi".
-    3. Connect to this AP. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
-    4.  The device will be recognized as a USB Mass Storage device (thumb drive), giving you direct access to the microSD card.
-
-- **FTP Server Mode:**
-    1.  Press the onboard button (single click) to switch from MSC to FTP mode.
-    2.  Use an FTP client to connect to the device's IP address (visible on the LCD display) using the `FTP_USER` and `FTP_PASSWORD` you set in `include/secrets.h`.
-
-- **Reset WiFi Settings:**
-    1. Press and hold the onboard button for 3 seconds.
-    2. The device will clear its stored WiFi credentials and restart.
-    3. Follow the steps for the first-time WiFi setup using the captive portal.
-
-> [!CAUTION]
-> FTP is an insecure protocol. Only use this feature on a trusted network.
-
 <details>
 <summary>Customization</summary>
-## :art: Customization
 
-### :art: Theme
+### :art: Customization
+
+#### :art: Theme
 
 The LCD display uses the [Catppuccin](https://github.com/catppuccin/catppuccin) color theme. You can change the active theme by editing `include/catppuccin_colors.h`.
 
@@ -219,6 +196,31 @@ To change the theme, simply uncomment the block for the theme you wish to use an
 ...
 ```
 </details>
+
+
+## :rocket: Usage
+
+The device boots into **USB Mass Storage (MSC) mode** by default. You can switch between modes by pressing the onboard button or by using the web API.
+
+### :detective: Modes of Operation
+
+- **USB Mass Storage Mode (Default):**
+    1.  Plug the T-Dongle-S3 into your computer's USB port.
+    2. The device will connect to the configured Wi-Fi network. If no credentials are saved, it will create a Wi-Fi Access Point named "AutoConnectAP-Frame-Fi".
+    3. Connect to this AP. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
+    4.  The device will be recognized as a USB Mass Storage device (thumb drive), giving you direct access to the microSD card.
+
+- **FTP Server Mode:**
+    1.  Press the onboard button (single click) to switch from MSC to FTP mode.
+    2.  Use an FTP client to connect to the device's IP address (visible on the LCD display) using the `FTP_USER` and `FTP_PASSWORD` you set in `include/secrets.h`.
+
+- **Reset WiFi Settings:**
+    1. Press and hold the onboard button for 3 seconds.
+    2. The device will clear its stored WiFi credentials and restart.
+    3. Follow the steps for the first-time WiFi setup using the captive portal.
+
+> [!CAUTION]
+> FTP is an insecure protocol. Only use this feature on a trusted network.
 
 <details>
 <summary>LED Status Indicators</summary>
