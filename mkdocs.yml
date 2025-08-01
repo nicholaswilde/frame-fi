@@ -109,9 +109,8 @@ markdown_extensions:
   - pymdownx.mark
   - pymdownx.snippets:
       base_path:
-        - ./pve
-        - ./docker
-        - ./vm
+        - ./include
+        - ./src
         - ./docs
   - pymdownx.smartsymbols
   - pymdownx.superfences:
