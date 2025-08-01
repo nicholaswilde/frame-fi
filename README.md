@@ -59,8 +59,10 @@ mirror -R --delete --verbose --parallel=1 '<REMOTE_DIR>' '<LOCAL_DIR>';
 - **USB Mass Storage Mode:** In MSC mode, the device mounts the microSD card as a standard USB thumb drive, allowing for high-speed file transfers directly from your computer.
 - **Fast Data Transfer:** Utilizes the `SD_MMC` interface for the microSD card, offering significantly faster read/write speeds compared to the standard SPI interface.
 - **Dynamic WiFi Configuration:** Uses `WiFiManager` to create a captive portal for easy Wi-Fi setup without hardcoding credentials.
+- **Easy WiFi Reset:** Hold the button for 3 seconds to clear saved WiFi credentials and re-enter setup mode.
+- **Boot-up Screen:** Displays a welcome screen with the current firmware version on startup.
 - **LED Status Indicators:** A built-in LED provides at-a-glance status updates for different modes.
-- **LCD Display:** Displays relevant information on the LCD display depending on the mode. It also utilizes catppuccin color schemes.
+- **LCD Display:** Displays relevant information on the LCD display depending on the mode, including a bar graph showing SD card usage. It also utilizes catppuccin color schemes.
 
 ## :electric_plug: Hardware Requirements
 
@@ -170,13 +172,19 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
 
 - **USB Mass Storage Mode (Default):**
     1.  Plug the T-Dongle-S3 into your computer's USB port.
-    2. The device will connect to the configured Wi-Fi network. If no credentials are saved, it will create a Wi-Fi Access Point named "AutoConnectAP-T-Dongle".
+    2. The device will connect to the configured Wi-Fi network. If no credentials are saved, it will create a Wi-Fi Access Point named "AutoConnectAP-Frame-Fi".
     3. Connect to this AP. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
     4.  The device will be recognized as a USB Mass Storage device (thumb drive), giving you direct access to the microSD card.
 
 - **FTP Server Mode:**
-    1.  Press the onboard button to switch from MSC to FTP mode.
-    2.  Use an FTP client to connect to the device's IP address (visible in the Serial Monitor) using the `FTP_USER` and `FTP_PASSWORD` you set in `include/secrets.h`.
+    1.  Press the onboard button (single click) to switch from MSC to FTP mode.
+    2.  Use an FTP client to connect to the device's IP address (visible on the LCD display) using the `FTP_USER` and `FTP_PASSWORD` you set in `include/secrets.h`.
+
+- **Reset WiFi Settings:**
+    1. Press and hold the onboard button for 3 seconds.
+    2. The device will clear its stored WiFi credentials and restart.
+    3. Follow the steps for the first-time WiFi setup using the captive portal.
+
 > [!CAUTION]
 > FTP is an insecure protocol. Only use this feature on a trusted network.
 
@@ -189,7 +197,7 @@ The onboard LED provides visual feedback on the device's status:
 
 | Color  | Meaning                               |
 | :----: | :------------------------------------ |
-| :red_circle:    | Initializing on boot                  |
+| :yellow_circle:    | Initializing on boot                  |
 | :large_blue_circle:   | Connecting to Wi-Fi or in setup mode  |
 | :green_circle:  | USB Mass Storage (MSC) mode active    |
 | :orange_circle: | FTP mode active                       |
@@ -399,7 +407,7 @@ FTP_HOST="192.168.1.100" LOCAL_DIR="path/to/your/pictures" ./scripts/sync.sh
 
 ## :white_check_mark: To Do
 
-- [ ] Enable the LCD display to show:
+- [x] Enable the LCD display to show:
     - Wi-Fi information in AP mode.
     - IP address in FTP mode.
     - The current mode name.

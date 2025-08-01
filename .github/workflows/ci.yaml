@@ -39,6 +39,9 @@ jobs:
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
 
+      - name: Copy secrets
+        run: cp include/secrets.h.tmpl include/secrets.h
+
       - name: Build PlatformIO Project LILYGO-T-Dongle-S3
         run: pio run --environment ${{ env.PIO_ENV }}
 

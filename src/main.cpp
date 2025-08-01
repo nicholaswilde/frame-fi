@@ -73,6 +73,7 @@ void handleSwitchToMSC();
 void handleSwitchToFTP();
 void handleRestart();
 void toggleMode();
+void resetWifiSettings();
 void msc_init();
 void sd_init();
 void ftp_transfer_callback(FtpTransferOperation ftpOperation, const char* name, unsigned int transferredSize);
@@ -80,11 +81,12 @@ static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t 
 static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize);
 static bool onStartStop(uint8_t power_condition, bool start, bool load_eject);
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
-void drawHeader(const char* title);
+void drawHeader(const char* title, uint16_t bannerColor);
 void drawStorageInfo(int files, float totalSizeMB, float freeSizeMB);
 void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
-void drawUsbMscModeScreen(const char* mac, int files, int totalSizeMB, float freeSizeMB);
+void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
+void drawBootScreen();
 int countFiles(File dir);
 int countFilesInPath(const char *path);
 
@@ -108,6 +110,8 @@ void setup(){
     
   // --- Initialize Button ---
   button.attachClick(toggleMode);
+  button.setPressMs(3000); // 3 seconds
+  button.attachLongPressStop(resetWifiSettings);
 
   // --- Initialize TFT Display ---
   pinMode(38, OUTPUT);
@@ -115,6 +119,10 @@ void setup(){
   tft.setRotation(1); // Adjust rotation as needed
   tft.fillScreen(CATPPUCCIN_BASE);
   digitalWrite(38, 0);
+  
+  // --- Show boot screen ---
+  drawBootScreen();
+  delay(2000); // Keep boot screen visible for 2 seconds
   
   // --- Connect to WiFi ---
   connectToWiFi();
@@ -147,7 +155,7 @@ sd_init();
     f_getfree(MOUNT_POINT, &fre_clust, &fs);
     uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
     uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
-    drawUsbMscModeScreen(WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
+    drawUsbMscModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
   } else {
     HWSerial.println("\n❌ Failed to start in MSC mode. SD Card not found.");
   }
@@ -354,6 +362,17 @@ void connectToWiFi() {
  *----------------*/
 
 /**
+ * @brief Resets WiFi settings if the button is held for 3 seconds.
+ */
+void resetWifiSettings() {
+  HWSerial.println("Button held for 3 seconds. Resetting WiFi settings...");
+  WiFiManager wm;
+  wm.resetSettings();
+  HWSerial.println("WiFi settings reset. Restarting...");
+  ESP.restart();
+}
+
+/**
  * @brief Toggles between FTP and MSC modes when the button is pressed.
  */
 void toggleMode() {
@@ -419,7 +438,7 @@ void enterMscMode() {
     f_getfree(MOUNT_POINT, &fre_clust, &fs);
     uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
     uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
-    drawUsbMscModeScreen(WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
+    drawUsbMscModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
   } else {
     HWSerial.println("\n❌ Failed to switch to MSC mode. SD Card not found.");
   }
@@ -559,7 +578,7 @@ void ftp_transfer_callback(FtpTransferOperation ftpOperation, const char* name, 
  *---------------------*/
 
 /**
- * @brief Counts the number of files in a directory using VFS.
+ * @brief Counts the number of files in a directory recursively using VFS.
  */
 int countFilesInPath(const char *path) {
   DIR *dir = opendir(path);
@@ -570,8 +589,14 @@ int countFilesInPath(const char *path) {
   int count = 0;
   struct dirent *entry;
   while ((entry = readdir(dir)) != NULL) {
-    if (entry->d_type == DT_REG) { // DT_REG for file
+    if (entry->d_type == DT_REG) {
       count++;
+    } else if (entry->d_type == DT_DIR) {
+      if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+        char subpath[512];
+        snprintf(subpath, sizeof(subpath), "%s/%s", path, entry->d_name);
+        count += countFilesInPath(subpath);
+      }
     }
   }
   closedir(dir);
@@ -579,7 +604,7 @@ int countFilesInPath(const char *path) {
 }
 
 /**
- * @brief Counts the number of files in a directory.
+ * @brief Counts the number of files in a directory recursively.
  */
 int countFiles(File dir) {
   int count = 0;
@@ -589,7 +614,9 @@ int countFiles(File dir) {
       // no more files
       break;
     }
-    if (!entry.isDirectory()) {
+    if (entry.isDirectory()) {
+      count += countFiles(entry);
+    } else {
       count++;
     }
     entry.close();
@@ -600,8 +627,8 @@ int countFiles(File dir) {
 /**
  * @brief Draws the top header bar
  */
-void drawHeader(const char* title) {
-  tft.fillRect(0, 0, TFT_HEIGHT, 12, CATPPUCCIN_BLUE);
+void drawHeader(const char* title, uint16_t bannerColor) {
+  tft.fillRect(0, 0, TFT_HEIGHT, 12, bannerColor);
   tft.setTextColor(CATPPUCCIN_CRUST);
   tft.setTextSize(1);
   tft.drawCentreString(title, TFT_WIDTH, 2, 1); // x-center, y, font
@@ -615,12 +642,21 @@ void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB) {
   int y_pos = 53;
   int x_pos = 5;
 
+  // --- Calculate usage ---
+  float usedSizeMB = totalSizeMB - freeSizeMB;
+  float usedPercentage = (totalSizeMB > 0) ? (usedSizeMB / totalSizeMB) * 100 : 0;
+
+  // --- Convert to GB for display ---
+  float totalSizeGB = totalSizeMB / 1024.0;
+  float usedSizeGB = usedSizeMB / 1024.0;
+
+  // --- Draw storage text info ---
   tft.setCursor(x_pos, y_pos);
   tft.setTextColor(CATPPUCCIN_MAUVE);
   tft.print("Size:  ");
   tft.setTextColor(CATPPUCCIN_PEACH);
-  tft.print(totalSizeMB);
-  tft.print("MB");
+  tft.print(totalSizeGB, 2);
+  tft.print("GB");
 
   tft.setTextColor(CATPPUCCIN_MAUVE);
   tft.print(" Files: ");
@@ -630,10 +666,45 @@ void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB) {
 
   tft.setCursor(x_pos, y_pos);
   tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Free:  ");
+  tft.print("Used:  ");
   tft.setTextColor(CATPPUCCIN_PEACH);
-  tft.print(freeSizeMB, 0);
-  tft.print("MB");
+  tft.print(usedSizeGB, 2);
+  tft.print("GB (");
+  tft.print((int)usedPercentage);
+  tft.print("%) ");
+  y_pos += 12;
+
+  // --- Draw capacity bar ---
+  int bar_x = x_pos;
+  int bar_y = y_pos;
+  int bar_width = TFT_HEIGHT - (2 * x_pos); // Bar width spans the screen with padding
+  int bar_height = 8;
+  int filled_width = (bar_width * usedPercentage) / 100;
+
+  // --- Draw the bar background (empty part) ---
+  tft.drawRect(bar_x, bar_y, bar_width, bar_height, CATPPUCCIN_BASE);
+  // --- Draw the filled part of the bar ---
+  tft.fillRect(bar_x, bar_y, filled_width, bar_height, CATPPUCCIN_GREEN);
+}
+
+/**
+ * @brief Displays the boot-up screen.
+ */
+void drawBootScreen() {
+  tft.fillScreen(CATPPUCCIN_BASE);
+  drawHeader("FrameFi", CATPPUCCIN_BLUE);
+
+  int y_pos = 30;
+  int x_pos = tft.width() / 2; // Center horizontally
+
+  tft.setTextColor(CATPPUCCIN_TEXT);
+  tft.setTextSize(1);
+  tft.drawCentreString("Booting...", x_pos, y_pos, 2);
+  y_pos += 15;
+
+  tft.setTextSize(1);
+  tft.setTextColor(CATPPUCCIN_LAVENDER);
+  tft.drawCentreString("Version 0.1.0", x_pos, y_pos, 1);
 }
 
 /**
@@ -641,7 +712,7 @@ void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB) {
  */
 void drawApModeScreen(const char* ap_ssid, const char* ap_ip) {
   tft.fillScreen(CATPPUCCIN_BASE);
-  drawHeader("FrameFi Setup");
+  drawHeader("FrameFi Setup", CATPPUCCIN_YELLOW);
 
   // Left Column: Network Info
   int y_pos = 17;
@@ -675,7 +746,7 @@ void drawApModeScreen(const char* ap_ssid, const char* ap_ip) {
  */
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
   tft.fillScreen(CATPPUCCIN_BASE);
-  drawHeader("FrameFi");
+  drawHeader("FrameFi", CATPPUCCIN_GREEN);
 
   // Left Column: Network Info
   int y_pos = 17;
@@ -709,9 +780,9 @@ void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSize
 /**
  * @brief 
  */
-void drawUsbMscModeScreen(const char* mac, int files, int totalSizeMB, float freeSizeMB) {
+void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
   tft.fillScreen(CATPPUCCIN_BASE);
-  drawHeader("FrameFi");
+  drawHeader("FrameFi", CATPPUCCIN_MAUVE);
 
   // Left Column: Network Info
   int y_pos = 17;
@@ -727,7 +798,7 @@ void drawUsbMscModeScreen(const char* mac, int files, int totalSizeMB, float fre
   tft.setTextColor(CATPPUCCIN_MAUVE);
   tft.print("IP:    ");
   tft.setTextColor(CATPPUCCIN_YELLOW);
-  tft.print("N/A");
+  tft.print(ip);
   y_pos += 12;
 
   tft.setCursor(x_pos, y_pos);
