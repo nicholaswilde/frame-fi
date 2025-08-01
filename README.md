@@ -4,6 +4,10 @@
 
 FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any digital picture frame. It enables you to remotely manage your photo library via FTP or access the SD card directly in USB Mass Storage mode.
 
+## :book: Documentation
+
+Documentation can be found [here][2].
+
 ## :stopwatch: TL;DR
 
 **Secrets:** Create `include/secrets.h` and update variables.
@@ -68,3 +72,4 @@ This project is licensed under the [Apache License 2.0](./LICENSE).
 This project was started in 2025 by [Nicholas Wilde](https://github.com/nicholaswilde/).
 
 [1]: <https://lilygo.cc/products/t-dongle-s3>
+[2]: <https://nicholaswilde.io/frame-fi>
