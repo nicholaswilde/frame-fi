@@ -3,6 +3,8 @@ version: '3'
 
 vars:
   IP: "192.168.2.169"
+  IMAGE: nicholaswilde/mkdocs-material
+  PORT: 8000
 
 tasks:
   serve:
