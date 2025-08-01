@@ -17,7 +17,12 @@ exclude:
 
 # Page tree
 nav:
-  - Home: index.md 
+  - Home: index.md
+  - Hardware: hardware.md
+  - Software: software.md
+  - Getting Started: getting-started.md
+  - Usage: usage.md
+  - Contributing: contributing.md
 
 extra_css:
   - stylesheets/extra.css
