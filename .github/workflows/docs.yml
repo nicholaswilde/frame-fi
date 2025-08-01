@@ -6,6 +6,8 @@ on:  # yamllint disable-line rule:truthy
       - main
     paths:
       - '**.md'
+  workflow_dispatch:
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
