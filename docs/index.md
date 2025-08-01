@@ -76,3 +76,20 @@ mirror -R --delete --verbose --parallel=1 '<REMOTE_DIR>' '<LOCAL_DIR>';
 - **PlatformIO:** This project is built using the PlatformIO ecosystem. You can install it as a [VSCode Extension](https://platformio.org/install/ide?install=vscode) or use the [PlatformIO Core (CLI)](https://platformio.org/install/cli).
 - **Task (optional):** A task runner / build tool. Installation instructions can be found [here](https://taskfile.dev/installation/).
 
+## :bulb: Inspiration 
+
+This project was inspired by the following projects.
+
+- <https://github.com/espressif/arduino-esp32>
+- <https://github.com/Xinyuan-LilyGO/T-Dongle-S3>
+- <https://github.com/i-am-shodan/USBArmyKnife>
+</details>
+
+## :balance_scale: License
+
+This project is licensed under the [Apache License 2.0](./LICENSE).
+
+## :pencil: Author
+
+This project was started in 2025 by [Nicholas Wilde](https://github.com/nicholaswilde/).
+
