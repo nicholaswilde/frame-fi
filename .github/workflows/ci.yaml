@@ -22,9 +22,8 @@ jobs:
     steps:
       - name: "Create filename"
         id: basename
-        uses: step-security/change-string-case-action@v6
-        with:
-          string: frame-fi-${{ github.ref_name }}-${{ matrix.env }}
+        run: |
+          echo "BASENAME=$(frame-fi-${{ github.ref_name }}-${{ matrix.env }})" >> $GITHUB_ENV
 
       - name: "Checkout repository"
         uses: actions/checkout@v4
@@ -60,13 +59,13 @@ jobs:
         run: pio run --environment ${{ matrix.env }}
 
       - name: "Zip binaries"
-        run: zip -j ${{ steps.basename.outputs.lowercase }}.zip .pio/build/${{ matrix.env }}/*.bin
+        run: zip -j ${{ env.BASENAME }}.zip .pio/build/${{ matrix.env }}/*.bin
         
       - name: "Upload ${{ matrix.env }} artifacts"
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.basename.outputs.lowercase }}
-          path: ${{ steps.basename.outputs.lowercase }}.zip
+          name: ${{ env.BASENAME }}
+          path: ${{ env.BASENAME }}.zip
 
   # This job creates the release and attaches all artifacts
   release:
