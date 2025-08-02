@@ -51,11 +51,14 @@ jobs:
       - name: Build PlatformIO Project LILYGO-T-Dongle-S3
         run: pio run --environment ${{ matrix.env }}
 
+      - name: "Zip binaries"
+        run: zip -r ${{ matrix.env }}-Firmware-binaries.zip .pio/build/${{ matrix.env }}/*.bin
+        
       - name: "Upload LILYGO-T-Dongle-S3 artifacts"
         uses: actions/upload-artifact@v4
         with:
-          name: LILYGO-T-Dongle-S3-Firmware-binaries
-          path: .pio/build/${{ matrix.env }}/*.bin
+          name: ${{ matrix.env }}-Firmware-binaries
+          path: ${{ matrix.env }}-Firmware-binaries.zip
 
   # This job creates the release and attaches all artifacts
   release:
