@@ -17,9 +17,16 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      PIO_ENV: LILYGO-T-Dongle-S3
+      FILENAME: "${{ matrix.env }}"
 
     steps:
+
+      - name: "Create filename"
+        id: basename
+        uses: step-security/change-string-case-action@v6
+        with:
+          string: frame-fi-${{ github.ref_name }}-${{ matrix.env }}
+
       - name: "Checkout repository"
         uses: actions/checkout@v4
         with:
@@ -39,27 +46,28 @@ jobs:
           path: ~/.platformio/packages
           key: ${{ runner.os }}-${{ hashFiles('**/platformio.ini') }}
 
-      - uses: actions/setup-python@v5
+      - name: "Setup Python"
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: "Install PlatformIO Core"
         run: pip install --upgrade platformio
 
-      - name: Copy secrets
+      - name: "Copy secrets"
         run: cp include/secrets.h.tmpl include/secrets.h
 
       - name: "Build PlatformIO Project ${{ matrix.env }}"
         run: pio run --environment ${{ matrix.env }}
 
       - name: "Zip binaries"
-        run: zip -j frame-fi-${{ github.ref_name }}-${{ matrix.env }}.zip .pio/build/${{ matrix.env }}/*.bin
+        run: zip -j ${{ steps.basename.outputs.lowercase }}.zip .pio/build/${{ matrix.env }}/*.bin
         
       - name: "Upload ${{ matrix.env }} artifacts"
         uses: actions/upload-artifact@v4
         with:
-          name: frame-fi-${{ github.ref_name }}-${{ matrix.env }}
-          path: frame-fi-${{ github.ref_name }}-${{ matrix.env }}.zip
+          name: ${{ steps.basename.outputs.lowercase }}
+          path: ${{ steps.basename.outputs.lowercase }}.zip
 
   # This job creates the release and attaches all artifacts
   release:
@@ -82,7 +90,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ github.ref_name }} # Creates a unique tag name for the release
+          tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           body: "This is a draft release created by a GitHub Action."
           draft: true
