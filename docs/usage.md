@@ -214,10 +214,15 @@ If you don't want to build the project from source, you can flash a pre-compiled
 !!! code ""
 
       ```shell
-      esptool.py --chip esp32s3 --port <YOUR_SERIAL_PORT> --before default_reset --after hard_reset write_flash \
-      0x0000 bootloader.bin \
-      0x8000 partitions.bin \
-      0x10000 firmware.bin
+      esptool.py \
+          --chip esp32s3 \
+          --port <YOUR_SERIAL_PORT> \
+          --before default_reset \
+          --after hard_reset \
+          write_flash \
+          0x0000 bootloader.bin \
+          0x8000 partitions.bin \
+          0x10000 firmware.bin
       ```
 
 !!! tip
