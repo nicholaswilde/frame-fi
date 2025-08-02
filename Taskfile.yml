@@ -7,6 +7,10 @@ vars:
   PORT: 8000
 
 tasks:
+  export:
+    desc: Export the task list to task-list.txt
+    cmds:
+      - task -l > task-list.txt
   serve:
     desc: >-
       Start development server on http://0.0.0.0:{{ .PORT }} using

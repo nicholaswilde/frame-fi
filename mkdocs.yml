@@ -118,6 +118,7 @@ markdown_extensions:
         - ./src
         - ./docs
         - ./scripts
+        - ./
   - pymdownx.smartsymbols
   - pymdownx.superfences:
       custom_fences:

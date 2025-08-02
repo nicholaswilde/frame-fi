@@ -1,0 +1,22 @@
+task: Available tasks for this project:
+* build:                 Build the project
+* clean:                 Clean build files
+* decrypt:               Decrypt secrets
+* encrypt:               Encrypt secrets
+* export:                Export the task list to task-list.txt
+* ftp:                   Switch to FTP mode
+* fullclean:             Perform a full clean of build files
+* get:                   curl -X GET
+* init:                  Init the project
+* list-devices:          List connected serial devices
+* monitor:               Monitor the serial output
+* msc:                   Switch to MSC mode
+* ping:                  Ping the device
+* prune:                 Prune the system
+* reset:                 Reset the Dongle by flashing the default fimrware.
+* serve:                 Start development server on http://0.0.0.0:8000 using Docker and mkdocs-material
+* sync:                  Runs the sync script.
+* update-packages:       Update project dependencies
+* upload:                Upload the firmware
+* uploadm:               Upload the firmware and monitor
+* verbose-build:         Build with verbose output

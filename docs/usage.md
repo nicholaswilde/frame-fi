@@ -1,6 +1,6 @@
 ---
 tags:
-  - Usage
+  - usage
 ---
 # :pencil: Usage
 
@@ -292,3 +292,38 @@ This command syncs a specific local directory to the device, overriding any sett
     ```shell
     FTP_HOST="192.168.1.100" LOCAL_DIR="path/to/your/pictures" ./sync.sh
     ```
+
+## :desktop_computer: Display
+
+The LCD display uses the TFT_eSPI library. Displays are shown in each mode. 
+
+- **USB Mass Storage Mode:**
+
+    1. Mode
+    2. IP
+    3. MAC
+    4. Size
+    5. Files
+    6. Used
+
+- **FTP Server Mode:**
+
+    1. Mode
+    2. IP
+    3. MAC
+    4. Size
+    5. Files
+    6. Used
+
+- **AP Mode:**
+
+    1. Mode
+    2. IP
+    3. MAC
+    4. Size
+    5. Files
+    6. Used
+
+## :link: References
+
+- <https://lftp.yar.ru/>

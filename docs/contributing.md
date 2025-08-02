@@ -62,3 +62,7 @@ Key points:
 ## :balance_scale: License
 
 By contributing, you agree that your contributions will be licensed under the [Apache License 2.0](./LICENSE).
+
+## :link: References
+
+- <https://github.com/nicholaswilde/frame-fi/blob/main/LICENSE>

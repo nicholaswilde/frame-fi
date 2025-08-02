@@ -129,3 +129,8 @@ To change the theme, simply uncomment the block for the theme you wish to use an
     ```cpp
     --8<-- "catppuccin_colors.h"
     ```
+
+## :link: References
+
+- <https://github.com/catppuccin/catppuccin>
+- <https://github.com/getsops/sops>

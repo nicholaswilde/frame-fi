@@ -7,6 +7,8 @@ tags:
 [![task](https://img.shields.io/badge/Task-Enabled-brightgreen?style=for-the-badge&logo=task&logoColor=white)](https://taskfile.dev/#/)
 [![test](https://img.shields.io/github/actions/workflow/status/nicholaswilde/frame-fi/test.yaml?label=test&style=for-the-badge&branch=main)](https://github.com/nicholaswilde/frame-fi/actions/workflows/test.yaml)
 [![docs](https://img.shields.io/github/actions/workflow/status/nicholaswilde/frame-fi/docs.yaml?label=docs&style=for-the-badge&branch=main)](https://github.com/nicholaswilde/frame-fi/actions/workflows/docs.yaml)
+[![ci](https://img.shields.io/github/actions/workflow/status/nicholaswilde/frame-fi/ci.yaml?label=ci&style=for-the-badge&branch=main)](https://github.com/nicholaswilde/frame-fi/actions/workflows/ci.yaml)
+
 
 FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any digital picture frame. It enables you to remotely manage your photo library via FTP or access the SD card directly in USB Mass Storage mode.
 
@@ -91,8 +93,8 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
     - IP address in FTP mode.
     - The current mode name.
     - File count, used space percentage, and free space on the SD card in USB MSC mode. https://github.com/nicholaswilde/frame-fi/issues/7
-- [ ] Use hard-coded Wi-Fi credentials in addition to the captive portal. https://github.com/nicholaswilde/frame-fi/issues/9
-- [ ] Implement versioning and releasing of `bin` files via Github Actions. https://github.com/nicholaswilde/frame-fi/issues/8
+- [x] Use hard-coded Wi-Fi credentials in addition to the captive portal. https://github.com/nicholaswilde/frame-fi/issues/9
+- [x] Implement versioning and releasing of `bin` files via Github Actions. https://github.com/nicholaswilde/frame-fi/issues/8
 
 ## :scales: License
 
@@ -104,6 +106,7 @@ This project was started in 2025 by [Nicholas Wilde][2].
 
 ## :link: References
 
+- <https://docs.frame-fi.sh>
 - <https://github.com/espressif/arduino-esp32>
 - <https://github.com/Xinyuan-LilyGO/T-Dongle-S3>
 - <https://github.com/i-am-shodan/USBArmyKnife>

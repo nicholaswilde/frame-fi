@@ -1,5 +1,4 @@
 /******************************************************************************
- *
  * FrameFi
  * ----------------
  * transforms a LILYGO T-Dongle-S3 into a wireless adapter for a digital
@@ -69,14 +68,14 @@ void setupSerial();
 void enterMscMode();
 bool enterFtpMode();
 void handleStatus();
-void handleSwitchToMSC();
-void handleSwitchToFTP();
+void handleSwitchToMsc();
+void handleSwitchToFtp();
 void handleRestart();
 void toggleMode();
 void resetWifiSettings();
-void msc_init();
-void sd_init();
-void ftp_transfer_callback(FtpTransferOperation ftpOperation, const char* name, unsigned int transferredSize);
+void mscInit();
+void sdInit();
+void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, unsigned int transferredSize);
 static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize);
 static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize);
 static bool onStartStop(uint8_t power_condition, bool start, bool load_eject);
@@ -90,17 +89,15 @@ void drawBootScreen();
 int countFiles(File dir);
 int countFilesInPath(const char *path);
 
-/*--------------------*
- * --- Main Logic --- *
- *--------------------*/
+// --- Main Logic ---
 
 /**
- * @brief 
+ * @brief Initializes the device and all its components.
  */
 void setup(){
   setupSerial();
 
-  // --- Initialize the LED pin as an output
+  // --- Initialize the LED pin as an output ---
   FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, NUM_LEDS);
   FastLED.setBrightness(BRIGHTNESS);
 
@@ -133,15 +130,15 @@ void setup(){
   HWSerial.println("HTTP server started.");
   
   // --- Start in MSC mode ---
-sd_init();
+sdInit();
   HWSerial.println("SD Card initialized for MSC.");
 
   if (card) {
-    // Turn the LED on
+    // --- Turn the LED on ---
     leds[0] = CRGB::Green;
     FastLED.show();
     USB.onEvent(usbEventCallback);
-    msc_init();
+    mscInit();
     USBSerial.begin();
     USB.begin();
     HWSerial.println("\n✅ Started in MSC mode. Connect USB to a computer.");
@@ -161,6 +158,9 @@ sd_init();
   }
 }
 
+/**
+ * @brief Main loop that runs repeatedly.
+ */
 void loop(){
   button.tick();
   server.handleClient();
@@ -169,12 +169,10 @@ void loop(){
   }
 }
 
-/*----------------*
- * --- Serial --- *
- *----------------*/
+// --- Serial Communications ---
 
 /**
- * @brief 
+ * @brief Initializes the serial communication.
  */
 void setupSerial() {
   Serial.begin(115200);
@@ -188,14 +186,12 @@ void setupSerial() {
   delay(100);
 }
 
-/*----------------*
- * --- USB MSC --- *
- *----------------*/
+// --- USB Mass Storage Control ---
 
 /**
- * @brief 
+ * @brief Initializes the SD card.
  */
-void sd_init(void) {
+void sdInit(void) {
   esp_err_t ret;
   const char mount_point[] = MOUNT_POINT;
   esp_vfs_fat_sdmmc_mount_config_t mount_config = {.format_if_mount_failed = false, .max_files = 5, .allocation_unit_size = 16 * 1024};
@@ -251,7 +247,7 @@ void sd_init(void) {
 }
 
 /**
- * @brief 
+ * @brief Writes data to the SD card.
  */
 static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize) {
   // HWSerial.printf("MSC WRITE: lba: %u, offset: %u, bufsize: %u\n", lba, offset, bufsize);
@@ -261,7 +257,7 @@ static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t 
 }
 
 /**
- * @brief 
+ * @brief Reads data from the SD card.
  */
 static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize) {
   // HWSerial.printf("MSC READ: lba: %u, offset: %u, bufsize: %u\n", lba, offset, bufsize);
@@ -271,7 +267,7 @@ static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufs
 }
 
 /**
- * @brief 
+ * @brief Handles the start and stop of the MSC device.
  */
 static bool onStartStop(uint8_t power_condition, bool start, bool load_eject) {
   HWSerial.printf("MSC START/STOP: power: %u, start: %u, eject: %u\n", power_condition, start, load_eject);
@@ -279,7 +275,7 @@ static bool onStartStop(uint8_t power_condition, bool start, bool load_eject) {
 }
 
 /**
- * @brief 
+ * @brief Handles USB events.
  */
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (event_base == ARDUINO_USB_EVENTS) {
@@ -295,9 +291,9 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
 }
 
 /**
- * @brief 
+ * @brief Initializes the USB MSC device.
  */
-void msc_init(void) {
+void mscInit(void) {
   MSC.vendorID("LILYGO");       // max 8 chars
   MSC.productID("T-Dongle-S3"); // max 16 chars
   MSC.productRevision("1.0");   // max 4 chars
@@ -308,9 +304,7 @@ void msc_init(void) {
   MSC.begin(card->csd.capacity, card->csd.sector_size);
 }
 
-/*---------------------*
- * --- WiFiManager --- *
- *---------------------*/
+// --- WiFi ---
 
 /**
  * @brief Connects to the WiFi network and provides visual feedback.
@@ -322,7 +316,7 @@ void connectToWiFi() {
 
   // wm.resetSettings(); // wipe settings
   
-  // Set up a callback for when the captive portal is entered
+  // --- Set up a callback for when the captive portal is entered ---
   wm.setAPCallback([](WiFiManager *myWiFiManager) {
     HWSerial.println("Entered config mode");
     HWSerial.println(WiFi.softAPIP());
@@ -332,7 +326,7 @@ void connectToWiFi() {
     drawApModeScreen(myWiFiManager->getConfigPortalSSID().c_str(), WiFi.softAPIP().toString().c_str());
   });
 
-  // Blink blue while connecting
+  // --- Blink blue while connecting ---
   unsigned long startConnecting = millis();
   bool connecting = true;
   while (connecting && (millis() - startConnecting < 180000)) { // 3-minute timeout
@@ -357,9 +351,7 @@ void connectToWiFi() {
   }
 }
 
-/*----------------*
- * --- Button --- *
- *----------------*/
+// --- Button Actions ---
 
 /**
  * @brief Resets WiFi settings if the button is held for 3 seconds.
@@ -384,17 +376,15 @@ void toggleMode() {
   }
 }
 
-/*-------------------*
- * --- Webserver --- *
- *-------------------*/
+// --- Web Server ---
 
 /**
  * @brief Defines the web server API endpoints.
  */
 void setupApiRoutes() {
   server.on("/", HTTP_GET, handleStatus);
-  server.on("/msc", HTTP_POST, handleSwitchToMSC);
-  server.on("/ftp", HTTP_POST, handleSwitchToFTP);
+  server.on("/msc", HTTP_POST, handleSwitchToMsc);
+  server.on("/ftp", HTTP_POST, handleSwitchToFtp);
   server.on("/restart", HTTP_POST, handleRestart);
 }
 
@@ -406,26 +396,26 @@ void enterMscMode() {
   
   HWSerial.println("\n--- Entering MSC Mode ---");
 
-  // Turn the LED on
+  // --- Turn the LED on ---
   leds[0] = CRGB::Green;
   FastLED.show();
     
-  // Stop FTP Server
+  // --- Stop FTP Server ---
   ftpServer.end();
   HWSerial.println("FTP Server stopped.");
 
-  // Unmount SD_MMC
+  // --- Unmount SD_MMC ---
   SD_MMC.end();
   HWSerial.println("SD Card unmounted from SD_MMC.");
 
-  // Initialize SD for MSC
-  sd_init();
+  // --- Initialize SD for MSC ---
+  sdInit();
   HWSerial.println("SD Card initialized for MSC.");
 
-  // Initialize USB MSC
+  // --- Initialize USB MSC ---
   if (card) {
     USB.onEvent(usbEventCallback);
-    msc_init();
+    mscInit();
     USBSerial.begin();
     USB.begin();
     HWSerial.println("\n✅ Switched to MSC mode. Connect USB to a computer.");
@@ -453,22 +443,22 @@ bool enterFtpMode() {
 
   HWSerial.println("\n--- Entering Application (FTP) Mode ---");
 
-  // Turn the LED on
+  // --- Turn the LED on ---
   leds[0] = CRGB::Orange;
   FastLED.show();
   
-  // Stop USB MSC
+  // --- Stop USB MSC ---
   MSC.end();
   USBSerial.end();
   HWSerial.println("USB MSC stopped.");
 
-  // Unmount SD from VFS
+  // --- Unmount SD from VFS ---
   if (card) {
     esp_vfs_fat_sdcard_unmount(MOUNT_POINT, card);
     HWSerial.println("SD Card unmounted from VFS.");
   }
 
-  // Initialize SD_MMC
+  // --- Initialize SD_MMC ---
   SD_MMC.setPins(SD_MMC_CLK_PIN, SD_MMC_CMD_PIN, SD_MMC_D0_PIN, SD_MMC_D1_PIN, SD_MMC_D2_PIN, SD_MMC_D3_PIN);
   if (!SD_MMC.begin(MOUNT_POINT, true)) {
     HWSerial.println("Card Mount Failed");
@@ -476,9 +466,9 @@ bool enterFtpMode() {
   }
   HWSerial.println("SD Card mounted with SD_MMC.");
 
-  // Start FTP Server
+  // --- Start FTP Server ---
   ftpServer.begin(FTP_USER, FTP_PASSWORD);
-  ftpServer.setTransferCallback(ftp_transfer_callback);
+  ftpServer.setTransferCallback(ftpTransferCallback);
   HWSerial.println("FTP Server started.");
 
   HWSerial.println("\n✅ Application mode active.");
@@ -507,7 +497,7 @@ void handleStatus() {
 /**
  * @brief Handles the POST request to switch to MSC mode.
  */
-void handleSwitchToMSC() {
+void handleSwitchToMsc() {
   if (isInMscMode) {
     String jsonResponse = "{\"status\":\"no_change\", \"message\":\"Already in MSC mode.\"}";
     server.send(200, "application/json", jsonResponse);
@@ -527,7 +517,7 @@ void handleSwitchToMSC() {
 /**
  * @brief Handles the POST request to switch back to Application (FTP) mode.
  */
-void handleSwitchToFTP() {
+void handleSwitchToFtp() {
   if (isInMscMode) {
     if (enterFtpMode()) {
       String jsonResponse = "{\"status\":\"success\", \"message\":\"Switched to Application (FTP) mode.\"}";
@@ -553,29 +543,28 @@ void handleRestart() {
   ESP.restart();
 }
 
+// --- FTP Server ---
+
 /**
- * @brief Callback function for FTP transfers. Blinks the LED during transfer
- *        and leaves it solid on when complete.
+ * @brief Callback function for FTP transfers.
  */
-void ftp_transfer_callback(FtpTransferOperation ftpOperation, const char* name, unsigned int transferredSize) {
+void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, unsigned int transferredSize) {
   if (ftpOperation == FTP_UPLOAD || ftpOperation == FTP_DOWNLOAD) {
-    // Blink LED by turning it OFF briefly, then back ON.
-    // This leaves the LED in the ON state after the pulse.
+    // --- Blink LED by turning it OFF briefly, then back ON ---
+    // --- This leaves the LED in the ON state after the pulse ---
     leds[0] = CRGB::Black;
     FastLED.show();
     delay(50);
     leds[0] = CRGB::Orange;
     FastLED.show();
   } else if (ftpOperation == FTP_UPLOAD_STOP || ftpOperation == FTP_DOWNLOAD_STOP || ftpOperation == FTP_TRANSFER_ERROR) {
-    // Ensure LED is solid orange after any transfer completion or error.
+    // --- Ensure LED is solid orange after any transfer completion or error ---
     leds[0] = CRGB::Orange;
     FastLED.show();
   }
 }
 
-/*---------------------*
- * --- LCD Display --- *
- *---------------------*/
+// --- File System ---
 
 /**
  * @brief Counts the number of files in a directory recursively using VFS.
@@ -611,7 +600,7 @@ int countFiles(File dir) {
   while (true) {
     File entry = dir.openNextFile();
     if (!entry) {
-      // no more files
+      // --- no more files ---
       break;
     }
     if (entry.isDirectory()) {
@@ -624,8 +613,10 @@ int countFiles(File dir) {
   return count;
 }
 
+// --- Display ---
+
 /**
- * @brief Draws the top header bar
+ * @brief Draws the top header bar.
  */
 void drawHeader(const char* title, uint16_t bannerColor) {
   tft.fillRect(0, 0, TFT_HEIGHT, 12, bannerColor);
@@ -636,7 +627,7 @@ void drawHeader(const char* title, uint16_t bannerColor) {
 }
 
 /**
- * @brief Draws the right column with storage statistics
+ * @brief Draws the right column with storage statistics.
  */
 void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB) {
   int y_pos = 53;
@@ -708,13 +699,13 @@ void drawBootScreen() {
 }
 
 /**
- * @brief 
+ * @brief Displays the AP mode screen.
  */
 void drawApModeScreen(const char* ap_ssid, const char* ap_ip) {
   tft.fillScreen(CATPPUCCIN_BASE);
   drawHeader("FrameFi Setup", CATPPUCCIN_YELLOW);
 
-  // Left Column: Network Info
+  // --- Left Column: Network Info ---
   int y_pos = 17;
   int x_pos = 5;
 
@@ -742,13 +733,13 @@ void drawApModeScreen(const char* ap_ssid, const char* ap_ip) {
 }
 
 /**
- * @brief
+ * @brief Displays the FTP mode screen.
  */
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
   tft.fillScreen(CATPPUCCIN_BASE);
   drawHeader("FrameFi", CATPPUCCIN_GREEN);
 
-  // Left Column: Network Info
+  // --- Left Column: Network Info ---
   int y_pos = 17;
   int x_pos = 5;
   tft.setCursor(x_pos, y_pos);
@@ -773,18 +764,18 @@ void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSize
   tft.setTextColor(CATPPUCCIN_YELLOW);
   tft.print(mac);
 
-  // Right Column: Storage Info
+  // --- Right Column: Storage Info ---
   drawStorageInfo(files, totalSizeMB, freeSizeMB);
 }
 
 /**
- * @brief 
+ * @brief Displays the USB MSC mode screen.
  */
 void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
   tft.fillScreen(CATPPUCCIN_BASE);
   drawHeader("FrameFi", CATPPUCCIN_MAUVE);
 
-  // Left Column: Network Info
+  // --- Left Column: Network Info ---
   int y_pos = 17;
   int x_pos = 5;
   tft.setCursor(x_pos, y_pos);
@@ -807,6 +798,6 @@ void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalS
   tft.setTextColor(CATPPUCCIN_YELLOW);
   tft.print(mac);
 
-  // Right Column: Storage Info
+  // --- Right Column: Storage Info ---
   drawStorageInfo(files, totalSizeMB, freeSizeMB);
 }
