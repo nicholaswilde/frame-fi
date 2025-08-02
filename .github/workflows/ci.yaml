@@ -16,11 +16,10 @@ jobs:
           - LILYGO-T-Dongle-S3
     runs-on: ubuntu-latest
     
-    env:
-      FILENAME: "${{ matrix.env }}"
+    # env:
+      # FILENAME: "${{ matrix.env }}"
 
     steps:
-
       - name: "Create filename"
         id: basename
         uses: step-security/change-string-case-action@v6
