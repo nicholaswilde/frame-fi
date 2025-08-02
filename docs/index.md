@@ -12,10 +12,9 @@ tags:
 
 FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any digital picture frame. It enables you to remotely manage your photo library via FTP or access the SD card directly in USB Mass Storage mode.
 
-
 ## :rocket: TL;DR
 
-**Secrets:** Create `include/secrets.h` and update variables.
+- **Secrets:** Create `include/secrets.h` and update variables.
 
 !!! code ""
 
@@ -23,9 +22,9 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
     cp includes/secrets.h.tmpl includes/secrets.h
     ```
 
-**Computer:** Plug in the LILYGO T-Dongle S3 to a computer USB port while holding the button to put it into boot mode.
+- **Computer:** Plug in the LILYGO T-Dongle S3 to a computer USB port while holding the button to put it into boot mode.
 
-**Upload Sketch:** Upload the sketch to the dongle.
+- **Upload Sketch:** Upload the sketch to the dongle.
 
 !!! code ""
 
@@ -41,11 +40,11 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
         pio run --target upload
         ```
 
-**Wi-Fi Credentials:** Connect to `AutoConnectAP-Frame-Fi` access point and enter WiFi credentials. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
+- **Wi-Fi Credentials:** Connect to `AutoConnectAP-Frame-Fi` access point and enter WiFi credentials. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
 
-**Digital Picture Frame:** Plug in dongle to digital picture frame.
+- **Digital Picture Frame:** Plug in dongle to digital picture frame.
 
-**Mode Switching:** A button or API call switches between FTP and USB Mass Storage modes.
+- **Mode Switching:** A button or API call switches between FTP and USB Mass Storage modes.
 
 !!! code ""
 
@@ -61,7 +60,7 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
         curl -X POST http://<DEVICE_IP>/msc
         ```
 
-**FTP Mode:** Upload pictures to the dongle via FTP using `lftp` or `scripts/sync.sh`.
+- **FTP Mode:** Upload pictures to the dongle via FTP using `lftp` or `scripts/sync.sh`.
 
 !!! code ""
 
