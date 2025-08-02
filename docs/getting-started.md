@@ -60,10 +60,18 @@ To decrypt the files, run the following command:
 
 !!! code ""
 
-    ```shell
-    sops -d include/secrets.h.enc > include/secrets.h
-    sops -d --input-type dotenv --output-type dotenv scripts/.env.enc > scripts/.env
-    ```
+    === "Task"
+    
+        ```shell
+        task decrypt
+        ```
+        
+    === "SOPS"
+    
+        ```shell
+        sops -d include/secrets.h.enc > include/secrets.h
+        sops -d --input-type dotenv --output-type dotenv scripts/.env.enc > scripts/.env
+        ```
 
 #### Encrypting Secrets
 
@@ -74,10 +82,18 @@ To encrypt the files after making changes, run the following command:
 
 !!! code ""
 
-    ```shell
-    sops -e include/secrets.h > include/secrets.h.enc
-    sops -e --input-type dotenv --output-type dotenv scripts/.env > scripts/.env.enc
-    ```
+    === "Task"
+    
+        ```shell
+        task encrypt
+        ```
+        
+    === "SOPS"
+    
+        ```shell
+        sops -e include/secrets.h > include/secrets.h.enc
+        sops -e --input-type dotenv --output-type dotenv scripts/.env > scripts/.env.enc
+        ```
 
 ### :art: Customization
 
