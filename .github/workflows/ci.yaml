@@ -22,7 +22,8 @@ jobs:
     steps:
       - name: "Create filename"
         run: |
-          echo "BASENAME=${frame-fi-${{ github.ref_name }}-${{ matrix.env }},,}" >> $GITHUB_ENV
+          VAR="frame-fi-${{ github.ref_name }}-${{ matrix.env }}"
+          echo "BASENAME=${VAR,,}" >> $GITHUB_ENV
 
       - name: "Checkout repository"
         uses: actions/checkout@v4
