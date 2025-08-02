@@ -10,8 +10,12 @@ permissions:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        env:
+          - LILYGO-T-Dongle-S3
     runs-on: ubuntu-latest
-
+    
     env:
       PIO_ENV: LILYGO-T-Dongle-S3
 
@@ -20,7 +24,7 @@ jobs:
         with:
           submodules: 'true'
 
-      - name: Cache pip
+      - name: "Cache pip"
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
@@ -28,7 +32,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Cache PlatformIO Core
+      - name: "Cache PlatformIO Core"
         uses: actions/cache@v4
         with:
           path: ~/.platformio/packages
@@ -45,20 +49,35 @@ jobs:
         run: cp include/secrets.h.tmpl include/secrets.h
 
       - name: Build PlatformIO Project LILYGO-T-Dongle-S3
-        run: pio run --environment ${{ env.PIO_ENV }}
+        run: pio run --environment ${{ matrix.env }}
 
-      - name: Upload LILYGO-T-Dongle-S3 artifacts
+      - name: "Upload LILYGO-T-Dongle-S3 artifacts"
         uses: actions/upload-artifact@v4
         with:
           name: LILYGO-T-Dongle-S3-Firmware-binaries
-          path: .pio/build/${{ env.PIO_ENV }}/*.bin
+          path: .pio/build/${{ matrix.env }}/*.bin
 
+  # This job creates the release and attaches all artifacts
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+      
+      - name: "Download all artifacts"
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-binaries.zip"
+          path: dist
+          
       - name: "Create Draft Release"
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ github.run_id }} # Creates a unique tag name for the release
-          name: Release ${{ github.run_id }}
+          tag_name: ${{ github.ref_name }} # Creates a unique tag name for the release
+          name: ${{ github.ref_name }}
           body: "This is a draft release created by a GitHub Action."
-          draft: true # 👈 This is the key to creating a draft
+          draft: true
           prerelease: false
+          files: dist/*
