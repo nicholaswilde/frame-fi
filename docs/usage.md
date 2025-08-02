@@ -19,9 +19,10 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
     2. Use an FTP client to connect to the device's IP address (visible on the LCD display) using the `FTP_USER` and `FTP_PASSWORD` you set in `include/secrets.h`.
 
 - **Reset WiFi Settings:**
-    1. Press and hold the onboard button for 3 seconds.
-    2. The device will clear its stored WiFi credentials and restart.
-    3. Follow the steps for the first-time WiFi setup using the captive portal.
+    1. Press and hold the onboard button for at least 3 seconds.
+    2. The reset is triggered upon releasing the button.
+    3. The device will clear its stored WiFi credentials and restart.
+    4. Follow the steps for the first-time WiFi setup using the captive portal.
 
 !!! warning
     FTP is an insecure protocol. Only use this feature on a trusted network.
@@ -329,6 +330,28 @@ This command syncs a specific local directory to the device, overriding any sett
 ## :desktop_computer: Display
 
 The LCD display uses the [TFT_eSPI][5] library to show device status and network information. The content of the display changes depending on the current operating mode.
+
+### :compass: Display Orientation
+
+You can change the screen orientation by modifying the `platformio.ini` file.
+
+1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
+2.  **Find `DISPLAY_ORIENTATION`**: Locate the `build_flags` section and find the `-D DISPLAY_ORIENTATION` line.
+3.  **Change the Value**: Change the value to one of the following:
+    - `0`: Portrait
+    - `1`: Landscape (Default)
+    - `2`: Portrait Inverted
+    - `3`: Landscape Inverted
+4.  **Rebuild and Upload**: Save the file, then rebuild and upload the firmware for the change to take effect.
+
+!!! abstract "platformio.ini"
+    ```ini
+    [env]
+    ...
+    build_flags =
+      ...
+      -D DISPLAY_ORIENTATION=1
+    ```
 
 !!! note
 

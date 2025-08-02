@@ -84,6 +84,7 @@ void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
 void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
 void drawBootScreen();
+void drawResetWiFiSettingsScreen();
 int countFiles(File dir);
 int countFilesInPath(const char *path);
 
@@ -111,7 +112,7 @@ void setup(){
   // --- Initialize TFT Display ---
   pinMode(38, OUTPUT);
   tft.init();
-  tft.setRotation(1); // Adjust rotation as needed
+  tft.setRotation(DISPLAY_ORIENTATION); // Adjust rotation as needed
   tft.fillScreen(CATPPUCCIN_BASE);
   digitalWrite(38, 0);
   
@@ -356,6 +357,7 @@ void connectToWiFi() {
  * @brief Resets WiFi settings if the button is held for 3 seconds.
  */
 void resetWifiSettings() {
+  drawResetWiFiSettingsScreen();
   HWSerial.println("Button held for 3 seconds. Resetting WiFi settings...");
   WiFiManager wm;
   wm.resetSettings();
@@ -690,12 +692,32 @@ void drawBootScreen() {
   tft.setTextColor(CATPPUCCIN_TEXT);
   tft.setTextSize(1);
   tft.drawCentreString("Booting...", x_pos, y_pos, 2);
-  y_pos += 15;
+  y_pos += 25;
 
   tft.setTextSize(1);
   tft.setTextColor(CATPPUCCIN_LAVENDER);
   String versionString = String(APP_VERSION);
   tft.drawCentreString(versionString.c_str(), x_pos, y_pos, 1);
+}
+
+/**
+ * @brief Displays the resetting wifi settings screen.
+ */
+void drawResetWiFiSettingsScreen() {
+  tft.fillScreen(CATPPUCCIN_BASE);
+  drawHeader("FrameFi", CATPPUCCIN_RED);
+
+  int y_pos = 30;
+  int x_pos = tft.width() / 2; // Center horizontally
+
+  tft.setTextColor(CATPPUCCIN_TEXT);
+  tft.setTextSize(1);
+  tft.drawCentreString("Resetting WiFi...", x_pos, y_pos, 2);
+  y_pos += 25;
+
+  tft.setTextSize(1);
+  tft.setTextColor(CATPPUCCIN_LAVENDER);
+  tft.drawCentreString("Restarting...", x_pos, y_pos, 1);
 }
 
 /**
