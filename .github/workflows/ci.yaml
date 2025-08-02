@@ -20,7 +20,8 @@ jobs:
       PIO_ENV: LILYGO-T-Dongle-S3
 
     steps:
-      - uses: actions/checkout@v4
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
         with:
           submodules: 'true'
 
@@ -42,23 +43,23 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install PlatformIO Core
+      - name: "Install PlatformIO Core"
         run: pip install --upgrade platformio
 
       - name: Copy secrets
         run: cp include/secrets.h.tmpl include/secrets.h
 
-      - name: Build PlatformIO Project LILYGO-T-Dongle-S3
+      - name: "Build PlatformIO Project ${{ matrix.env }}"
         run: pio run --environment ${{ matrix.env }}
 
       - name: "Zip binaries"
-        run: zip -j frame-fi-${{ github.ref_name }}-${{ toLower(matrix.env) }}.zip .pio/build/${{ matrix.env }}/*.bin
+        run: zip -j frame-fi-${{ github.ref_name }}-${{ matrix.env }}.zip .pio/build/${{ matrix.env }}/*.bin
         
-      - name: "Upload LILYGO-T-Dongle-S3 artifacts"
+      - name: "Upload ${{ matrix.env }} artifacts"
         uses: actions/upload-artifact@v4
         with:
-          name: frame-fi-${{ github.ref_name }}-${{ toLower(matrix.env) }}
-          path: frame-fi-${{ github.ref_name }}-${{ toLower(matrix.env) }}.zip
+          name: frame-fi-${{ github.ref_name }}-${{ matrix.env }}
+          path: frame-fi-${{ github.ref_name }}-${{ matrix.env }}.zip
 
   # This job creates the release and attaches all artifacts
   release:
