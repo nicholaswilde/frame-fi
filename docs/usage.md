@@ -124,7 +124,7 @@ The device hosts a simple web server that allows you to check status and switch 
 
 ### :hammer_and_wrench: Building
 
-This project uses a `Taskfile.yml` for common development tasks. After installing [Task](https://taskfile.dev/), you can run the following commands.
+This project uses a `Taskfile.yml` for common development tasks. After installing [Task][1], you can run the following commands.
 
 **Build the project:**
 
@@ -188,12 +188,12 @@ This project uses a `Taskfile.yml` for common development tasks. After installin
         task -l
         ```
 
-### :inbox_tray: Flashing the Firmware (WIP [#8](https://github.com/nicholaswilde/frame-fi/issues/8))
+### :inbox_tray: Flashing the Firmware (WIP [#2](https://github.com/nicholaswilde/frame-fi/issues/8))
 
 If you don't want to build the project from source, you can flash a pre-compiled release directly to your device.
 
 1.  **Download the Latest Release:**
-    - Go to the [Releases page](https://github.com/nicholaswilde/frame-fi/releases).
+    - Go to the [Releases page][3].
     - Download the `LILYGO-T-Dongle-S3-Firmware-binaries.zip` file from the latest release.
     - Unzip the archive. It will contain `firmware.bin`, `partitions.bin`, and `bootloader.bin`.
 
@@ -230,7 +230,7 @@ If you don't want to build the project from source, you can flash a pre-compiled
 
 ### :arrow_right_hook: Synchronizing Files
 
-The `scripts/sync.sh` script provides an easy way to synchronize a local directory with the device's microSD card over FTP. It uses [lftp](https://lftp.yar.ru/) to mirror the contents, deleting any files on the device that are not present locally.
+The `scripts/sync.sh` script provides an easy way to synchronize a local directory with the device's microSD card over FTP. It uses [lftp][4] to mirror the contents, deleting any files on the device that are not present locally.
 
 #### :package: Dependencies
 
@@ -295,35 +295,48 @@ This command syncs a specific local directory to the device, overriding any sett
 
 ## :desktop_computer: Display
 
-The LCD display uses the TFT_eSPI library. Displays are shown in each mode. 
+The LCD display uses the [TFT_eSPI][5] library to show device status and network information. The content of the display changes depending on the current operating mode.
 
-- **USB Mass Storage Mode:**
+!!! note
 
-    1. Mode
-    2. IP
-    3. MAC
-    4. Size
-    5. Files
-    6. Used
+    === "USB Mass Storage Mode"
 
-- **FTP Server Mode:**
+        When in USB MSC mode, the display shows:
 
-    1. Mode
-    2. IP
-    3. MAC
-    4. Size
-    5. Files
-    6. Used
+        - **Mode:** USB MSC
+        - **IP:** The device's current IP address.
+        - **MAC:** The device's MAC address.
+        - **Size:** The total size of the microSD card.
+        - **Files:** The number of files on the microSD card.
+        - **Used:** The amount of used space on the microSD card.
 
-- **AP Mode:**
+    === "FTP Server Mode"
 
-    1. Mode
-    2. IP
-    3. MAC
-    4. Size
-    5. Files
-    6. Used
+        When in FTP mode, the display shows:
+
+        - **Mode:** FTP Server
+        - **IP:** The device's current IP address.
+        - **MAC:** The device's MAC address.
+        - **Size:** The total size of the microSD card.
+        - **Files:** The number of files on the microSD card.
+        - **Used:** The amount of used space on the microSD card.
+
+    === "Wi-Fi AP Mode"
+
+        When in Wi-Fi Access Point mode for configuration, the display shows:
+
+        - **Mode:** Wi-Fi AP
+        - **IP:** The AP's IP address (usually `192.168.4.1`).
+        - **MAC:** The device's MAC address.
+        - **SSID:** The name of the Access Point (`AutoConnectAP-Frame-Fi`).
 
 ## :link: References
 
-- <https://lftp.yar.ru/>
+- <[lftp][4]>
+- <[TFT_eSPI][5]>
+
+[1]: https://taskfile.dev/
+[2]: https://github.com/nicholaswilde/frame-fi/issues/8
+[3]: https://github.com/nicholaswilde/frame-fi/releases
+[4]: https://lftp.yar.ru/
+[5]: https://github.com/Bodmer/TFT_eSPI

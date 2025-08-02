@@ -1,10 +1,12 @@
 ---
 name: PlatformIO CI
-
-on:
+on:  # yamllint disable-line rule:truthy
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*'
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -48,5 +50,15 @@ jobs:
       - name: Upload LILYGO-T-Dongle-S3 artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: LILYGO-T-Dongle-S3 Firmware binaries
+          name: LILYGO-T-Dongle-S3-Firmware-binaries
           path: .pio/build/${{ env.PIO_ENV }}/*.bin
+
+      - name: "Create Draft Release"
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.run_id }} # Creates a unique tag name for the release
+          name: Release ${{ github.run_id }}
+          body: "This is a draft release created by a GitHub Action."
+          draft: true # 👈 This is the key to creating a draft
+          prerelease: false
