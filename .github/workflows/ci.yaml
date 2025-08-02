@@ -52,7 +52,7 @@ jobs:
         run: pio run --environment ${{ matrix.env }}
 
       - name: "Zip binaries"
-        run: zip -r ${{ matrix.env }}-Firmware-binaries.zip .pio/build/${{ matrix.env }}/*.bin
+        run: zip -j ${{ matrix.env }}-Firmware-binaries.zip .pio/build/${{ matrix.env }}/*.bin
         
       - name: "Upload LILYGO-T-Dongle-S3 artifacts"
         uses: actions/upload-artifact@v4
