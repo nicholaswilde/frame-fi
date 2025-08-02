@@ -51,7 +51,7 @@ theme:
   language: en
   icon:
     repo: fontawesome/brands/github
-    logo: fontawesome/solid/house-chimney
+    logo: material/wifi-sync
   features:
     - navigation.top
     - navigation.tracking
