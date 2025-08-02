@@ -96,11 +96,13 @@ The device hosts a simple web server that allows you to check status and switch 
         ```
 
     === "No Change (200 OK)"
+
         ```json
         {"status":"no_change","message":"Already in Application (FTP) mode."}
         ```
 
     === "Error (500 Internal Server Error)"
+
         ```json
         {"status":"error","message":"Failed to re-initialize SD card."}
         ```
@@ -125,22 +127,29 @@ The device hosts a simple web server that allows you to check status and switch 
 This project uses a `Taskfile.yml` for common development tasks. After installing [Task](https://taskfile.dev/), you can run the following commands.
 
 **Build the project:**
+
 !!! code ""
+
     === "Task"
         ```shell
         task build
         ```
+
     === "PlatformIO"
         ```shell
         pio run
         ```
 
 **Upload the firmware:**
+
 !!! code ""
+
     === "Task"
+
         ```shell
         task upload
         ```
+  
     === "PlatformIO"
         ```shell
         pio run --target upload
@@ -163,14 +172,18 @@ This project uses a `Taskfile.yml` for common development tasks. After installin
         ```shell
         task clean
         ```
+
     === "PlatformIO"
         ```shell
         pio run --target clean
         ```
 
 **List all available tasks:**
+
 !!! code ""
+
     === "Task"
+    
         ```shell
         task -l
         ```
@@ -186,14 +199,20 @@ If you don't want to build the project from source, you can flash a pre-compiled
 
 2.  **Install esptool:**
     If you have PlatformIO installed, you already have `esptool.py`. If not, you can install it with pip:
+
+!!! code ""
+
     ```shell
     pip install esptool
     ```
 
-3.  **Flash the Device:**
+4.  **Flash the Device:**
     - Put your T-Dongle-S3 into bootloader mode. You can usually do this by holding down the `BOOT` button (the one on the side), plugging it into your computer, and then releasing the button.
     - Find the serial port of your device. It will be something like `COM3` on Windows, `/dev/ttyUSB0` on Linux, or `/dev/cu.usbserial-XXXX` on macOS.
     - Run the following command, replacing `<YOUR_SERIAL_PORT>` with your device's port:
+
+!!! code ""
+
       ```shell
       esptool.py --chip esp32s3 --port <YOUR_SERIAL_PORT> --before default_reset --after hard_reset write_flash \
       0x0000 bootloader.bin \
@@ -213,10 +232,12 @@ The `scripts/sync.sh` script provides an easy way to synchronize a local directo
 You must have `lftp` installed on your system.
 
 !!! code ""
+
     === "Debian/Ubuntu"
         ```shell
         sudo apt install lftp
         ```
+
     === "macOS (Homebrew)"
         ```shell
         brew install lftp
