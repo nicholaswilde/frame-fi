@@ -155,6 +155,9 @@ This project uses a `Taskfile.yml` for common development tasks. After installin
         pio run --target upload
         ```
 
+!!! tip "Rebooting the Device"
+    After uploading the firmware, you may need to unplug the dongle and plug it back in to reboot it and apply the changes.
+
 **Monitor the serial output:**
 !!! code ""
     === "Task"
@@ -192,11 +195,11 @@ This project uses a `Taskfile.yml` for common development tasks. After installin
 
 If you don't want to build the project from source, you can flash a pre-compiled release directly to your device.
 
-1. **Download the Latest Release:**
+- **Download the Latest Release:**
     - Go to the [Releases page][3].
-    - Download the `LILYGO-T-Dongle-S3-Firmware-binaries.zip` file from the latest release.
+    - Download the zip file from the [latest release][6].
     - Unzip the archive. It will contain `firmware.bin`, `partitions.bin`, and `bootloader.bin`.
-    - Download the `boot_app0.bin` file.
+    - Optionally, download the `boot_app0.bin` file from [espressive/arduino-esp32][2].
 
 !!! code ""
 
@@ -204,7 +207,10 @@ If you don't want to build the project from source, you can flash a pre-compiled
     wget https://github.com/espressif/arduino-esp32/raw/refs/heads/master/tools/partitions/boot_app0.bin
     ```
 
-1. **Install esptool:**
+!!! warning
+    The version of `boot_app0.bin` is critical. Using a version that is incompatible with your ESP32-S3's silicon revision can result in a soft-bricked device that is difficult to recover. The link provided is for the master branch of the `arduino-esp32` repository and should be compatible with most devices.
+
+- **Install esptool:**
     If you have PlatformIO installed, you already have `esptool.py`. If not, you can install it with pip:
 
 !!! code ""
@@ -213,28 +219,44 @@ If you don't want to build the project from source, you can flash a pre-compiled
     pip install esptool
     ```
 
-1. **Flash the Device:**
+- **Flash the Device:**
     - Put your T-Dongle-S3 into bootloader mode. You can usually do this by holding down the `BOOT` button (the one on the side), plugging it into your computer, and then releasing the button.
     - Find the serial port of your device. It will be something like `COM3` on Windows, `/dev/ttyUSB0` on Linux, or `/dev/cu.usbserial-XXXX` on macOS.
     - Run the following command, replacing `<YOUR_SERIAL_PORT>` with your device's port:
 
-!!! warning
-    The version of `boot_app0.bin` is critical. Using a version that is incompatible with your ESP32-S3's silicon revision can result in a soft-bricked device that is difficult to recover. The link provided is for the master branch of the `arduino-esp32` repository and should be compatible with most devices.
-
 !!! code ""
 
-      ```shell
-      esptool.py \
-          --chip esp32s3 \
-          --port <YOUR_SERIAL_PORT> \
-          --before default_reset \
-          --after hard_reset \
-          write_flash \
-          0x0000 bootloader.bin \
-          0xe000 boot_app0.bin \
-          0x8000 partitions.bin \
-          0x10000 firmware.bin
-      ```
+    === "Without boot_app0"
+
+        ```shell
+        esptool.py \
+            --chip esp32s3 \
+            --port <YOUR_SERIAL_PORT> \
+            --before default_reset \
+            --after hard_reset \
+            write_flash \
+            0x0000 bootloader.bin \
+            0x8000 partitions.bin \
+            0x10000 firmware.bin
+        ```
+
+    === "With boot_app0"
+
+        ```shell
+        esptool.py \
+            --chip esp32s3 \
+            --port <YOUR_SERIAL_PORT> \
+            --before default_reset \
+            --after hard_reset \
+            write_flash \
+            0x0000 bootloader.bin \
+            0xe000 boot_app0.bin \
+            0x8000 partitions.bin \
+            0x10000 firmware.bin
+        ```
+
+1. **Reboot the Device:**
+    - After the flashing process is complete, unplug the dongle from your computer and plug it back in to reboot it.
 
 !!! tip
     If you have PlatformIO installed, you can use the `pio run --target upload` command, which handles the flashing process automatically.
@@ -346,7 +368,9 @@ The LCD display uses the [TFT_eSPI][5] library to show device status and network
 - <[lftp][4]>
 - <[TFT_eSPI][5]>
 
-[1]: https://taskfile.dev/
-[3]: https://github.com/nicholaswilde/frame-fi/releases
-[4]: https://lftp.yar.ru/
-[5]: https://github.com/Bodmer/TFT_eSPI
+[1]: <https://taskfile.dev/>
+[2]: <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>
+[3]: <https://github.com/nicholaswilde/frame-fi/releases>
+[4]: <https://lftp.yar.ru/>
+[5]: <https://github.com/Bodmer/TFT_eSPI>
+[6]: <https://github.com/nicholaswilde/frame-fi/releases/latest>

@@ -5,8 +5,6 @@
  * picture frame, enabling you to upload pictures and manage files remotely.
  *
  * @author Nicholas Wilde, 0xb299a622
- * @date 25 Jul 2025
- * @version 0.1.0
  *
  *****************************************************************************/ 
  
@@ -696,7 +694,7 @@ void drawBootScreen() {
 
   tft.setTextSize(1);
   tft.setTextColor(CATPPUCCIN_LAVENDER);
-  String versionString = "Version " + String(APP_VERSION);
+  String versionString = String(APP_VERSION);
   tft.drawCentreString(versionString.c_str(), x_pos, y_pos, 1);
 }
 

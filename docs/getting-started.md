@@ -45,11 +45,11 @@ The microSD card must be formatted as **FAT32**.
     ```
     
 !!! note
-    This project uses `WiFiManager` to handle Wi-Fi connections via a captive portal, so you don't need to hardcode your network credentials. The `WIFI_SSID` and `WIFI_PASSWORD` fields in `secrets.h` are placeholders for a potential future feature and are not currently used.
+    This project uses [`WiFiManager`][1] to handle Wi-Fi connections via a captive portal, so you don't need to hardcode your network credentials. The `WIFI_SSID` and `WIFI_PASSWORD` fields in `secrets.h` are placeholders for a potential future feature and are not currently used.
 
 ### :lock: Secrets Management
 
-This project uses [sops](https://github.com/getsops/sops) for encrypting and decrypting secrets. The following files are encrypted:
+This project uses [sops][2] for encrypting and decrypting secrets. The following files are encrypted:
 
 - `include/secrets.h`
 - `scripts/.env`
@@ -110,6 +110,9 @@ To change the theme, simply uncomment the block for the theme you wish to use an
 3.  Find the `Macchiato` theme block and uncomment it.
 4.  Rebuild and upload the firmware.
 
+!!! tip "Rebooting the Device"
+    After uploading the firmware, you may need to unplug the dongle and plug it back in to reboot it and apply the changes.
+
 !!! abstract "include/catppuccin_colors.h"
 
     ```cpp
@@ -134,3 +137,7 @@ To change the theme, simply uncomment the block for the theme you wish to use an
 
 - <https://github.com/catppuccin/catppuccin>
 - <https://github.com/getsops/sops>
+- <https://github.com/tzapu/WiFiManager>
+
+[1]: <https://github.com/tzapu/WiFiManager>
+[2]: <https://github.com/getsops/sops>

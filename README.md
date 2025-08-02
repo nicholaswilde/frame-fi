@@ -16,15 +16,15 @@ Documentation can be found [here][2].
 
 ## :stopwatch: TL;DR
 
-**Secrets:** Create `include/secrets.h` and update variables.
+- **Secrets:** Create `include/secrets.h` and update variables.
 
 ```shell
 cp includes/secrets.h.tmpl includes/secrets.h
 ```
 
-**Computer:** Plug in the LILYGO T-Dongle S3 to a computer USB port while holding the button to put it into boot mode.
+- **Computer:** Plug in the LILYGO T-Dongle S3 to a computer USB port while holding the button to put it into boot mode.
 
-**Upload Sketch:** Upload the sketch to the dongle.
+- **Upload Sketch:** Upload the sketch to the dongle.
 
 ```shell
 task upload
@@ -35,12 +35,13 @@ or
 ```shell
 pio run --target upload
 ```
+- **Reboot the Device:** Unplug the dongle from your computer and plug it back in to reboot it.
 
-**Wi-Fi Credentials:** Connect to `AutoConnectAP-Frame-Fi` access point and enter WiFi credentials. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
+- **Wi-Fi Credentials:** Connect to `AutoConnectAP-Frame-Fi` access point and enter WiFi credentials. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
 
-**Digital Picture Frame:** Plug in dongle to digital picture frame.
+- **Digital Picture Frame:** Plug in dongle to digital picture frame.
 
-**Mode Switching:** A button or API call switches between FTP and USB Mass Storage modes.
+- **Mode Switching:** A button or API call switches between FTP and USB Mass Storage modes.
 
 ```sh
 curl -X POST http://<DEVICE_IP>/ftp
@@ -50,7 +51,7 @@ curl -X POST http://<DEVICE_IP>/ftp
 curl -X POST http://<DEVICE_IP>/msc
 ```
 
-**FTP Mode:** Upload pictures to the dongle via FTP using `lftp` or `scripts/sync.sh`.
+- **FTP Mode:** Upload pictures to the dongle via FTP using `lftp` or `scripts/sync.sh`.
 
 ```shell
 lftp -c "
