@@ -183,6 +183,7 @@ void setupSerial() {
     }
   }
   HWSerial.setDebugOutput(true);
+  HWSerial.println(APP_VERSION);
   delay(100);
 }
 
@@ -695,7 +696,8 @@ void drawBootScreen() {
 
   tft.setTextSize(1);
   tft.setTextColor(CATPPUCCIN_LAVENDER);
-  tft.drawCentreString("Version 0.1.0", x_pos, y_pos, 1);
+  String versionString = "Version " + String(APP_VERSION);
+  tft.drawCentreString(versionString.c_str(), x_pos, y_pos, 1);
 }
 
 /**
