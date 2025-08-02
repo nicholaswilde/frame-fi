@@ -80,4 +80,4 @@ jobs:
           body: "This is a draft release created by a GitHub Action."
           draft: true
           prerelease: false
-          files: dist/*
+          files: dist/**/*
