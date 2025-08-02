@@ -27,17 +27,19 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 
 **Upload Sketch:** Upload the sketch to the dongle.
 
-=== "Task"
+!!! code ""
 
-    ```shell
-    task upload
-    ```
+    === "Task"
 
-=== "PlatformIO"
+        ```shell
+        task upload
+        ```
 
-    ```shell
-    pio run --target upload
-    ```
+    === "PlatformIO"
+
+        ```shell
+        pio run --target upload
+        ```
 
 **Wi-Fi Credentials:** Connect to `AutoConnectAP-Frame-Fi` access point and enter WiFi credentials. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
 
