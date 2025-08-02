@@ -188,7 +188,7 @@ This project uses a `Taskfile.yml` for common development tasks. After installin
         task -l
         ```
 
-### :inbox_tray: Flashing the Firmware
+### :inbox_tray: Flashing the Firmware (WIP [#8](https://github.com/nicholaswilde/frame-fi/issues/8))
 
 If you don't want to build the project from source, you can flash a pre-compiled release directly to your device.
 
