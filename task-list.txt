@@ -14,6 +14,7 @@ task: Available tasks for this project:
 * ping:                  Ping the device
 * prune:                 Prune the system
 * reset:                 Reset the Dongle by flashing the default fimrware.
+* restart:               Restart the device
 * serve:                 Start development server on http://0.0.0.0:8000 using Docker and mkdocs-material
 * sync:                  Runs the sync script.
 * update-packages:       Update project dependencies

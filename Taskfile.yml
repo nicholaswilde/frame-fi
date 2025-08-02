@@ -36,6 +36,10 @@ tasks:
     desc: Switch to FTP mode
     cmds:
       - curl -X POST http://{{.IP}}/ftp
+  restart:
+    desc: Restart the device
+    cmds:
+      - curl -X POST http://{{.IP}}/restart
   get:
     desc: curl -X GET
     cmds:
