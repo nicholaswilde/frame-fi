@@ -6,17 +6,17 @@ tags:
 
 The device boots into **USB Mass Storage (MSC) mode** by default. You can switch between modes by pressing the onboard button or by using the web API.
 
-### :detective: Modes of Operation
+## :detective: Modes of Operation
 
 - **USB Mass Storage Mode (Default):**
-    1.  Plug the T-Dongle-S3 into your computer's USB port.
+    1. Plug the T-Dongle-S3 into your computer's USB port.
     2. The device will connect to the configured Wi-Fi network. If no credentials are saved, it will create a Wi-Fi Access Point named "AutoConnectAP-Frame-Fi".
-    3. Connect to this AP. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
-    4.  The device will be recognized as a USB Mass Storage device (thumb drive), giving you direct access to the microSD card.
+    3. Connect to this AP. If the captive portal does not open automatically, navigate to <http://192.168.4.1> in your web browser to configure Wi-Fi.
+    4. The device will be recognized as a USB Mass Storage device (thumb drive), giving you direct access to the microSD card.
 
 - **FTP Server Mode:**
-    1.  Press the onboard button (single click) to switch from MSC to FTP mode.
-    2.  Use an FTP client to connect to the device's IP address (visible on the LCD display) using the `FTP_USER` and `FTP_PASSWORD` you set in `include/secrets.h`.
+    1. Press the onboard button (single click) to switch from MSC to FTP mode.
+    2. Use an FTP client to connect to the device's IP address (visible on the LCD display) using the `FTP_USER` and `FTP_PASSWORD` you set in `include/secrets.h`.
 
 - **Reset WiFi Settings:**
     1. Press and hold the onboard button for 3 seconds.
@@ -26,7 +26,7 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
 !!! warning
     FTP is an insecure protocol. Only use this feature on a trusted network.
 
-### :art: LED Status Indicators
+## :art: LED Status Indicators
 
 The onboard LED provides visual feedback on the device's status:
 
@@ -37,7 +37,7 @@ The onboard LED provides visual feedback on the device's status:
 | :green_circle:  | USB Mass Storage (MSC) mode active    |
 | :orange_circle: | FTP mode active                       |
 
-### :globe_with_meridians: Web API
+## :globe_with_meridians: Web API
 
 The device hosts a simple web server that allows you to check status and switch modes.
 
@@ -114,7 +114,7 @@ The device hosts a simple web server that allows you to check status and switch 
     ```sh
     curl -X POST http://<DEVICE_IP>/restart
     ```
-    
+
 !!! code "Example Response:"
 
     === "Success (200 OK)"
@@ -122,7 +122,7 @@ The device hosts a simple web server that allows you to check status and switch 
         {"status":"success","message":"Restarting device..."}
         ```
 
-### :hammer_and_wrench: Building
+## :hammer_and_wrench: Building
 
 This project uses a `Taskfile.yml` for common development tasks. After installing [Task][1], you can run the following commands.
 
@@ -188,16 +188,23 @@ This project uses a `Taskfile.yml` for common development tasks. After installin
         task -l
         ```
 
-### :inbox_tray: Flashing the Firmware (WIP [#2](https://github.com/nicholaswilde/frame-fi/issues/8))
+## :inbox_tray: Flashing the Firmware
 
 If you don't want to build the project from source, you can flash a pre-compiled release directly to your device.
 
-1.  **Download the Latest Release:**
+1. **Download the Latest Release:**
     - Go to the [Releases page][3].
     - Download the `LILYGO-T-Dongle-S3-Firmware-binaries.zip` file from the latest release.
     - Unzip the archive. It will contain `firmware.bin`, `partitions.bin`, and `bootloader.bin`.
+    - Download the `boot_app0.bin` file.
 
-2.  **Install esptool:**
+!!! code ""
+
+    ```shell
+    wget https://github.com/espressif/arduino-esp32/raw/refs/heads/master/tools/partitions/boot_app0.bin
+    ```
+
+1. **Install esptool:**
     If you have PlatformIO installed, you already have `esptool.py`. If not, you can install it with pip:
 
 !!! code ""
@@ -206,10 +213,13 @@ If you don't want to build the project from source, you can flash a pre-compiled
     pip install esptool
     ```
 
-4.  **Flash the Device:**
+1. **Flash the Device:**
     - Put your T-Dongle-S3 into bootloader mode. You can usually do this by holding down the `BOOT` button (the one on the side), plugging it into your computer, and then releasing the button.
     - Find the serial port of your device. It will be something like `COM3` on Windows, `/dev/ttyUSB0` on Linux, or `/dev/cu.usbserial-XXXX` on macOS.
     - Run the following command, replacing `<YOUR_SERIAL_PORT>` with your device's port:
+
+!!! warning
+    The version of `boot_app0.bin` is critical. Using a version that is incompatible with your ESP32-S3's silicon revision can result in a soft-bricked device that is difficult to recover. The link provided is for the master branch of the `arduino-esp32` repository and should be compatible with most devices.
 
 !!! code ""
 
@@ -221,6 +231,7 @@ If you don't want to build the project from source, you can flash a pre-compiled
           --after hard_reset \
           write_flash \
           0x0000 bootloader.bin \
+          0xe000 boot_app0.bin \
           0x8000 partitions.bin \
           0x10000 firmware.bin
       ```
@@ -228,11 +239,11 @@ If you don't want to build the project from source, you can flash a pre-compiled
 !!! tip
     If you have PlatformIO installed, you can use the `pio run --target upload` command, which handles the flashing process automatically.
 
-### :arrow_right_hook: Synchronizing Files
+## :arrow_right_hook: Synchronizing Files
 
 The `scripts/sync.sh` script provides an easy way to synchronize a local directory with the device's microSD card over FTP. It uses [lftp][4] to mirror the contents, deleting any files on the device that are not present locally.
 
-#### :package: Dependencies
+### :package: Dependencies
 
 You must have `lftp` installed on your system.
 
@@ -248,7 +259,7 @@ You must have `lftp` installed on your system.
         brew install lftp
         ```
 
-#### :gear: Configuration
+### :gear: Configuration
 
 There are two ways to configure the script:
 
@@ -259,7 +270,7 @@ There are two ways to configure the script:
     ```shell
     cp scripts/.env.tmpl scripts/.env
     ```
-    
+
 - Edit `scripts/.env` with your device's IP address and other settings.
 
 !!! abstract "scripts/.env"
@@ -272,10 +283,10 @@ There are two ways to configure the script:
 
     You can override the `.env` file settings by passing environment variables directly.
 
-#### :pencil: Usage
+### :pencil: Script Usage
 
-1.  Make sure the device is in **FTP Server Mode**.
-2.  Run the script from the scripts directory:
+1. Make sure the device is in **FTP Server Mode**.
+2. Run the script from the scripts directory:
 
 !!! code "./scripts directory"
 
@@ -336,7 +347,6 @@ The LCD display uses the [TFT_eSPI][5] library to show device status and network
 - <[TFT_eSPI][5]>
 
 [1]: https://taskfile.dev/
-[2]: https://github.com/nicholaswilde/frame-fi/issues/8
 [3]: https://github.com/nicholaswilde/frame-fi/releases
 [4]: https://lftp.yar.ru/
 [5]: https://github.com/Bodmer/TFT_eSPI

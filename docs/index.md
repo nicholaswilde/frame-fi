@@ -90,7 +90,6 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 ## :white_check_mark: To Do
 
 - [ ] Use hard-coded Wi-Fi credentials in addition to the captive portal. ([#9](https://github.com/nicholaswilde/frame-fi/issues/9))
-- [ ] Implement versioning and releasing of `bin` files via Github Actions. ([#8](https://github.com/nicholaswilde/frame-fi/issues/8))
 
 ## :scales: License
 
