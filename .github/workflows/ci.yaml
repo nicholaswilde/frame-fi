@@ -52,13 +52,13 @@ jobs:
         run: pio run --environment ${{ matrix.env }}
 
       - name: "Zip binaries"
-        run: zip -j ${{ matrix.env }}-Firmware-binaries.zip .pio/build/${{ matrix.env }}/*.bin
+        run: zip -j frame-fi-${{ github.ref_name }}-${{ toLower(matrix.env) }}.zip .pio/build/${{ matrix.env }}/*.bin
         
       - name: "Upload LILYGO-T-Dongle-S3 artifacts"
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.env }}-Firmware-binaries
-          path: ${{ matrix.env }}-Firmware-binaries.zip
+          name: frame-fi-${{ github.ref_name }}-${{ toLower(matrix.env) }}
+          path: frame-fi-${{ github.ref_name }}-${{ toLower(matrix.env) }}.zip
 
   # This job creates the release and attaches all artifacts
   release:
@@ -71,7 +71,7 @@ jobs:
       - name: "Download all artifacts"
         uses: actions/download-artifact@v4
         with:
-          pattern: "*-binaries*"
+          pattern: "frame-fi-*"
           path: dist
 
       - name: "list files"
