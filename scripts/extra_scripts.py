@@ -24,32 +24,32 @@ env.Append(BUILD_FLAGS=[f'-DAPP_VERSION=\\"{firmware_version}\\"'])
 # --- Catppuccin Theme Generation ---
 palettes = {
     'mocha': {
-        'ROSEWATER': '0xF73B', 'FLAMINGO': '0xF67A', 'PINK': '0xF61C', 'MAUVE': '0xCD5F',
-        'RED': '0xF455', 'MAROON': '0xEBB0', 'PEACH': '0xF8A8', 'YELLOW': '0xF72D',
-        'GREEN': '0xA72C', 'TEAL': '0x9771', 'SKY': '0x867E', 'SAPPHIRE': '0x755E',
-        'BLUE': '0x853F', 'LAVENDER': '0xB57F', 'TEXT': '0xCCDE', 'BASE': '0x18E5',
-        'CRUST': '0x10A3'
+        'ROSEWATER': '0xf71b', 'FLAMINGO': '0xf679', 'PINK': '0xf61c', 'MAUVE': '0xcd3e',
+        'RED': '0xf455', 'MAROON': '0xed15', 'PEACH': '0xfd90', 'YELLOW': '0xff15',
+        'GREEN': '0xa714', 'TEAL': '0x971a', 'SKY': '0x8efd', 'SAPPHIRE': '0x763d',
+        'BLUE': '0x8dbf', 'LAVENDER': '0xb5ff', 'TEXT': '0xcebe', 'BASE': '0x18e5',
+        'CRUST': '0x1083'
     },
     'macchiato': {
-        'ROSEWATER': '0xF73B', 'FLAMINGO': '0xF67A', 'PINK': '0xF61C', 'MAUVE': '0xCD5F',
-        'RED': '0xF126', 'MAROON': '0xE4AF', 'PEACH': '0xF468', 'YELLOW': '0xF6E8',
-        'GREEN': '0xA668', 'TEAL': '0x96B0', 'SKY': '0x959D', 'SAPPHIRE': '0x853D',
-        'BLUE': '0x84DF', 'LAVENDER': '0xB53F', 'TEXT': '0xCE7E', 'BASE': '0x2127',
-        'CRUST': '0x10A2'
+        'ROSEWATER': '0xf6da', 'FLAMINGO': '0xf638', 'PINK': '0xf5fc', 'MAUVE': '0xc51e',
+        'RED': '0xec32', 'MAROON': '0xecd4', 'PEACH': '0xf54f', 'YELLOW': '0xeeb3',
+        'GREEN': '0xa6d2', 'TEAL': '0x8eb9', 'SKY': '0x96bc', 'SAPPHIRE': '0x7e3c',
+        'BLUE': '0x8d7e', 'LAVENDER': '0xb5ff', 'TEXT': '0xce9e', 'BASE': '0x2127',
+        'CRUST': '0x18c4'
     },
     'frappe': {
-        'ROSEWATER': '0xF77B', 'FLAMINGO': '0xF69A', 'PINK': '0xF61C', 'MAUVE': '0xCAFF',
-        'RED': '0xE948', 'MAROON': '0xE52E', 'PEACH': '0xEF08', 'YELLOW': '0xEEC8',
-        'GREEN': '0xA5A9', 'TEAL': '0x9E2D', 'SKY': '0x8D5E', 'SAPPHIRE': '0x7D3D',
-        'BLUE': '0x8C9E', 'LAVENDER': '0xB97E', 'TEXT': '0xD5DA', 'BASE': '0x3186',
-        'CRUST': '0x2124'
+        'ROSEWATER': '0xf6b9', 'FLAMINGO': '0xedf7', 'PINK': '0xf5dc', 'MAUVE': '0xccfc',
+        'RED': '0xe410', 'MAROON': '0xecd3', 'PEACH': '0xecee', 'YELLOW': '0xe652',
+        'GREEN': '0xa691', 'TEAL': '0x8657', 'SKY': '0x9e9b', 'SAPPHIRE': '0x861b',
+        'BLUE': '0x8d5d', 'LAVENDER': '0xbdde', 'TEXT': '0xc69e', 'BASE': '0x31a8',
+        'CRUST': '0x2126'
     },
     'latte': {
-        'ROSEWATER': '0xF77C', 'FLAMINGO': '0xF69B', 'PINK': '0xEA9B', 'MAUVE': '0x8C7F',
-        'RED': '0xD20A', 'MAROON': '0xE2EB', 'PEACH': '0xFE69', 'YELLOW': '0xDFC8',
-        'GREEN': '0x4549', 'TEAL': '0x156B', 'SKY': '0x059D', 'SAPPHIRE': '0x2479',
-        'BLUE': '0x1C9F', 'LAVENDER': '0x743F', 'TEXT': '0x4A69', 'BASE': '0xEFE9',
-        'CRUST': '0xD5EB'
+        'ROSEWATER': '0xde4f', 'FLAMINGO': '0xddce', 'PINK': '0xeade', 'MAUVE': '0x89ff',
+        'RED': '0xd067', 'MAROON': '0xe24a', 'PEACH': '0xfb01', 'YELLOW': '0xde43',
+        'GREEN': '0x4505', 'TEAL': '0x1493', 'SKY': '0x053c', 'SAPPHIRE': '0x24fb',
+        'BLUE': '0x1b3e', 'LAVENDER': '0x745f', 'TEXT': '0x4a6d', 'BASE': '0xef7e',
+        'CRUST': '0xde1d'
     }
 }
 
