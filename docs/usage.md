@@ -394,6 +394,26 @@ You can completely enable or disable the LCD screen backlight by modifying the `
       -D LCD_ENABLED=1
     ```
 
+### :art: Theme
+
+You can customize the color scheme of the display by selecting a Catppuccin theme in the `platformio.ini` file.
+
+1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
+2.  **Find `custom_catppuccin_theme`**: Locate the `[env]` section and find the `custom_catppuccin_theme` option.
+3.  **Change the Value**: Change the value to one of the following:
+    - `Mocha` (Default)
+    - `Macchiato`
+    - `Frappe`
+    - `Latte`
+4.  **Rebuild and Upload**: Save the file, then rebuild and upload the firmware for the change to take effect.
+
+!!! abstract "platformio.ini"
+    ```ini
+    [env]
+    ...
+    custom_catppuccin_theme = Mocha
+    ```
+
 !!! note
 
     === "USB Mass Storage Mode"
