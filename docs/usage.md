@@ -64,7 +64,7 @@ You can adjust the brightness of the status LED by modifying the `platformio.ini
 
 The device hosts a simple web server that allows you to check status and switch modes.
 
-**`GET /`**: Returns the current mode.
+**`GET /`**: Returns the current mode, display status, and SD card information.
 
 !!! code ""
 
@@ -75,7 +75,18 @@ The device hosts a simple web server that allows you to check status and switch 
 !!! code "Example Response"
 
     ```json
-    {"mode":"USB MSC"}
+    {
+      "mode": "USB MSC",
+      "display": {
+        "status": "on",
+        "orientation": 1
+      },
+      "sd_card": {
+        "used_space": 1234567890,
+        "total_space": 9876543210,
+        "file_count": 42
+      }
+    }
     ```
 
 **`POST /msc`**: Switches the device to USB Mass Storage (MSC) mode.
@@ -144,6 +155,73 @@ The device hosts a simple web server that allows you to check status and switch 
         ```json
         {"status":"success","message":"Restarting device..."}
         ```
+
+**`POST /display/toggle`**: Toggles the display on and off.
+
+!!! code ""
+
+    ```sh
+    curl -X POST http://<DEVICE_IP>/display/toggle
+    ```
+
+!!! code "Example Responses"
+
+    === "Success (200 OK)"
+        ```json
+        {"status":"success","message":"Display toggled on."}
+        ```
+    === "Success (200 OK)"
+        ```json
+        {"status":"success","message":"Display toggled off."}
+        ```
+
+**`POST /display/on`**: Turns the display on.
+
+!!! code ""
+
+    ```sh
+    curl -X POST http://<DEVICE_IP>/display/on
+    ```
+
+!!! code "Example Response"
+
+    === "Success (200 OK)"
+        ```json
+        {"status":"success","message":"Display turned on."}
+        ```
+
+**`POST /display/off`**: Turns the display off.
+
+!!! code ""
+
+    ```sh
+    curl -X POST http://<DEVICE_IP>/display/off
+    ```
+
+!!! code "Example Response"
+
+    === "Success (200 OK)"
+        ```json
+        {"status":"success","message":"Display turned off."}
+        ```
+
+**`POST /wifi/reset`**: Resets the WiFi settings and restarts the device.
+
+!!! code ""
+
+    ```sh
+    curl -X POST http://<DEVICE_IP>/wifi/reset
+    ```
+
+!!! code "Example Response"
+
+    === "Success (200 OK)"
+        ```json
+        {"status":"success","message":"Resetting WiFi and restarting..."}
+        ```
+
+!!! warning "Device Unreachable After Reset"
+    After resetting the WiFi settings, the device will restart and will no longer be connected to your WiFi network. It will become unreachable at its previous IP address. You must reconnect to its Access Point (AP) to configure the new WiFi credentials. See the [Modes of Operation](#detective-modes-of-operation) section for details on connecting to the AP.
 
 ## :hammer_and_wrench: Building
 

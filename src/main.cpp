@@ -1,4 +1,5 @@
 /******************************************************************************
+ *
  * FrameFi
  * ----------------
  * transforms a LILYGO T-Dongle-S3 into a wireless adapter for a digital
@@ -57,6 +58,7 @@ sdmmc_card_t *card;
 
 // --- A flag to track the current mode ---
 bool isInMscMode = true;
+bool isDisplayOn = true; // A flag to track the display status
 
 // --- MSC screen refresh tracking ---
 volatile bool msc_disk_dirty = false;
@@ -73,6 +75,10 @@ void handleStatus();
 void handleSwitchToMsc();
 void handleSwitchToFtp();
 void handleRestart();
+void handleDisplayToggle();
+void handleDisplayOn();
+void handleDisplayOff();
+void handleWifiReset();
 void toggleMode();
 void resetWifiSettings();
 void mscInit();
@@ -124,7 +130,11 @@ void setup(){
   tft.init();
   tft.setRotation(DISPLAY_ORIENTATION); // Adjust rotation as needed
   tft.fillScreen(CATPPUCCIN_BASE);
-  digitalWrite(TFT_LEDA, LOW);
+  if (isDisplayOn) {
+    digitalWrite(TFT_LEDA, LOW); // Turn display on
+  } else {
+    digitalWrite(TFT_LEDA, HIGH); // Turn display off
+  }
 #else
   digitalWrite(TFT_LEDA, HIGH);
 #endif
@@ -415,6 +425,10 @@ void setupApiRoutes() {
   server.on("/msc", HTTP_POST, handleSwitchToMsc);
   server.on("/ftp", HTTP_POST, handleSwitchToFtp);
   server.on("/restart", HTTP_POST, handleRestart);
+  server.on("/display/toggle", HTTP_POST, handleDisplayToggle);
+  server.on("/display/on", HTTP_POST, handleDisplayOn);
+  server.on("/display/off", HTTP_POST, handleDisplayOff);
+  server.on("/wifi/reset", HTTP_POST, handleWifiReset);
 }
 
 /**
@@ -510,13 +524,49 @@ bool enterFtpMode() {
 }
 
 /**
- * @brief Handles requests to the root URL (")/"). Sends a JSON status object.
+ * @brief Handles requests to the root URL ("/"). Sends a JSON status object.
  */
 void handleStatus() {
   const char* modeString = isInMscMode ? MODE_MSC_DESC : MODE_FTP_DESC;
-  String jsonResponse = "{\"mode\":\"" + String(modeString) + "\"}";
+  const char* displayStatus = isDisplayOn ? "on" : "off";
+  
+  int fileCount = 0;
+  uint64_t totalSize = 0;
+  uint64_t usedSize = 0;
+
+  if (isInMscMode) {
+    if(card) {
+      fileCount = countFilesInPath(MOUNT_POINT);
+      FATFS *fs;
+      DWORD fre_clust;
+      f_getfree(MOUNT_POINT, &fre_clust, &fs);
+      totalSize = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
+      uint64_t freeSize = (uint64_t)fre_clust * fs->csize * fs->ssize;
+      usedSize = totalSize - freeSize;
+    }
+  } else {
+    File root = SD_MMC.open("/");
+    if (root) {
+      fileCount = countFiles(root);
+      root.close();
+    }
+    totalSize = SD_MMC.cardSize();
+    usedSize = SD_MMC.usedBytes();
+  }
+
+  String jsonResponse = "{";
+  jsonResponse += "\"mode\":\"" + String(modeString) + "\",";
+  jsonResponse += "\"display\":{";
+    jsonResponse += "\"status\":\"" + String(displayStatus) + "\",";
+    jsonResponse += "\"orientation\":\"" + String(tft.getRotation()) + "\"";
+  jsonResponse += "},";
+  jsonResponse += "\"sd_card\":{";
+    jsonResponse += "\"total_size\":\"" + String(totalSize) + "\",";
+    jsonResponse += "\"used_size\":\"" + String(usedSize) + "\",";
+    jsonResponse += "\"file_count\":\"" + String(fileCount) + "\"}";
+  jsonResponse += "}";
   server.send(200, "application/json", jsonResponse);
-}
+ }     
 
 /**
  * @brief Handles the POST request to switch to MSC mode.
@@ -534,8 +584,7 @@ void handleSwitchToMsc() {
       String jsonResponse = "{\"status\":\"error\", \"message\":\"Failed to switch to MSC mode.\"}";
       server.send(500, "application/json", jsonResponse);
     }
-  }
-  
+  }  
 }
  
 /**
@@ -567,7 +616,61 @@ void handleRestart() {
   ESP.restart();
 }
 
+/**
+ * @brief Handles the POST request to turn the display on.
+ */
+void handleDisplayOn() {
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
+  digitalWrite(TFT_LEDA, LOW);
+  isDisplayOn = true;
+  server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display turned on.\"}");
+#else
+  server.send(200, "application/json", "{\"status\":\"no_change\", \"message\":\"Display is disabled in firmware.\"}");
+#endif
+}
+
+/**
+ * @brief Handles the POST request to turn the display off.
+ */
+void handleDisplayOff() {
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
+  digitalWrite(TFT_LEDA, HIGH);
+  isDisplayOn = false;
+  server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display turned off.\"}");
+#else
+  server.send(200, "application/json", "{\"status\":\"no_change\", \"message\":\"Display is disabled in firmware.\"}");
+#endif
+}
+
+/**
+ * @brief Handles the POST request to toggle the display.
+ */
+void handleDisplayToggle() {
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
+  isDisplayOn = !isDisplayOn;
+  if (isDisplayOn) {
+    digitalWrite(TFT_LEDA, LOW);
+    server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display toggled on.\"}");
+  } else {
+    digitalWrite(TFT_LEDA, HIGH);
+    server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display toggled off.\"}");
+  }
+#else
+  server.send(200, "application/json", "{\"status\":\"no_change\", \"message\":\"Display is disabled in firmware.\"}");
+#endif
+}
+
+/**
+ * @brief Handles the POST request to reset WiFi settings.
+ */
+void handleWifiReset() {
+  server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Resetting WiFi and restarting...\"}");
+  delay(200);
+  resetWifiSettings();
+}
+
 // --- FTP Server ---
+
 
 /**
  * @brief Callback function for FTP transfers.
