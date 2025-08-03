@@ -34,7 +34,6 @@
 #include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
 
 // --- LED Configuration ---
-#define BRIGHTNESS 13 // 5% of 255
 
 // --- Button Configuration ---
 #define BTN_PIN 0
@@ -98,7 +97,11 @@ void setup(){
 
   // --- Initialize the LED pin as an output ---
   FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, NUM_LEDS);
-  FastLED.setBrightness(BRIGHTNESS);
+#if defined(LED_BRIGHTNESS)
+  FastLED.setBrightness(LED_BRIGHTNESS);
+#else
+  FastLED.setBrightness(13); // 5% of 255
+#endif
 
   // --- Turn the LED on ---
   leds[0] = CRGB::Yellow;
@@ -110,14 +113,20 @@ void setup(){
   button.attachLongPressStop(resetWifiSettings);
 
   // --- Initialize TFT Display ---
-  pinMode(38, OUTPUT);
+  pinMode(TFT_LEDA, OUTPUT);
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
   tft.init();
   tft.setRotation(DISPLAY_ORIENTATION); // Adjust rotation as needed
   tft.fillScreen(CATPPUCCIN_BASE);
-  digitalWrite(38, 0);
+  digitalWrite(TFT_LEDA, LOW);
+#else
+  digitalWrite(TFT_LEDA, HIGH);
+#endif
   
   // --- Show boot screen ---
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
   drawBootScreen();
+#endif
   delay(2000); // Keep boot screen visible for 2 seconds
   
   // --- Connect to WiFi ---
@@ -151,7 +160,9 @@ sdInit();
     f_getfree(MOUNT_POINT, &fre_clust, &fs);
     uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
     uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
     drawUsbMscModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
+#endif
   } else {
     HWSerial.println("\n❌ Failed to start in MSC mode. SD Card not found.");
   }
@@ -323,7 +334,9 @@ void connectToWiFi() {
     HWSerial.println(myWiFiManager->getConfigPortalSSID());
     leds[0] = CRGB::Blue; // Solid blue for captive portal
     FastLED.show();
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
     drawApModeScreen(myWiFiManager->getConfigPortalSSID().c_str(), WiFi.softAPIP().toString().c_str());
+#endif
   });
 
   // --- Blink blue while connecting ---
@@ -357,7 +370,9 @@ void connectToWiFi() {
  * @brief Resets WiFi settings if the button is held for 3 seconds.
  */
 void resetWifiSettings() {
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
   drawResetWiFiSettingsScreen();
+#endif
   HWSerial.println("Button held for 3 seconds. Resetting WiFi settings...");
   WiFiManager wm;
   wm.resetSettings();
@@ -429,7 +444,9 @@ void enterMscMode() {
     f_getfree(MOUNT_POINT, &fre_clust, &fs);
     uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
     uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
     drawUsbMscModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
+#endif
   } else {
     HWSerial.println("\n❌ Failed to switch to MSC mode. SD Card not found.");
   }
@@ -481,7 +498,9 @@ bool enterFtpMode() {
   root.close();
   uint64_t totalBytes = SD_MMC.cardSize();
   uint64_t usedBytes = SD_MMC.usedBytes();
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
   drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
+#endif
   
   return true;
 }

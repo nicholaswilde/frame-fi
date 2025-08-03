@@ -38,6 +38,27 @@ The onboard LED provides visual feedback on the device's status:
 | :green_circle:  | USB Mass Storage (MSC) mode active    |
 | :orange_circle: | FTP mode active                       |
 
+### :bulb: LED Brightness
+
+You can adjust the brightness of the status LED by modifying the `platformio.ini` file.
+
+1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
+2.  **Find `LED_BRIGHTNESS`**: Locate the `build_flags` section and find the `-D LED_BRIGHTNESS` line. If it doesn't exist, you can add it.
+3.  **Change the Value**: Set the value to a number between `0` (off) and `255` (maximum brightness).
+4.  **Rebuild and Upload**: Save the file, then rebuild and upload the firmware for the change to take effect.
+
+!!! abstract "platformio.ini"
+    ```ini
+    [env]
+    ...
+    build_flags =
+      ...
+      -D LED_BRIGHTNESS=255
+    ```
+
+!!! note
+    If the `LED_BRIGHTNESS` flag is not defined, the brightness will default to `13` (approximately 5%).
+
 ## :globe_with_meridians: Web API
 
 The device hosts a simple web server that allows you to check status and switch modes.
@@ -351,6 +372,26 @@ You can change the screen orientation by modifying the `platformio.ini` file.
     build_flags =
       ...
       -D DISPLAY_ORIENTATION=1
+    ```
+
+### :electric_plug: Enable/Disable LCD
+
+You can completely enable or disable the LCD screen backlight by modifying the `platformio.ini` file. This is useful for saving power if you don't need the display.
+
+1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
+2.  **Find `LCD_ENABLED`**: Locate the `build_flags` section and find the `-D LCD_ENABLED` line.
+3.  **Change the Value**:
+    - `1`: Enable the LCD (Default)
+    - `0`: Disable the LCD
+4.  **Rebuild and Upload**: Save the file, then rebuild and upload the firmware for the change to take effect.
+
+!!! abstract "platformio.ini"
+    ```ini
+    [env]
+    ...
+    build_flags =
+      ...
+      -D LCD_ENABLED=1
     ```
 
 !!! note
