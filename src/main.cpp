@@ -110,7 +110,7 @@ void setup(){
   // --- Initialize Button ---
   button.attachClick(toggleMode);
   button.setPressMs(3000); // 3 seconds
-  button.attachLongPressStop(resetWifiSettings);
+  button.attachLongPressStart(resetWifiSettings);
 
   // --- Initialize TFT Display ---
   pinMode(TFT_LEDA, OUTPUT);
