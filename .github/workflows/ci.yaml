@@ -78,13 +78,15 @@ jobs:
           # Fetches all history for all branches and tags
           fetch-depth: 0
 
-      - name: Conventional Changelog
+      - name: "Conventional Changelog"
         id: changelog
         uses: TriPSs/conventional-changelog-action@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           output-file: "false" # Set to false to use the output in the next step
-
+          skipOnEmpty: true
+          createTag: false
+  
       - name: "Download all artifacts"
         uses: actions/download-artifact@v4
         with:
