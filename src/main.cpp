@@ -493,7 +493,7 @@ bool enterFtpMode() {
   isInMscMode = false;
 
   // --- Display FTP mode screen ---
-  File root = SD_MMC.open(MOUNT_POINT);
+  File root = SD_MMC.open("/");
   int numFiles = countFiles(root);
   root.close();
   uint64_t totalBytes = SD_MMC.cardSize();
