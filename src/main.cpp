@@ -58,6 +58,11 @@ sdmmc_card_t *card;
 // --- A flag to track the current mode ---
 bool isInMscMode = true;
 
+// --- MSC screen refresh tracking ---
+volatile bool msc_disk_dirty = false;
+volatile unsigned long last_msc_write_time = 0;
+const unsigned long MSC_REFRESH_DEBOUNCE_MS = 2000; // 2 seconds
+
 // --- Function prototypes ---
 void connectToWiFi();
 void setupApiRoutes();
@@ -86,6 +91,7 @@ void drawBootScreen();
 void drawResetWiFiSettingsScreen();
 int countFiles(File dir);
 int countFilesInPath(const char *path);
+void updateAndDrawMscScreen();
 
 // --- Main Logic ---
 
@@ -154,15 +160,7 @@ sdInit();
     enterMscMode();
     
     // --- Display MSC mode screen ---
-    int numFiles = countFilesInPath(MOUNT_POINT);
-    FATFS *fs;
-    DWORD fre_clust;
-    f_getfree(MOUNT_POINT, &fre_clust, &fs);
-    uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
-    uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
-#if defined(LCD_ENABLED) && LCD_ENABLED == 1
-    drawUsbMscModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
-#endif
+    updateAndDrawMscScreen();
   } else {
     HWSerial.println("\n❌ Failed to start in MSC mode. SD Card not found.");
   }
@@ -176,6 +174,12 @@ void loop(){
   server.handleClient();
   if (!isInMscMode) {
     ftpServer.handleFTP(); // Continuously process FTP requests  
+  }
+
+  // --- Check if the MSC screen needs to be refreshed ---
+  if (isInMscMode && msc_disk_dirty && (millis() - last_msc_write_time > MSC_REFRESH_DEBOUNCE_MS)) {
+    msc_disk_dirty = false; // Reset flag
+    updateAndDrawMscScreen();
   }
 }
 
@@ -264,6 +268,11 @@ static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t 
   // HWSerial.printf("MSC WRITE: lba: %u, offset: %u, bufsize: %u\n", lba, offset, bufsize);
   uint32_t count = (bufsize / card->csd.sector_size);
   sdmmc_write_sectors(card, buffer + offset, lba, count);
+
+  // --- Track that a write has occurred ---
+  msc_disk_dirty = true;
+  last_msc_write_time = millis();
+
   return bufsize;
 }
 
@@ -282,6 +291,10 @@ static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufs
  */
 static bool onStartStop(uint8_t power_condition, bool start, bool load_eject) {
   HWSerial.printf("MSC START/STOP: power: %u, start: %u, eject: %u\n", power_condition, start, load_eject);
+  if (load_eject) {
+    // --- The host has ejected the device, a good time to refresh the screen ---
+    updateAndDrawMscScreen();
+  }
   return true;
 }
 
@@ -438,15 +451,7 @@ void enterMscMode() {
     isInMscMode = true;
 
     // --- Display MSC mode screen ---
-    int numFiles = countFilesInPath(MOUNT_POINT);
-    FATFS *fs;
-    DWORD fre_clust;
-    f_getfree(MOUNT_POINT, &fre_clust, &fs);
-    uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
-    uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
-#if defined(LCD_ENABLED) && LCD_ENABLED == 1
-    drawUsbMscModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
-#endif
+    updateAndDrawMscScreen();
   } else {
     HWSerial.println("\n❌ Failed to switch to MSC mode. SD Card not found.");
   }
@@ -643,6 +648,32 @@ int countFiles(File dir) {
 }
 
 // --- Display ---
+
+/**
+ * @brief Fetches the latest storage stats and redraws the MSC mode screen.
+ */
+void updateAndDrawMscScreen() {
+  if (!card) return;
+
+  // --- Recalculate storage info ---
+  int numFiles = countFilesInPath(MOUNT_POINT);
+  FATFS *fs;
+  DWORD fre_clust;
+  f_getfree(MOUNT_POINT, &fre_clust, &fs);
+  uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
+  uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
+
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
+  drawUsbMscModeScreen(
+    WiFi.localIP().toString().c_str(),
+    WiFi.macAddress().c_str(),
+    numFiles,
+    totalBytes / (1024 * 1024),
+    freeBytes / (1024.0 * 1024.0)
+  );
+#endif
+  HWSerial.println("MSC screen refreshed.");
+}
 
 /**
  * @brief Draws the top header bar.
