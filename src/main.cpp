@@ -493,18 +493,11 @@ bool enterFtpMode() {
   isInMscMode = false;
 
   // --- Display FTP mode screen ---
-  // File root = SD_MMC.open("/");
-  // int numFiles = countFiles(root);
-  int numFiles;
-  // root.close();
+  File root = SD_MMC.open("/");
+  int numFiles = countFiles(root);
+  root.close();
   uint64_t totalBytes = SD_MMC.cardSize();
   uint64_t usedBytes = SD_MMC.usedBytes();
-#if defined(LCD_ENABLED) && LCD_ENABLED == 1
-  drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
-#endif
-  File root = SD_MMC.open("/");
-  numFiles = countFiles(root);
-  root.close();
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
 #endif  
@@ -587,6 +580,16 @@ void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, un
     // --- Ensure LED is solid orange after any transfer completion or error ---
     leds[0] = CRGB::Orange;
     FastLED.show();
+
+    // --- Update storage info on the screen ---
+    File root = SD_MMC.open("/");
+    int numFiles = countFiles(root);
+    root.close();
+    uint64_t totalBytes = SD_MMC.cardSize();
+    uint64_t usedBytes = SD_MMC.usedBytes();
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
+    drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
+#endif
   }
 }
 
