@@ -20,6 +20,7 @@
 captures/
 *.log
 **/secrets.h
+include/catppuccin_colors.h
 **/.env
 scripts/data/
 
