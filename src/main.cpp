@@ -58,6 +58,12 @@ sdmmc_card_t *card;
 // --- A flag to track the current mode ---
 bool isInMscMode = true;
 
+// --- Global variables for file counting ---
+volatile int fileCount = -1;
+volatile bool countingInProgress = false;
+volatile bool screenNeedsUpdate = false;
+TaskHandle_t countFilesTaskHandle = NULL;
+
 // --- Function prototypes ---
 void connectToWiFi();
 void setupApiRoutes();
@@ -84,10 +90,49 @@ void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSize
 void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
 void drawBootScreen();
 void drawResetWiFiSettingsScreen();
+void startFileCount();
+void updateScreen();
 int countFiles(File dir);
 int countFilesInPath(const char *path);
 
 // --- Main Logic ---
+
+/**
+ * @brief Background task to count files.
+ */
+void countFilesTask(void *parameter) {
+  countingInProgress = true;
+  fileCount = -1; // Reset file count
+
+  if (isInMscMode) {
+    fileCount = countFilesInPath(MOUNT_POINT);
+  } else {
+    File root = SD_MMC.open("/");
+    fileCount = countFiles(root);
+    root.close();
+  }
+
+  countingInProgress = false;
+  screenNeedsUpdate = true;
+  vTaskDelete(NULL); // Delete task once complete
+}
+
+/**
+ * @brief Starts the file counting task.
+ */
+void startFileCount() {
+  // If a task is already running, delete it
+  if (countFilesTaskHandle != NULL) {
+    vTaskDelete(countFilesTaskHandle);
+  }
+  xTaskCreate(
+      countFilesTask,
+      "CountFilesTask",
+      4096,
+      NULL,
+      1,
+      &countFilesTaskHandle);
+}
 
 /**
  * @brief Initializes the device and all its components.
@@ -154,14 +199,15 @@ sdInit();
     enterMscMode();
     
     // --- Display MSC mode screen ---
-    int numFiles = countFilesInPath(MOUNT_POINT);
+    fileCount = -2; // -2 means counting in progress
+    startFileCount();
     FATFS *fs;
     DWORD fre_clust;
     f_getfree(MOUNT_POINT, &fre_clust, &fs);
     uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
     uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-    drawUsbMscModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
+    drawUsbMscModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), fileCount, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
 #endif
   } else {
     HWSerial.println("\n❌ Failed to start in MSC mode. SD Card not found.");
@@ -169,13 +215,33 @@ sdInit();
 }
 
 /**
- * @brief Main loop that runs repeatedly.
+ * @brief Updates the screen with the current mode and file count.
  */
+void updateScreen() {
+  if (isInMscMode) {
+    FATFS *fs;
+    DWORD fre_clust;
+    f_getfree(MOUNT_POINT, &fre_clust, &fs);
+    uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
+    uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
+    drawUsbMscModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), fileCount, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
+  } else {
+    uint64_t totalBytes = SD_MMC.cardSize();
+    uint64_t usedBytes = SD_MMC.usedBytes();
+    drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), fileCount, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
+  }
+}
+
 void loop(){
   button.tick();
   server.handleClient();
   if (!isInMscMode) {
     ftpServer.handleFTP(); // Continuously process FTP requests  
+  }
+
+  if (screenNeedsUpdate) {
+    screenNeedsUpdate = false;
+    updateScreen();
   }
 }
 
@@ -438,14 +504,15 @@ void enterMscMode() {
     isInMscMode = true;
 
     // --- Display MSC mode screen ---
-    int numFiles = countFilesInPath(MOUNT_POINT);
+    fileCount = -2; // -2 means counting in progress
+    startFileCount();
     FATFS *fs;
     DWORD fre_clust;
     f_getfree(MOUNT_POINT, &fre_clust, &fs);
     uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
     uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-    drawUsbMscModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
+    drawUsbMscModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), fileCount, totalBytes / (1024 * 1024), freeBytes / (1024.0 * 1024.0));
 #endif
   } else {
     HWSerial.println("\n❌ Failed to switch to MSC mode. SD Card not found.");
@@ -467,7 +534,7 @@ bool enterFtpMode() {
   
   // --- Stop USB MSC ---
   MSC.mediaPresent(false);
-  delay(2000);
+  delay(500);
   MSC.end();
   USBSerial.end();
   HWSerial.println("USB MSC stopped.");
@@ -495,13 +562,12 @@ bool enterFtpMode() {
   isInMscMode = false;
 
   // --- Display FTP mode screen ---
-  File root = SD_MMC.open("/");
-  int numFiles = countFiles(root);
-  root.close();
+  fileCount = -2; // -2 means counting in progress
+  startFileCount();
   uint64_t totalBytes = SD_MMC.cardSize();
   uint64_t usedBytes = SD_MMC.usedBytes();
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-  drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
+  drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), fileCount, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
 #endif
   
   return true;
@@ -674,7 +740,13 @@ void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB) {
   tft.setTextColor(CATPPUCCIN_MAUVE);
   tft.print(" Files: ");
   tft.setTextColor(CATPPUCCIN_PEACH);
-  tft.print(files);
+  if (files == -1) {
+    tft.print("N/A");
+  } else if (files == -2) {
+    tft.print("Counting...");
+  } else {
+    tft.print(files);
+  }
   y_pos += 12;
 
   tft.setCursor(x_pos, y_pos);
