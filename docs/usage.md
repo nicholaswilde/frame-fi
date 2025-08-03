@@ -48,12 +48,13 @@ You can adjust the brightness of the status LED by modifying the `platformio.ini
 4.  **Rebuild and Upload**: Save the file, then rebuild and upload the firmware for the change to take effect.
 
 !!! abstract "platformio.ini"
+
     ```ini
     [env]
     ...
     build_flags =
       ...
-      -D LED_BRIGHTNESS=255
+      -D LED_BRIGHTNESS=15
     ```
 
 !!! note
@@ -359,13 +360,18 @@ You can change the screen orientation by modifying the `platformio.ini` file.
 1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
 2.  **Find `DISPLAY_ORIENTATION`**: Locate the `build_flags` section and find the `-D DISPLAY_ORIENTATION` line.
 3.  **Change the Value**: Change the value to one of the following:
-    - `0`: Portrait
-    - `1`: Landscape (Default)
-    - `2`: Portrait Inverted
-    - `3`: Landscape Inverted
+
+    | Value | Description         |
+    |:-----:|---------------------|
+    | `0`   | Portrait            |
+    | `1`   | Landscape (Default) |
+    | `2`   | Portrait Inverted   |
+    | `3`   | Landscape Inverted  |
+
 4.  **Rebuild and Upload**: Save the file, then rebuild and upload the firmware for the change to take effect.
 
 !!! abstract "platformio.ini"
+
     ```ini
     [env]
     ...
@@ -381,11 +387,16 @@ You can completely enable or disable the LCD screen backlight by modifying the `
 1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
 2.  **Find `LCD_ENABLED`**: Locate the `build_flags` section and find the `-D LCD_ENABLED` line.
 3.  **Change the Value**:
-    - `1`: Enable the LCD (Default)
-    - `0`: Disable the LCD
+
+    | Value | Description               |
+    |:-----:|---------------------------|
+    | `1`   | Enable the LCD (Default)  |
+    | `0`   | Disable the LCD           |
+    
 4.  **Rebuild and Upload**: Save the file, then rebuild and upload the firmware for the change to take effect.
 
 !!! abstract "platformio.ini"
+
     ```ini
     [env]
     ...
@@ -450,8 +461,8 @@ You can customize the color scheme of the display by selecting a Catppuccin them
 
 ## :link: References
 
-- <[lftp][4]>
-- <[TFT_eSPI][5]>
+- [lftp][4]
+- [TFT_eSPI][5]
 
 [1]: <https://taskfile.dev/>
 [2]: <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>
