@@ -84,8 +84,6 @@ void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSize
 void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
 void drawBootScreen();
 void drawResetWiFiSettingsScreen();
-int countFiles(File dir);
-int countFilesInPath(const char *path);
 
 // --- Main Logic ---
 
@@ -154,7 +152,7 @@ sdInit();
     enterMscMode();
     
     // --- Display MSC mode screen ---
-    int numFiles = countFilesInPath(MOUNT_POINT);
+    int numFiles = -1; // We will not count files to improve performance
     FATFS *fs;
     DWORD fre_clust;
     f_getfree(MOUNT_POINT, &fre_clust, &fs);
@@ -438,7 +436,7 @@ void enterMscMode() {
     isInMscMode = true;
 
     // --- Display MSC mode screen ---
-    int numFiles = countFilesInPath(MOUNT_POINT);
+    int numFiles = -1; // We will not count files to improve performance
     FATFS *fs;
     DWORD fre_clust;
     f_getfree(MOUNT_POINT, &fre_clust, &fs);
@@ -493,9 +491,7 @@ bool enterFtpMode() {
   isInMscMode = false;
 
   // --- Display FTP mode screen ---
-  File root = SD_MMC.open("/");
-  int numFiles = countFiles(root);
-  root.close();
+  int numFiles = -1; // We will not count files to improve performance
   uint64_t totalBytes = SD_MMC.cardSize();
   uint64_t usedBytes = SD_MMC.usedBytes();
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
@@ -586,53 +582,6 @@ void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, un
 
 // --- File System ---
 
-/**
- * @brief Counts the number of files in a directory recursively using VFS.
- */
-int countFilesInPath(const char *path) {
-  DIR *dir = opendir(path);
-  if (!dir) {
-    HWSerial.printf("Error opening directory: %s\n", path);
-    return 0;
-  }
-  int count = 0;
-  struct dirent *entry;
-  while ((entry = readdir(dir)) != NULL) {
-    if (entry->d_type == DT_REG) {
-      count++;
-    } else if (entry->d_type == DT_DIR) {
-      if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-        char subpath[512];
-        snprintf(subpath, sizeof(subpath), "%s/%s", path, entry->d_name);
-        count += countFilesInPath(subpath);
-      }
-    }
-  }
-  closedir(dir);
-  return count;
-}
-
-/**
- * @brief Counts the number of files in a directory recursively.
- */
-int countFiles(File dir) {
-  int count = 0;
-  while (true) {
-    File entry = dir.openNextFile();
-    if (!entry) {
-      // --- no more files ---
-      break;
-    }
-    if (entry.isDirectory()) {
-      count += countFiles(entry);
-    } else {
-      count++;
-    }
-    entry.close();
-  }
-  return count;
-}
-
 // --- Display ---
 
 /**
@@ -672,7 +621,11 @@ void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB) {
   tft.setTextColor(CATPPUCCIN_MAUVE);
   tft.print(" Files: ");
   tft.setTextColor(CATPPUCCIN_PEACH);
-  tft.print(files);
+  if (files == -1) {
+    tft.print("N/A");
+  } else {
+    tft.print(files);
+  }
   y_pos += 12;
 
   tft.setCursor(x_pos, y_pos);
