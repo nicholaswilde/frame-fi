@@ -78,6 +78,7 @@ static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufs
 static bool onStartStop(uint8_t power_condition, bool start, bool load_eject);
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 void drawHeader(const char* title, uint16_t bannerColor);
+void updateStorageInfo(int files, float totalSizeMB, float freeSizeMB);
 void drawStorageInfo(int files, float totalSizeMB, float freeSizeMB);
 void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
@@ -493,13 +494,17 @@ bool enterFtpMode() {
   isInMscMode = false;
 
   // --- Display FTP mode screen ---
-  File root = SD_MMC.open(MOUNT_POINT);
-  int numFiles = countFiles(root);
-  root.close();
   uint64_t totalBytes = SD_MMC.cardSize();
   uint64_t usedBytes = SD_MMC.usedBytes();
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-  drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
+  drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), -1, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
+#endif
+
+  File root = SD_MMC.open("/");
+  int numFiles = countFiles(root);
+  root.close();
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
+  updateStorageInfo(numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
 #endif
   
   return true;
@@ -650,8 +655,18 @@ void drawHeader(const char* title, uint16_t bannerColor) {
  * @brief Draws the right column with storage statistics.
  */
 void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB) {
+  updateStorageInfo(files, totalSizeMB, freeSizeMB);
+}
+
+/**
+ * @brief Updates the right column with storage statistics.
+ */
+void updateStorageInfo(int files, float totalSizeMB, float freeSizeMB) {
   int y_pos = 53;
   int x_pos = 5;
+
+  // --- Erase the previous statistics ---
+  tft.fillRect(x_pos, y_pos, TFT_WIDTH - x_pos, TFT_HEIGHT - y_pos, CATPPUCCIN_BASE);
 
   // --- Calculate usage ---
   float usedSizeMB = totalSizeMB - freeSizeMB;
@@ -672,7 +687,11 @@ void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB) {
   tft.setTextColor(CATPPUCCIN_MAUVE);
   tft.print(" Files: ");
   tft.setTextColor(CATPPUCCIN_PEACH);
-  tft.print(files);
+  if (files == -1) {
+    tft.print("...");
+  } else {
+    tft.print(files);
+  }
   y_pos += 12;
 
   tft.setCursor(x_pos, y_pos);
