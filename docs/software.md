@@ -25,7 +25,7 @@ This project relies on a set of software tools and libraries to ensure proper fu
 - **[knolleary/PubSubClient](https://github.com/knolleary/pubsubclient):** A client library for MQTT.
 - **[mathertel/OneButton](https://github.com/mathertel/OneButton):** A library for debouncing and simplifying button inputs.
 - **[fastled/FastLED](https://github.com/FastLED/FastLED):** A library for controlling a wide range of addressable LEDs.
-- **[tzapu/WiFiManager](https://github.com/tzapu/WiFiManager):** A library for managing WiFi connections on ESP8266 and ESP32 devices.
+- **[tzapu/WiFiManager](https://github.com/tzapu/WiFiManager):** A library for managing Wi-Fi connections on ESP8266 and ESP32 devices.
 - **[bodmer/TFT_eSPI](https://github.com/Bodmer/TFT_eSPI):** A library for driving TFT displays.
 
 ## :scroll: Languages and Frameworks
