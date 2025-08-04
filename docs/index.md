@@ -42,7 +42,7 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 
 - **Reboot the Device:** Unplug the dongle from your computer and plug it back in to reboot it.
 
-- **Wi-Fi Credentials:** Connect to `AutoConnectAP-Frame-Fi` access point and enter WiFi credentials.
+- **Wi-Fi Credentials:** Connect to `AutoConnectAP-FrameFi` access point and enter WiFi credentials.
 
 !!! tip
 
