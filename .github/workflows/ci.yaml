@@ -83,8 +83,10 @@ jobs:
         uses: TriPSs/conventional-changelog-action@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          output-file: "false" # Set to false to use the output in the next step
+          output-file: false  # Set to false to use the output in the next step
           skip-tag: true
+          skip-commit: true
+          skip-version-file: true
   
       - name: "Download all artifacts"
         uses: actions/download-artifact@v4
