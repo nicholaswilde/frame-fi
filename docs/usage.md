@@ -10,7 +10,7 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
 
 - **USB Mass Storage Mode (Default):**
     1. Plug the T-Dongle-S3 into your computer's USB port.
-    2. The device will connect to the configured Wi-Fi network. If no credentials are saved, it will create a Wi-Fi Access Point named "AutoConnectAP-Frame-Fi".
+    2. The device will connect to the configured Wi-Fi network. If no credentials are saved, it will create a Wi-Fi Access Point named `AutoConnectAP-FrameFi`.
     3. Connect to this AP. If the captive portal does not open automatically, navigate to <http://192.168.4.1> in your web browser to configure Wi-Fi.
     4. The device will be recognized as a USB Mass Storage device (thumb drive), giving you direct access to the microSD card.
 
