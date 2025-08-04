@@ -461,6 +461,39 @@ This command syncs a specific local directory to the device, overriding any sett
 
 The LCD display uses the [TFT_eSPI][5] library to show device status and network information. The content of the display changes depending on the current operating mode.
 
+!!! example "Screens"
+
+    === "USB Mass Storage Mode"
+
+        When in USB MSC mode, the display shows:
+
+        - **Mode:** USB MSC
+        - **IP:** The device's current IP address.
+        - **MAC:** The device's MAC address.
+        - **Size:** The total size of the microSD card.
+        - **Files:** The number of files on the microSD card.
+        - **Used:** The amount of used space on the microSD card.
+
+    === "FTP Server Mode"
+
+        When in FTP mode, the display shows:
+
+        - **Mode:** FTP Server
+        - **IP:** The device's current IP address.
+        - **MAC:** The device's MAC address.
+        - **Size:** The total size of the microSD card.
+        - **Files:** The number of files on the microSD card.
+        - **Used:** The amount of used space on the microSD card.
+
+    === "Wi-Fi AP Mode"
+
+        When in Wi-Fi Access Point mode for configuration, the display shows:
+
+        - **Mode:** Wi-Fi AP
+        - **IP:** The AP's IP address (usually `192.168.4.1`).
+        - **MAC:** The device's MAC address.
+        - **SSID:** The name of the Access Point (`AutoConnectAP-Frame-Fi`).
+
 ### :compass: Display Orientation
 
 You can change the screen orientation by modifying the `platformio.ini` file.
@@ -533,39 +566,6 @@ You can customize the color scheme of the display by selecting a Catppuccin them
     ...
     custom_catppuccin_theme = Mocha
     ```
-
-!!! note
-
-    === "USB Mass Storage Mode"
-
-        When in USB MSC mode, the display shows:
-
-        - **Mode:** USB MSC
-        - **IP:** The device's current IP address.
-        - **MAC:** The device's MAC address.
-        - **Size:** The total size of the microSD card.
-        - **Files:** The number of files on the microSD card.
-        - **Used:** The amount of used space on the microSD card.
-
-    === "FTP Server Mode"
-
-        When in FTP mode, the display shows:
-
-        - **Mode:** FTP Server
-        - **IP:** The device's current IP address.
-        - **MAC:** The device's MAC address.
-        - **Size:** The total size of the microSD card.
-        - **Files:** The number of files on the microSD card.
-        - **Used:** The amount of used space on the microSD card.
-
-    === "Wi-Fi AP Mode"
-
-        When in Wi-Fi Access Point mode for configuration, the display shows:
-
-        - **Mode:** Wi-Fi AP
-        - **IP:** The AP's IP address (usually `192.168.4.1`).
-        - **MAC:** The device's MAC address.
-        - **SSID:** The name of the Access Point (`AutoConnectAP-Frame-Fi`).
 
 ## :link: References
 
