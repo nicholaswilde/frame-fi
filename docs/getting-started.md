@@ -76,7 +76,7 @@ To decrypt the files, run the following command:
 #### Encrypting Secrets
 
 !!! note
-    Before encrypting any files, you must add your GPG key's fingerprint or other public key information to the `.sops.yaml` file at the root of the project. This authorizes you to encrypt and decrypt the files.
+    Before encrypting any files, you must add your GPG key's fingerprint or other public key information to the [`.sops.yaml`][3] file at the root of the project. This authorizes you to encrypt and decrypt the files.
 
 To encrypt the files after making changes, run the following command:
 
@@ -141,3 +141,4 @@ To change the theme, simply uncomment the block for the theme you wish to use an
 
 [1]: <https://github.com/tzapu/WiFiManager>
 [2]: <https://github.com/getsops/sops>
+[3]: <https://getsops.io/docs/#using-sopsyaml-conf-to-select-kms-pgp-and-age-for-new-files>
