@@ -374,12 +374,12 @@ If you don't want to build the project from source, you can flash a pre-compiled
             0x10000 firmware.bin
         ```
 
-| Address | Bin File       |
-|:-------:|----------------|
-| 0x0000  | bootloader.bin |
-| 0xe000  | boot_app0.bin  |
-| 0x8000  | partitions.bin |
-| 0x10000 | firmware.bin   |
+    | Address | Bin File       |
+    |:-------:|----------------|
+    | 0x0000  | bootloader.bin |
+    | 0xe000  | boot_app0.bin  |
+    | 0x8000  | partitions.bin |
+    | 0x10000 | firmware.bin   |
 
 - **Reboot the Device:**
     - After the flashing process is complete, unplug the dongle from your computer and plug it back in to reboot it.
