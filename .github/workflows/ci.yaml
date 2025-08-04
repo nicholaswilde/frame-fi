@@ -87,7 +87,8 @@ jobs:
           skip-tag: true
           skip-commit: true
           skip-version-file: true
-  
+          skip-bump: true
+            
       - name: "Download all artifacts"
         uses: actions/download-artifact@v4
         with:
@@ -104,4 +105,4 @@ jobs:
           prerelease: false
           files: dist/**/*
           generate_release_notes: true
-          body: ${{ steps.changelog.outputs.changelog }}
+          body: ${{ steps.changelog.outputs.clean_changelog }}
