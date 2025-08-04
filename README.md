@@ -64,6 +64,12 @@ mirror -R --delete --verbose --parallel=1 '<REMOTE_DIR>' '<LOCAL_DIR>';
 "
 ```
 
+- **MQTT:** Publish a message to the MQTT broker to turn the display on or off.
+
+```shell
+mosquitto_pub -h <MQTT_BROKER_IP> -t "frame-fi/display/set" -m "ON"
+```
+
 ---
 
 ## :balance_scale: License
