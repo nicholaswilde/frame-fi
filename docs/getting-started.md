@@ -41,29 +41,7 @@ The microSD card must be formatted as **FAT32**.
 !!! abstract "include/secrets.h"
 
     ```cpp
-    #pragma once
-
-    // --- WiFi Credentials ---
-    // Not currently used.
-    #define WIFI_SSID "YourWiFiNetworkName"
-    #define WIFI_PASSWORD "YourWiFiPassword"
-
-    // --- AP Mode ---
-    #define WIFI_AP_SSID "AutoConnectAP-Frame-Fi"
-    #define WIFI_AP_PASSWORD "password"
-
-    // --- FTP Mode ---
-    #define FTP_USER "user"
-    #define FTP_PASSWORD "password"
-
-    // --- MQTT ---
-    #define MQTT_ENABLED 1
-    #define MQTT_BROKER "192.168.1.100"
-    #define MQTT_PORT 1883
-    #define MQTT_USER "mqtt_user"
-    #define MQTT_PASSWORD "mqtt_password"
-    #define MQTT_CLIENT_ID "frame-fi"
-    #define MQTT_TOPIC_PREFIX "frame-fi"
+    --8<-- "secrets.h.tmpl"
     ```
     
 !!! note
