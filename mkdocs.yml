@@ -22,6 +22,7 @@ nav:
   - Software: software.md
   - Getting Started: getting-started.md
   - Usage: usage.md
+  - Home Assistant: home-assistant.md
   - Contributing: contributing.md
 
 extra_css:

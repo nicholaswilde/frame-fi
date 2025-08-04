@@ -74,6 +74,14 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
     "
     ```
 
+- **MQTT:** Publish a message to the MQTT broker to turn the display on or off.
+
+!!! code ""
+
+    ```shell
+    mosquitto_pub -h <MQTT_BROKER_IP> -t "frame-fi/display/set" -m "ON"
+    ```
+
 ## :sparkles: Features
 
 - **Dual-Mode Operation:** Seamlessly switch between a USB Mass Storage (MSC) device and an FTP server.
@@ -84,6 +92,7 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 - **USB Mass Storage Mode:** In MSC mode, the device mounts the microSD card as a standard USB thumb drive, allowing for high-speed file transfers directly from your computer.
 - **Fast Data Transfer:** Utilizes the `SD_MMC` interface for the microSD card, offering significantly faster read/write speeds compared to the standard SPI interface.
 - **Dynamic WiFi Configuration:** Uses `WiFiManager` to create a captive portal for easy Wi-Fi setup without hardcoding credentials.
+- **Home Assistant Integration:** Publishes status and accepts commands via MQTT for seamless integration with home automation systems.
 - **Easy WiFi Reset:** Hold the button for 3 seconds to clear saved WiFi credentials and re-enter setup mode.
 - **Boot-up Screen:** Displays a welcome screen with the current firmware version on startup.
 - **LED Status Indicators:** A built-in LED provides at-a-glance status updates for different modes.
