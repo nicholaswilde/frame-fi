@@ -115,7 +115,7 @@ The device hosts a simple web server that allows you to check status and switch 
     curl -X POST http://<DEVICE_IP>/msc
     ```
 
-!!! code "Example Responses"
+!!! success "Example Responses"
 
     === "Success (200 OK)"
         ```json
@@ -140,7 +140,7 @@ The device hosts a simple web server that allows you to check status and switch 
     curl -X POST http://<DEVICE_IP>/ftp
     ```
 
-!!! code "Example Responses"
+!!! success "Example Responses"
 
     === "Success (200 OK)"
         ```json
@@ -167,7 +167,7 @@ The device hosts a simple web server that allows you to check status and switch 
     curl -X POST http://<DEVICE_IP>/restart
     ```
 
-!!! code "Example Response:"
+!!! success "Example Response:"
 
     === "Success (200 OK)"
         ```json
@@ -182,7 +182,7 @@ The device hosts a simple web server that allows you to check status and switch 
     curl -X POST http://<DEVICE_IP>/display/toggle
     ```
 
-!!! code "Example Responses"
+!!! success "Example Responses"
 
     === "Success (200 OK)"
         ```json
@@ -201,7 +201,7 @@ The device hosts a simple web server that allows you to check status and switch 
     curl -X POST http://<DEVICE_IP>/display/on
     ```
 
-!!! code "Example Response"
+!!! success "Example Response"
 
     === "Success (200 OK)"
         ```json
@@ -216,7 +216,7 @@ The device hosts a simple web server that allows you to check status and switch 
     curl -X POST http://<DEVICE_IP>/display/off
     ```
 
-!!! code "Example Response"
+!!! success "Example Response"
 
     === "Success (200 OK)"
         ```json
@@ -231,7 +231,7 @@ The device hosts a simple web server that allows you to check status and switch 
     curl -X POST http://<DEVICE_IP>/wifi/reset
     ```
 
-!!! code "Example Response"
+!!! success "Example Response"
 
     === "Success (200 OK)"
         ```json
@@ -374,12 +374,12 @@ If you don't want to build the project from source, you can flash a pre-compiled
             0x10000 firmware.bin
         ```
 
-    | Address | Bin File       |
-    |:-------:|----------------|
-    | 0x0000  | bootloader.bin |
-    | 0xe000  | boot_app0.bin  |
-    | 0x8000  | partitions.bin |
-    | 0x10000 | firmware.bin   |
+| Address | Bin File       |
+|:-------:|----------------|
+| 0x0000  | bootloader.bin |
+| 0xe000  | boot_app0.bin  |
+| 0x8000  | partitions.bin |
+| 0x10000 | firmware.bin   |
 
 - **Reboot the Device:**
     - After the flashing process is complete, unplug the dongle from your computer and plug it back in to reboot it.
