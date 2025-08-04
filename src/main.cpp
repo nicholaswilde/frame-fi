@@ -32,6 +32,7 @@
 #include <OneButton.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <FastLED.h>   // https://github.com/FastLED/FastLED
+#include <PubSubClient.h>
 #include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
 
 // --- LED Configuration ---
@@ -51,6 +52,8 @@ CRGB leds[NUM_LEDS];
 USBMSC MSC;
 USBCDC USBSerial;
 TFT_eSPI tft = TFT_eSPI();
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
 
 #define HWSerial    Serial0
 #define MOUNT_POINT "/sdcard"
@@ -98,6 +101,19 @@ void drawResetWiFiSettingsScreen();
 int countFiles(File dir);
 int countFilesInPath(const char *path);
 void updateAndDrawMscScreen();
+void setupMqtt();
+void publishMqttStatus();
+void callback(char *topic, byte *payload, unsigned int length);
+void reconnect();
+
+// --- MQTT Topics ---
+#define MQTT_STATE_TOPIC "frame-fi/state"
+#define MQTT_DISPLAY_STATUS_TOPIC "frame-fi/display/status"
+#define MQTT_DISPLAY_SET_TOPIC "frame-fi/display/set"
+
+// --- Timers ---
+unsigned long lastMqttPublish = 0;
+const long mqttPublishInterval = 300000; // 5 minutes
 
 // --- Main Logic ---
 
@@ -148,6 +164,9 @@ void setup(){
   // --- Connect to WiFi ---
   connectToWiFi();
 
+  // --- Setup MQTT ---
+  setupMqtt();
+
   // --- Setup and start Web Server ---
   setupApiRoutes();
   server.begin();
@@ -182,6 +201,18 @@ sdInit();
 void loop(){
   button.tick();
   server.handleClient();
+
+  if (!mqttClient.connected()) {
+    reconnect();
+  }
+  mqttClient.loop();
+
+  unsigned long currentMillis = millis();
+  if (currentMillis - lastMqttPublish >= mqttPublishInterval) {
+    lastMqttPublish = currentMillis;
+    publishMqttStatus();
+  }
+
   if (!isInMscMode) {
     ftpServer.handleFTP(); // Continuously process FTP requests  
   }
@@ -413,6 +444,7 @@ void toggleMode() {
   } else {
     enterMscMode();
   }
+  publishMqttStatus();
 }
 
 // --- Web Server ---
@@ -466,6 +498,7 @@ void enterMscMode() {
 
     // --- Display MSC mode screen ---
     updateAndDrawMscScreen();
+    publishMqttStatus();
   } else {
     HWSerial.println("\n❌ Failed to switch to MSC mode. SD Card not found.");
   }
@@ -519,7 +552,8 @@ bool enterFtpMode() {
   uint64_t usedBytes = SD_MMC.usedBytes();
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
-#endif  
+#endif
+  publishMqttStatus();
   return true;
 }
 
@@ -533,6 +567,7 @@ void handleStatus() {
   int fileCount = 0;
   uint64_t totalSize = 0;
   uint64_t usedSize = 0;
+  uint64_t freeSize = 0;
 
   if (isInMscMode) {
     if(card) {
@@ -541,7 +576,7 @@ void handleStatus() {
       DWORD fre_clust;
       f_getfree(MOUNT_POINT, &fre_clust, &fs);
       totalSize = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
-      uint64_t freeSize = (uint64_t)fre_clust * fs->csize * fs->ssize;
+      freeSize = (uint64_t)fre_clust * fs->csize * fs->ssize;
       usedSize = totalSize - freeSize;
     }
   } else {
@@ -552,6 +587,7 @@ void handleStatus() {
     }
     totalSize = SD_MMC.cardSize();
     usedSize = SD_MMC.usedBytes();
+    freeSize = totalSize - usedSize;
   }
 
   String jsonResponse = "{";
@@ -561,10 +597,11 @@ void handleStatus() {
     jsonResponse += "\"orientation\":\"" + String(tft.getRotation()) + "\"";
   jsonResponse += "},";
   jsonResponse += "\"sd_card\":{";
-    jsonResponse += "\"total_size\":\"" + String(totalSize) + "\",";
-    jsonResponse += "\"used_size\":\"" + String(usedSize) + "\",";
-    jsonResponse += "\"file_count\":\"" + String(fileCount) + "\"}";
-  jsonResponse += "}";
+    jsonResponse += "\"total_size\":" + String(totalSize) + ",";
+    jsonResponse += "\"used_size\":" + String(usedSize) + ",";
+    jsonResponse += "\"free_size\":" + String(freeSize) + ",";
+    jsonResponse += "\"file_count\":" + String(fileCount);
+  jsonResponse += "}}";
   server.send(200, "application/json", jsonResponse);
  }     
 
@@ -624,6 +661,7 @@ void handleDisplayOn() {
   digitalWrite(TFT_LEDA, LOW);
   isDisplayOn = true;
   server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display turned on.\"}");
+  publishMqttStatus();
 #else
   server.send(200, "application/json", "{\"status\":\"no_change\", \"message\":\"Display is disabled in firmware.\"}");
 #endif
@@ -637,6 +675,7 @@ void handleDisplayOff() {
   digitalWrite(TFT_LEDA, HIGH);
   isDisplayOn = false;
   server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display turned off.\"}");
+  publishMqttStatus();
 #else
   server.send(200, "application/json", "{\"status\":\"no_change\", \"message\":\"Display is disabled in firmware.\"}");
 #endif
@@ -655,6 +694,7 @@ void handleDisplayToggle() {
     digitalWrite(TFT_LEDA, HIGH);
     server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display toggled off.\"}");
   }
+  publishMqttStatus();
 #else
   server.send(200, "application/json", "{\"status\":\"no_change\", \"message\":\"Display is disabled in firmware.\"}");
 #endif
@@ -698,6 +738,7 @@ void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, un
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
     drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
 #endif
+    publishMqttStatus();
   }
 }
 
@@ -748,6 +789,120 @@ int countFiles(File dir) {
     entry.close();
   }
   return count;
+}
+
+// --- MQTT ---
+
+/**
+ * @brief Sets up the MQTT client and connection.
+ */
+void setupMqtt() {
+  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+  mqttClient.setCallback(callback);
+  HWSerial.println("MQTT client setup complete.");
+}
+
+/**
+ * @brief Publishes the current status to the MQTT state topic.
+ */
+void publishMqttStatus() {
+  if (!mqttClient.connected()) {
+    return; // Don't publish if not connected
+  }
+
+  const char* modeString = isInMscMode ? MODE_MSC_DESC : MODE_FTP_DESC;
+  const char* displayStatus = isDisplayOn ? "ON" : "OFF";
+
+  int fileCount = 0;
+  uint64_t totalSize = 0;
+  uint64_t usedSize = 0;
+  uint64_t freeSize = 0;
+
+  if (isInMscMode) {
+    if(card) {
+      fileCount = countFilesInPath(MOUNT_POINT);
+      FATFS *fs;
+      DWORD fre_clust;
+      f_getfree(MOUNT_POINT, &fre_clust, &fs);
+      totalSize = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
+      freeSize = (uint64_t)fre_clust * fs->csize * fs->ssize;
+      usedSize = totalSize - freeSize;
+    }
+  } else {
+    File root = SD_MMC.open("/");
+    if (root) {
+      fileCount = countFiles(root);
+      root.close();
+    }
+    totalSize = SD_MMC.cardSize();
+    usedSize = SD_MMC.usedBytes();
+    freeSize = totalSize - usedSize;
+  }
+
+  String jsonResponse = "{";
+  jsonResponse += "\"mode\":\"" + String(modeString) + "\",";
+  jsonResponse += "\"display\":{";
+    jsonResponse += "\"status\":\"" + String(displayStatus) + "\",";
+    jsonResponse += "\"orientation\":\"" + String(tft.getRotation()) + "\"";
+  jsonResponse += "},";
+  jsonResponse += "\"sd_card\":{";
+    jsonResponse += "\"total_size\":" + String(totalSize) + ",";
+    jsonResponse += "\"used_size\":" + String(usedSize) + ",";
+    jsonResponse += "\"free_size\":" + String(freeSize) + ",";
+    jsonResponse += "\"file_count\":" + String(fileCount);
+  jsonResponse += "}}";
+
+  mqttClient.publish(MQTT_STATE_TOPIC, jsonResponse.c_str(), true); // Retain message
+  mqttClient.publish(MQTT_DISPLAY_STATUS_TOPIC, displayStatus, true); // Retain message
+  HWSerial.println("Published MQTT status.");
+}
+
+/**
+ * @brief Handles incoming MQTT messages.
+ */
+void callback(char *topic, byte *payload, unsigned int length) {
+  HWSerial.print("Message arrived [");
+  HWSerial.print(topic);
+  HWSerial.print("] ");
+
+  char message[length + 1];
+  for (int i = 0; i < length; i++) {
+    message[i] = (char)payload[i];
+  }
+  message[length] = '\0';
+  HWSerial.println(message);
+
+  if (strcmp(topic, MQTT_DISPLAY_SET_TOPIC) == 0) {
+    if (strcmp(message, "ON") == 0) {
+      handleDisplayOn();
+    } else if (strcmp(message, "OFF") == 0) {
+      handleDisplayOff();
+    }
+  }
+}
+
+/**
+ * @brief Reconnects to the MQTT broker.
+ */
+void reconnect() {
+  // Loop until we're reconnected
+  while (!mqttClient.connected()) {
+    HWSerial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    if (mqttClient.connect(MQTT_CLIENT_ID, MQTT_USER, MQTT_PASSWORD)) {
+      HWSerial.println("connected");
+      // Subscribe
+      mqttClient.subscribe(MQTT_DISPLAY_SET_TOPIC);
+      // Publish initial status
+      publishMqttStatus();
+    } else {
+      HWSerial.print("failed, rc=");
+      HWSerial.print(mqttClient.state());
+      HWSerial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
 }
 
 // --- Display ---
