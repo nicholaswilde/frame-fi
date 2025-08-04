@@ -90,7 +90,7 @@ The device hosts a simple web server that allows you to check status and switch 
     curl -X GET http://<DEVICE_IP>/
     ```
 
-!!! code "Example Response"
+!!! success "Example Response"
 
     ```json
     {
