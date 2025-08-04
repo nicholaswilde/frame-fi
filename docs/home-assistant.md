@@ -21,7 +21,7 @@ Add the following configuration to your `configuration.yaml` file in Home Assist
 
     ```yaml
     mqtt:
-      sensor:
+      - sensor:
         - name: "FrameFi Status"
           state_topic: "frame-fi/state"
           value_template: "{{ value_json.mode }}"
@@ -41,8 +41,7 @@ Add the following configuration to your `configuration.yaml` file in Home Assist
           value_template: "{{ (value_json.sd_card.total_size | float / 1024 / 1024 / 1024) | round(2) }}"
           unit_of_measurement: "GB"
           icon: "mdi:sd"
-
-      switch:
+      - switch:
         - name: "FrameFi Display"
           state_topic: "frame-fi/display/status"
           command_topic: "frame-fi/display/set"
