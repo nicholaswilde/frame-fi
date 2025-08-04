@@ -565,7 +565,7 @@ You can customize the color scheme of the display by selecting a Catppuccin them
         - **Mode:** Wi-Fi AP
         - **IP:** The AP's IP address (usually `192.168.4.1`).
         - **MAC:** The device's MAC address.
-        - **SSID:** The name of the Access Point (`AutoConnectAP-Frame-Fi`).
+        - **SSID:** The name of the Access Point (`AutoConnectAP-FrameFi`).
 
 ## :link: References
 
