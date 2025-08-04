@@ -42,7 +42,11 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 
 - **Reboot the Device:** Unplug the dongle from your computer and plug it back in to reboot it.
 
-- **Wi-Fi Credentials:** Connect to `AutoConnectAP-Frame-Fi` access point and enter WiFi credentials. If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
+- **Wi-Fi Credentials:** Connect to `AutoConnectAP-Frame-Fi` access point and enter WiFi credentials.
+
+!!! tip
+
+    If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
 
 - **Digital Picture Frame:** Plug in dongle to digital picture frame.
 
