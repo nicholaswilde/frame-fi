@@ -179,6 +179,21 @@ The device hosts a simple web server that allows you to check status and switch 
         {"status":"success","message":"Restarting device..."}
         ```
 
+**`POST /device/restart`**: Restarts the device.
+
+!!! code ""
+
+    ```sh
+    curl -X POST http://<DEVICE_IP>/device/restart
+    ```
+
+!!! success "Example Response:"
+
+    === "Success (200 OK)"
+        ```json
+        {"status":"success","message":"Restarting device..."}
+        ```
+
 **`POST /display/toggle`**: Toggles the display on and off.
 
 !!! code ""

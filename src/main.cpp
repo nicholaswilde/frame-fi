@@ -465,6 +465,7 @@ void setupApiRoutes() {
   server.on("/msc", HTTP_POST, handleSwitchToMsc);
   server.on("/ftp", HTTP_POST, handleSwitchToFtp);
   server.on("/restart", HTTP_POST, handleRestart);
+  server.on("/device/restart", HTTP_POST, handleRestart);
   server.on("/display/toggle", HTTP_POST, handleDisplayToggle);
   server.on("/display/on", HTTP_POST, handleDisplayOn);
   server.on("/display/off", HTTP_POST, handleDisplayOff);
@@ -655,9 +656,8 @@ void handleSwitchToFtp() {
  * @brief Handles the POST request to restart the device.
  */
 void handleRestart() {
-  String jsonResponse = "{\"status\":\"success\", \"message\":\"Restarting device...\"}";
-  server.send(200, "application/json", jsonResponse);
-  delay(1000); // Give the server time to send the response
+  server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Restarting device...\"}");
+  delay(100);
   ESP.restart();
 }
 
