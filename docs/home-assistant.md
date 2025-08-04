@@ -53,6 +53,15 @@ Add the following configuration to your `configuration.yaml` file in Home Assist
           qos: 0
           retain: true
           icon: "mdi:monitor"
+      - device_tracker:
+        - name: "FrameFi"
+          state_topic: "frame-fi/status"
+          availability_topic: "frame-fi/status"
+          payload_available: "online"
+          payload_not_available: "offline"
+          payload_home: "online"
+          payload_not_home: "offline"
+          source_type: "router"
     ```
 
 ## :mag: Explanation
@@ -68,6 +77,13 @@ Add the following configuration to your `configuration.yaml` file in Home Assist
     - `command_topic`: When you toggle the switch, it sends either `ON` or `OFF` to the `frame-fi/display/set` topic.
     - `state_topic`: It listens to the `frame-fi/display/status` topic to get the current state of the display.
     - `retain: true`: This ensures that the last command is retained by the MQTT broker, so the device will pick up the correct state when it reconnects.
+
+- **`mqtt.device_tracker`**:
+    - This creates a new device tracker entity named `FrameFi`.
+    - It listens to the `frame-fi/status` topic to determine the device's online/offline status.
+    - `payload_available`: When the device publishes `online` to the `frame-fi/status` topic, it will be marked as `home`.
+    - `payload_not_available`: When the device publishes `offline` to the `frame-fi/status` topic, it will be marked as `away`.
+    - `source_type: "router"`: This tells Home Assistant to treat the device as a network-based tracker.
 
 - **Additional Sensors**:
     - The configuration also adds sensors for `File Count`, `Used Space`, and `Total Space`.

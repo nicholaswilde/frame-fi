@@ -14,6 +14,11 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
     3. Connect to this AP. If the captive portal does not open automatically, navigate to <http://192.168.4.1> in your web browser to configure Wi-Fi.
     4. The device will be recognized as a USB Mass Storage device (thumb drive), giving you direct access to the microSD card.
 
+- **AP Mode:**
+    1. If the device has no saved Wi-Fi credentials, it will automatically start in AP mode.
+    2. The device will create a Wi-Fi Access Point named `AutoConnectAP-FrameFi`.
+    3. Connect to this AP. If the captive portal does not open automatically, navigate to <http://192.168.4.1> in your web browser to configure Wi-Fi.
+
 - **FTP Server Mode:**
     1. Press the onboard button (single click) to switch from MSC to FTP mode.
     2. Use an FTP client to connect to the device's IP address (visible on the LCD display) using the `FTP_USER` and `FTP_PASSWORD` you set in `include/secrets.h`.

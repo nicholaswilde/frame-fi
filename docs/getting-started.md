@@ -95,44 +95,6 @@ To encrypt the files after making changes, run the following command:
         sops -e --input-type dotenv --output-type dotenv scripts/.env > scripts/.env.enc
         ```
 
-### :art: Customization
-
-#### :art: Theme
-
-The LCD display uses the [Catppuccin](https://github.com/catppuccin/catppuccin) color theme. You can change the active theme by editing `include/catppuccin_colors.h`.
-
-To change the theme, simply uncomment the block for the theme you wish to use and comment out the currently active theme.
-
-**Example: Switching from Mocha to Macchiato**
-
-1.  Open `include/catppuccin_colors.h`.
-2.  Find the `Mocha` theme block and comment it out.
-3.  Find the `Macchiato` theme block and uncomment it.
-4.  Rebuild and upload the firmware.
-
-!!! tip "Rebooting the Device"
-    After uploading the firmware, you may need to unplug the dongle and plug it back in to reboot it and apply the changes.
-
-!!! abstract "include/catppuccin_colors.h"
-
-    ```cpp
-    // --- Theme: Mocha (Now commented out) ---
-    /*
-    #define CATPPUCCIN_ROSEWATER  0xF73B
-    ...
-    */
-
-    // --- Theme: Macchiato (Now active) ---
-    #define CATPPUCCIN_ROSEWATER  0xF73B
-    ...
-    ```
-
-??? abstract "include/catppuccin_colors.h"
-
-    ```cpp
-    --8<-- "catppuccin_colors.h"
-    ```
-
 ## :link: References
 
 - <https://github.com/catppuccin/catppuccin>
