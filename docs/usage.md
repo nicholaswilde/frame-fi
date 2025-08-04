@@ -548,7 +548,7 @@ You can completely enable or disable the LCD screen backlight by modifying the `
 
 ### :art: Theme
 
-You can customize the color scheme of the display by selecting a Catppuccin theme in the `platformio.ini` file.
+You can customize the color scheme of the display by selecting a [Catppuccin theme][7] in the `platformio.ini` file.
 
 1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
 2.  **Find `custom_catppuccin_theme`**: Locate the `[env]` section and find the `custom_catppuccin_theme` option.
@@ -578,3 +578,4 @@ You can customize the color scheme of the display by selecting a Catppuccin them
 [4]: <https://lftp.yar.ru/>
 [5]: <https://github.com/Bodmer/TFT_eSPI>
 [6]: <https://github.com/nicholaswilde/frame-fi/releases/latest>
+[7]: <https://catppuccin.com/palette/>
