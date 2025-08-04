@@ -464,10 +464,11 @@ The LCD display uses the [TFT_eSPI][5] library to show device status and network
 !!! example "Screens"
 
     === "Boot"
+        When the device is booting, the device shows:
+        
+            Booting...
 
-        Booting...
-
-        version
+             version
         
     === "USB Mass Storage Mode"
 
@@ -498,7 +499,7 @@ The LCD display uses the [TFT_eSPI][5] library to show device status and network
         - **Mode:** AP
         - **IP:** The AP's IP address (usually `192.168.4.1`).
         - **MAC:** The device's MAC address.
-        - **SSID:** The name of the Access Point (`AutoConnectAP-Frame-Fi`).
+        - **SSID:** The name of the Access Point (`AutoConnectAP-FrameFi`).
 
 ### :compass: Display Orientation
 
