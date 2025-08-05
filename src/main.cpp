@@ -389,6 +389,26 @@ void connectToWiFi() {
 
   // wm.resetSettings(); // wipe settings
   
+  // --- Configure WiFiManager ---
+  String ap_ssid_str;
+  const char* ap_ssid;
+  const char* ap_password;
+
+#if defined(WIFI_AP_SSID)
+  ap_ssid = WIFI_AP_SSID;
+#else
+  String mac = WiFi.macAddress();
+  mac.replace(":", "");
+  ap_ssid_str = "FrameFi-" + mac.substring(mac.length() - 6);
+  ap_ssid = ap_ssid_str.c_str();
+#endif
+
+#if defined(WIFI_AP_PASSWORD)
+  ap_password = WIFI_AP_PASSWORD;
+#else
+  ap_password = NULL;
+#endif
+
   // --- Set up a callback for when the captive portal is entered ---
   wm.setAPCallback([](WiFiManager *myWiFiManager) {
     HWSerial.println("Entered config mode");
@@ -411,7 +431,7 @@ void connectToWiFi() {
     leds[0] = CRGB::Black;
     FastLED.show();
     delay(400);
-    if (wm.autoConnect(WIFI_AP_SSID, WIFI_AP_PASSWORD)) {
+    if (wm.autoConnect(ap_ssid, ap_password)) {
       connecting = false;
     }
   }
@@ -1109,10 +1129,17 @@ void drawResetWiFiSettingsScreen() {
 
   int y_pos = 30;
   int x_pos = tft.width() / 2; // Center horizontally
+  uint8_t rotation = tft.getRotation();
 
   tft.setTextColor(CATPPUCCIN_TEXT);
   tft.setTextSize(1);
-  tft.drawCentreString("Resetting WiFi...", x_pos, y_pos, 2);
+  if (rotation == 1 || rotation == 3) { // Landscape
+    tft.drawCentreString("Resetting Wi-Fi...", x_pos, y_pos, 2);
+  } else { // Portrait
+    tft.drawCentreString("Resetting", x_pos, y_pos, 2);
+    y_pos += 15;
+    tft.drawCentreString("Wi-Fi...", x_pos, y_pos, 2);
+  }
   y_pos += 25;
 
   tft.setTextSize(1);
