@@ -547,7 +547,7 @@ You can completely enable or disable the LCD screen backlight by modifying the `
 
 !!! tip
 
-    The screen can also be enabled and disabled via the we API.
+    The screen can also be enabled and disabled via the [web API](#web-api).
 
 1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
 2.  **Find `LCD_ENABLED`**: Locate the `build_flags` section and find the `-D LCD_ENABLED` line.
