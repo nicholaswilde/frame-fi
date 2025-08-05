@@ -10,13 +10,13 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
 
 - **USB Mass Storage Mode (Default):**
     1. Plug the T-Dongle-S3 into your computer's USB port.
-    2. The device will connect to the configured Wi-Fi network. If no credentials are saved, it will create a Wi-Fi Access Point named `AutoConnectAP-FrameFi`.
+    2. The device will connect to the configured Wi-Fi network. If no credentials are saved, it will create a Wi-Fi Access Point named `FrameFi-<MAC>`.
     3. Connect to this AP. If the captive portal does not open automatically, navigate to <http://192.168.4.1> in your web browser to configure Wi-Fi.
     4. The device will be recognized as a USB Mass Storage device (thumb drive), giving you direct access to the microSD card.
 
 - **AP Mode:**
     1. If the device has no saved Wi-Fi credentials, it will automatically start in AP mode.
-    2. The device will create a Wi-Fi Access Point named `AutoConnectAP-FrameFi`.
+    2. The device will create a Wi-Fi Access Point named `FrameFi-<MAC>`.
     3. Connect to this AP. If the captive portal does not open automatically, navigate to <http://192.168.4.1> in your web browser to configure Wi-Fi.
 
 - **FTP Server Mode:**
@@ -580,7 +580,7 @@ You can customize the color scheme of the display by selecting a Catppuccin them
         - **Mode:** Wi-Fi AP
         - **IP:** The AP's IP address (usually `192.168.4.1`).
         - **MAC:** The device's MAC address.
-        - **SSID:** The name of the Access Point (`AutoConnectAP-FrameFi`).
+        - **SSID:** The name of the Access Point (`FrameFi-<MAC>`).
 
 ## :link: References
 
