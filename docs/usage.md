@@ -591,6 +591,10 @@ You can customize the color scheme of the display by selecting a [Catppuccin the
     custom_catppuccin_theme = Mocha
     ```
 
+!!! note
+
+    The file `catppuccin_colors.h` is automatically generated. Do not edit.
+
 ## :link: References
 
 - [lftp][4]
