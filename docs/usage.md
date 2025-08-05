@@ -545,6 +545,10 @@ You can change the screen orientation by modifying the `platformio.ini` file.
 
 You can completely enable or disable the LCD screen backlight by modifying the `platformio.ini` file. This is useful for saving power if you don't need the display.
 
+!!! tip
+
+    The screen can also be enabled and disabled via the we API.
+
 1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
 2.  **Find `LCD_ENABLED`**: Locate the `build_flags` section and find the `-D LCD_ENABLED` line.
 3.  **Change the Value**:
