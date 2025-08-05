@@ -61,6 +61,10 @@ This project uses [sops][2] for encrypting and decrypting secrets. The following
 - `include/secrets.h`
 - `scripts/.env`
 
+The above files are ignored by git to prevent the accidental comitting of secrets.
+
+`*.enc` files are saved encrypted secrets for making it easier to save credentials.
+
 #### Decrypting Secrets
 
 To decrypt the files, run the following command:
