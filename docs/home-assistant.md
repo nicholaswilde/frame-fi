@@ -53,6 +53,11 @@ Add the following configuration to your `configuration.yaml` file in Home Assist
           qos: 0
           retain: true
           icon: "mdi:monitor"
+      - button:
+        - name: "FrameFi Restart"
+          command_topic: "frame-fi/restart"
+          payload_press: "RESTART"
+          icon: "mdi:restart"
       - device_tracker:
         - name: "FrameFi"
           state_topic: "frame-fi/status"
@@ -77,6 +82,10 @@ Add the following configuration to your `configuration.yaml` file in Home Assist
     - `command_topic`: When you toggle the switch, it sends either `ON` or `OFF` to the `frame-fi/display/set` topic.
     - `state_topic`: It listens to the `frame-fi/display/status` topic to get the current state of the display.
     - `retain: true`: This ensures that the last command is retained by the MQTT broker, so the device will pick up the correct state when it reconnects.
+
+- **`mqtt.button`**:
+    - This creates a new button entity named `FrameFi Restart`.
+    - When you press the button, it sends `RESTART` to the `frame-fi/restart` topic.
 
 - **`mqtt.device_tracker`**:
     - This creates a new device tracker entity named `FrameFi`.

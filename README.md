@@ -37,7 +37,7 @@ pio run --target upload
 ```
 - **Reboot the Device:** Unplug the dongle from your computer and plug it back in to reboot it.
 
-- **Wi-Fi Credentials:** Connect to `AutoConnectAP-Frame-Fi` access point and enter WiFi credentials.
+- **Wi-Fi Credentials:** Connect to `AutoConnectAP-FrameFi` access point and enter Wi-Fi credentials.
 
 >[!TIP]
 >If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.

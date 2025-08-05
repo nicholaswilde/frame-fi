@@ -59,6 +59,18 @@ Key points:
 - Specify the language for code blocks.
 - Add new pages to the `nav` section of `mkdocs.yml`.
 
+### :label: Versioning
+
+The firmware version is automatically generated based on the `git` history of the repository, so you don't need to set it manually. This ensures that each build is traceable to a specific point in the code's history.
+
+The version string is derived using the `git describe --tags --dirty --always` command. Here's how it works:
+
+-   **Tags:** The base version number comes from the most recent `git` tag (e.g., `v1.2.0`). It's crucial to tag releases in the format `vX.Y.Z`.
+-   **Commit Hash:** If you have made commits since the last tag, the version will include the number of commits and the short hash of the latest commit (e.g., `v1.2.0-4-g1a2b3c4`). This indicates it's a development build.
+-   **Dirty State:** If you have uncommitted changes in your local working directory when you build the firmware, the version string will have a `-dirty` suffix (e.g., `v1.2.0-4-g1a2b3c4-dirty`). This is a clear indicator that the build was made from code that doesn't exactly match any commit in the repository, which is useful for debugging.
+
+This automated versioning helps maintain a clear and consistent understanding of what code is running on a device at any given time.
+
 ## :balance_scale: License
 
 By contributing, you agree that your contributions will be licensed under the [Apache License 2.0](./LICENSE).

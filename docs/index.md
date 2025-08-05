@@ -42,7 +42,7 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 
 - **Reboot the Device:** Unplug the dongle from your computer and plug it back in to reboot it.
 
-- **Wi-Fi Credentials:** Connect to `AutoConnectAP-FrameFi` access point and enter WiFi credentials.
+- **Wi-Fi Credentials:** Connect to `FrameFi-<MAC>` access point and enter Wi-Fi credentials.
 
 !!! tip
 
@@ -95,9 +95,9 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
     FTP is an insecure protocol. Only use this feature on a trusted network.
 - **USB Mass Storage Mode:** In MSC mode, the device mounts the microSD card as a standard USB thumb drive, allowing for high-speed file transfers directly from your computer.
 - **Fast Data Transfer:** Utilizes the `SD_MMC` interface for the microSD card, offering significantly faster read/write speeds compared to the standard SPI interface.
-- **Dynamic WiFi Configuration:** Uses `WiFiManager` to create a captive portal for easy Wi-Fi setup without hardcoding credentials.
+- **Dynamic Wi-Fi Configuration:** Uses `WiFiManager` to create a captive portal for easy Wi-Fi setup without hardcoding credentials.
 - **Home Assistant Integration:** Publishes status and accepts commands via MQTT for seamless integration with home automation systems.
-- **Easy WiFi Reset:** Hold the button for 3 seconds to clear saved WiFi credentials and re-enter setup mode.
+- **Easy Wi-Fi Reset:** Hold the button for 3 seconds to clear saved Wi-Fi credentials and re-enter setup mode.
 - **Boot-up Screen:** Displays a welcome screen with the current firmware version on startup.
 - **LED Status Indicators:** A built-in LED provides at-a-glance status updates for different modes.
 - **LCD Display:** Displays relevant information on the LCD display depending on the mode, including a bar graph showing SD card usage. It also utilizes catppuccin color schemes.
