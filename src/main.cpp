@@ -945,10 +945,10 @@ void updateAndDrawMscScreen() {
  * @brief Draws the top header bar.
  */
 void drawHeader(const char* title, uint16_t bannerColor) {
-  tft.fillRect(0, 0, TFT_HEIGHT, 12, bannerColor);
+  tft.fillRect(0, 0, tft.width(), 12, bannerColor);
   tft.setTextColor(CATPPUCCIN_CRUST);
   tft.setTextSize(1);
-  tft.drawCentreString(title, TFT_WIDTH, 2, 1); // x-center, y, font
+  tft.drawCentreString(title, tft.width() / 2, 2, 1); // x-center, y, font
   tft.setTextSize(1);
 }
 
@@ -1034,6 +1034,16 @@ void drawStorageInfoPortrait(int files, int totalSizeMB, float freeSizeMB) {
   // --- Draw storage text info ---
   tft.setCursor(x_pos, y_pos);
   tft.setTextColor(CATPPUCCIN_MAUVE);
+  tft.print("Files:");
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_PEACH);
+  tft.print(files);
+  y_pos += 12;
+
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
   tft.print("Size:");
   y_pos += 12;
 
@@ -1041,16 +1051,6 @@ void drawStorageInfoPortrait(int files, int totalSizeMB, float freeSizeMB) {
   tft.setTextColor(CATPPUCCIN_PEACH);
   tft.print(totalSizeGB, 2);
   tft.print("GB");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Files:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_PEACH);
-  tft.print(files);
   y_pos += 12;
 
   tft.setCursor(x_pos, y_pos);
@@ -1282,7 +1282,9 @@ void drawFtpModeScreenPortrait(const char* ip, const char* mac, int files, int t
 
   tft.setCursor(x_pos, y_pos);
   tft.setTextColor(CATPPUCCIN_YELLOW);
-  tft.print(ip);
+  String ipStr = String(ip);
+  ipStr.replace(".", "");
+  tft.print(ipStr);
   y_pos += 12;
 
   tft.setCursor(x_pos, y_pos);
@@ -1292,7 +1294,9 @@ void drawFtpModeScreenPortrait(const char* ip, const char* mac, int files, int t
 
   tft.setCursor(x_pos, y_pos);
   tft.setTextColor(CATPPUCCIN_YELLOW);
-  tft.print(mac);
+  String macStr = String(mac);
+  macStr.replace(":", "");
+  tft.print(macStr);
 
   // --- Storage Info ---
   drawStorageInfo(files, totalSizeMB, freeSizeMB);
@@ -1371,7 +1375,9 @@ void drawUsbMscModeScreenPortrait(const char* ip, const char* mac, int files, in
 
   tft.setCursor(x_pos, y_pos);
   tft.setTextColor(CATPPUCCIN_YELLOW);
-  tft.print(ip);
+  String ipStr = String(ip);
+  ipStr.replace(".", "");
+  tft.print(ipStr);
   y_pos += 12;
 
   tft.setCursor(x_pos, y_pos);
@@ -1381,7 +1387,9 @@ void drawUsbMscModeScreenPortrait(const char* ip, const char* mac, int files, in
 
   tft.setCursor(x_pos, y_pos);
   tft.setTextColor(CATPPUCCIN_YELLOW);
-  tft.print(mac);
+  String macStr = String(mac);
+  macStr.replace(":", "");
+  tft.print(macStr);
 
   // --- Storage Info ---
   drawStorageInfo(files, totalSizeMB, freeSizeMB);
