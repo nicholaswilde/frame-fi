@@ -1024,9 +1024,9 @@ void drawStorageInfoLandscape(int files, int totalSizeMB, float freeSizeMB) {
 
   // --- Draw capacity bar ---
   int bar_x = x_pos;
-  int bar_y = y_pos;
+  int bar_height = 3;
+  int bar_y = tft.height() - bar_height;
   int bar_width = TFT_HEIGHT - (2 * x_pos); // Bar width spans the screen with padding
-  int bar_height = 8;
   int filled_width = (bar_width * usedPercentage) / 100;
 
   // --- Draw the bar background (empty part) ---
@@ -1086,16 +1086,17 @@ void drawStorageInfoPortrait(int files, int totalSizeMB, float freeSizeMB) {
   y_pos += 12;
 
   // --- Draw capacity bar ---
-  int bar_x = x_pos;
-  int bar_y = y_pos;
-  int bar_width = tft.width() - (2 * x_pos); // Bar width spans the screen with padding
-  int bar_height = 8;
-  int filled_width = (bar_width * usedPercentage) / 100;
+  // int bar_x = x_pos;
+  int bar_x = 0;
+  int bar_y = 12;
+  int bar_width = x_pos-2;
+  int bar_height = tft.height() - 12; // Bar width spans the screen with padding
+  int filled_height = (bar_height * usedPercentage) / 100;
 
   // --- Draw the bar background (empty part) ---
   tft.drawRect(bar_x, bar_y, bar_width, bar_height, CATPPUCCIN_BASE);
   // --- Draw the filled part of the bar ---
-  tft.fillRect(bar_x, bar_y, filled_width, bar_height, CATPPUCCIN_GREEN);
+  tft.fillRect(bar_x, y_pos - filled_height, bar_width, filled_height, CATPPUCCIN_GREEN);
 }
 
 /**
@@ -1272,8 +1273,6 @@ void drawFtpModeScreenLandscape(const char* ip, const char* mac, int files, int 
   tft.setCursor(x_pos, y_pos);
   tft.setTextColor(CATPPUCCIN_MAUVE);
   tft.print("MAC:   ");
-  // y_pos += 10;
-  // tft.setCursor(x_pos, y_pos);
   tft.setTextColor(CATPPUCCIN_YELLOW);
   tft.print(mac);
 
