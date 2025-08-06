@@ -162,21 +162,6 @@ The device hosts a simple web server that allows you to check status and switch 
         {"status":"error","message":"Failed to re-initialize SD card."}
         ```
 
-**`POST /restart`**: Restarts the device.
-
-!!! code ""
-
-    ```sh
-    curl -X POST http://<DEVICE_IP>/restart
-    ```
-
-!!! success "Example Response:"
-
-    === "Success (200 OK)"
-        ```json
-        {"status":"success","message":"Restarting device..."}
-        ```
-
 **`POST /device/restart`**: Restarts the device.
 
 !!! code ""
