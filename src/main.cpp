@@ -33,7 +33,10 @@
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <FastLED.h>   // https://github.com/FastLED/FastLED
 #include <PubSubClient.h>
+#include "json.hpp"
 #include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
+
+using json = nlohmann::json;
 
 // --- Mode Descriptions ---
 const char* MODE_MSC_DESC = "USB MSC";
@@ -613,25 +616,18 @@ void handleStatus() {
     freeSize = totalSize - usedSize;
   }
 
-  const char* mqttStatus = mqttClient.connected() ? "connected" : "disconnected";
-    
-  String jsonResponse = "{";
-  jsonResponse += "\"mode\":\"" + String(modeString) + "\",";
-  jsonResponse += "\"display\":{";
-    jsonResponse += "\"status\":\"" + String(displayStatus) + "\",";
-    jsonResponse += "\"orientation\":" + String(tft.getRotation());
-  jsonResponse += "},";
-  jsonResponse += "\"sd_card\":{";
-    jsonResponse += "\"total_size\":" + String(totalSize) + ",";
-    jsonResponse += "\"used_size\":" + String(usedSize) + ",";
-    jsonResponse += "\"free_size\":" + String(freeSize) + ",";
-    jsonResponse += "\"file_count\":" + String(fileCount);
-  jsonResponse += "},";
-  jsonResponse += "\"mqtt\":{";
-    jsonResponse += "\"state\":" + String(mqttClient.state()) + ",";
-    jsonResponse += "\"connected\":" + String(mqttClient.connected()) + "}";
-  jsonResponse += "}";
-  server.send(200, "application/json", jsonResponse);
+  json jsonResponse;
+  jsonResponse["mode"] = modeString;
+  jsonResponse["display"]["status"] = displayStatus;
+  jsonResponse["display"]["orientation"] = tft.getRotation();
+  jsonResponse["sd_card"]["total_size"] = totalSize;
+  jsonResponse["sd_card"]["used_size"] = usedSize;
+  jsonResponse["sd_card"]["free_size"] = freeSize;
+  jsonResponse["sd_card"]["file_count"] = fileCount;
+  jsonResponse["mqtt"]["state"] = mqttClient.state();
+  jsonResponse["mqtt"]["connected"] = mqttClient.connected();
+
+  server.send(200, "application/json", jsonResponse.dump().c_str());
  }     
 
 /**
@@ -639,16 +635,22 @@ void handleStatus() {
  */
 void handleSwitchToMsc() {
   if (isInMscMode) {
-    String jsonResponse = "{\"status\":\"no_change\", \"message\":\"Already in MSC mode.\"}";
-    server.send(200, "application/json", jsonResponse);
+    json jsonResponse;
+    jsonResponse["status"] = "no_change";
+    jsonResponse["message"] = "Already in MSC mode.";
+    server.send(200, "application/json", jsonResponse.dump().c_str());
   } else {
     enterMscMode();
     if (isInMscMode) {
-      String jsonResponse = "{\"status\":\"success\", \"message\":\"Switched to MSC mode.\"}";
-      server.send(200, "application/json", jsonResponse);
+      json jsonResponse;
+      jsonResponse["status"] = "success";
+      jsonResponse["message"] = "Switched to MSC mode.";
+      server.send(200, "application/json", jsonResponse.dump().c_str());
     } else {
-      String jsonResponse = "{\"status\":\"error\", \"message\":\"Failed to switch to MSC mode.\"}";
-      server.send(500, "application/json", jsonResponse);
+      json jsonResponse;
+      jsonResponse["status"] = "error";
+      jsonResponse["message"] = "Failed to switch to MSC mode.";
+      server.send(500, "application/json", jsonResponse.dump().c_str());
     }
   }  
 }
@@ -659,16 +661,22 @@ void handleSwitchToMsc() {
 void handleSwitchToFtp() {
   if (isInMscMode) {
     if (enterFtpMode()) {
-      String jsonResponse = "{\"status\":\"success\", \"message\":\"Switched to Application (FTP) mode.\"}";
-      server.send(200, "application/json", jsonResponse);
+      json jsonResponse;
+      jsonResponse["status"] = "success";
+      jsonResponse["message"] = "Switched to Application (FTP) mode.";
+      server.send(200, "application/json", jsonResponse.dump().c_str());
     } else {
-      String jsonResponse = "{\"status\":\"error\", \"message\":\"Failed to re-initialize SD card.\"}";
-      server.send(500, "application/json", jsonResponse);
+      json jsonResponse;
+      jsonResponse["status"] = "error";
+      jsonResponse["message"] = "Failed to re-initialize SD card.";
+      server.send(500, "application/json", jsonResponse.dump().c_str());
     }
   }
   else {
-    String jsonResponse = "{\"status\":\"no_change\", \"message\":\"Already in Application (FTP) mode.\"}";
-    server.send(200, "application/json", jsonResponse);
+    json jsonResponse;
+    jsonResponse["status"] = "no_change";
+    jsonResponse["message"] = "Already in Application (FTP) mode.";
+    server.send(200, "application/json", jsonResponse.dump().c_str());
   }
 }
 
@@ -676,7 +684,10 @@ void handleSwitchToFtp() {
  * @brief Handles the POST request to restart the device.
  */
 void handleRestart() {
-  server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Restarting device...\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "success";
+  jsonResponse["message"] = "Restarting device...";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
   delay(100);
   ESP.restart();
 }
@@ -688,10 +699,16 @@ void handleDisplayOn() {
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   digitalWrite(TFT_LEDA, LOW);
   isDisplayOn = true;
-  server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display turned on.\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "success";
+  jsonResponse["message"] = "Display turned on.";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
   publishMqttStatus();
 #else
-  server.send(200, "application/json", "{\"status\":\"no_change\", \"message\":\"Display is disabled in firmware.\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "no_change";
+  jsonResponse["message"] = "Display is disabled in firmware.";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
 #endif
 }
 
@@ -702,10 +719,16 @@ void handleDisplayOff() {
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   digitalWrite(TFT_LEDA, HIGH);
   isDisplayOn = false;
-  server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display turned off.\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "success";
+  jsonResponse["message"] = "Display turned off.";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
   publishMqttStatus();
 #else
-  server.send(200, "application/json", "{\"status\":\"no_change\", \"message\":\"Display is disabled in firmware.\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "no_change";
+  jsonResponse["message"] = "Display is disabled in firmware.";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
 #endif
 }
 
@@ -715,16 +738,22 @@ void handleDisplayOff() {
 void handleDisplayToggle() {
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   isDisplayOn = !isDisplayOn;
+  json jsonResponse;
+  jsonResponse["status"] = "success";
   if (isDisplayOn) {
     digitalWrite(TFT_LEDA, LOW);
-    server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display toggled on.\"}");
+    jsonResponse["message"] = "Display toggled on.";
   } else {
     digitalWrite(TFT_LEDA, HIGH);
-    server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display toggled off.\"}");
+    jsonResponse["message"] = "Display toggled off.";
   }
+  server.send(200, "application/json", jsonResponse.dump().c_str());
   publishMqttStatus();
 #else
-  server.send(200, "application/json", "{\"status\":\"no_change\", \"message\":\"Display is disabled in firmware.\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "no_change";
+  jsonResponse["message"] = "Display is disabled in firmware.";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
 #endif
 }
 
@@ -732,7 +761,10 @@ void handleDisplayToggle() {
  * @brief Handles the POST request to reset WiFi settings.
  */
 void handleWifiReset() {
-  server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Resetting WiFi and restarting...\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "success";
+  jsonResponse["message"] = "Resetting WiFi and restarting...";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
   delay(200);
   resetWifiSettings();
 }
@@ -867,20 +899,16 @@ void publishMqttStatus() {
     freeSize = totalSize - usedSize;
   }
 
-  String jsonResponse = "{";
-  jsonResponse += "\"mode\":\"" + String(modeString) + "\",";
-  jsonResponse += "\"display\":{";
-    jsonResponse += "\"status\":\"" + String(displayStatus) + "\",";
-    jsonResponse += "\"orientation\":\"" + String(tft.getRotation()) + "\"";
-  jsonResponse += "},";
-  jsonResponse += "\"sd_card\":{";
-    jsonResponse += "\"total_size\":" + String(totalSize) + ",";
-    jsonResponse += "\"used_size\":" + String(usedSize) + ",";
-    jsonResponse += "\"free_size\":" + String(freeSize) + ",";
-    jsonResponse += "\"file_count\":" + String(fileCount);
-  jsonResponse += "}}";
+  json jsonResponse;
+  jsonResponse["mode"] = modeString;
+  jsonResponse["display"]["status"] = displayStatus;
+  jsonResponse["display"]["orientation"] = tft.getRotation();
+  jsonResponse["sd_card"]["total_size"] = totalSize;
+  jsonResponse["sd_card"]["used_size"] = usedSize;
+  jsonResponse["sd_card"]["free_size"] = freeSize;
+  jsonResponse["sd_card"]["file_count"] = fileCount;
 
-  mqttClient.publish(MQTT_STATE_TOPIC, jsonResponse.c_str(), true); // Retain message
+  mqttClient.publish(MQTT_STATE_TOPIC, jsonResponse.dump().c_str(), true); // Retain message
   mqttClient.publish(MQTT_DISPLAY_STATUS_TOPIC, displayStatus, true); // Retain message
   HWSerial.println("Published MQTT status.");
 }
