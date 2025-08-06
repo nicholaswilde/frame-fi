@@ -35,11 +35,6 @@
 #include <PubSubClient.h>
 #include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
 
-// --- LED Configuration ---
-
-// --- Button Configuration ---
-#define BTN_PIN 0
-
 // --- Mode Descriptions ---
 const char* MODE_MSC_DESC = "USB MSC";
 const char* MODE_FTP_DESC = "Application (FTP Server)";
@@ -484,7 +479,6 @@ void setupApiRoutes() {
   server.on("/", HTTP_GET, handleStatus);
   server.on("/msc", HTTP_POST, handleSwitchToMsc);
   server.on("/ftp", HTTP_POST, handleSwitchToFtp);
-  server.on("/restart", HTTP_POST, handleRestart);
   server.on("/device/restart", HTTP_POST, handleRestart);
   server.on("/display/toggle", HTTP_POST, handleDisplayToggle);
   server.on("/display/on", HTTP_POST, handleDisplayOn);
@@ -619,18 +613,23 @@ void handleStatus() {
     freeSize = totalSize - usedSize;
   }
 
+  const char* mqttStatus = mqttClient.connected() ? "connected" : "disconnected";
+    
   String jsonResponse = "{";
   jsonResponse += "\"mode\":\"" + String(modeString) + "\",";
   jsonResponse += "\"display\":{";
     jsonResponse += "\"status\":\"" + String(displayStatus) + "\",";
-    jsonResponse += "\"orientation\":\"" + String(tft.getRotation()) + "\"";
+    jsonResponse += "\"orientation\":" + String(tft.getRotation());
   jsonResponse += "},";
   jsonResponse += "\"sd_card\":{";
     jsonResponse += "\"total_size\":" + String(totalSize) + ",";
     jsonResponse += "\"used_size\":" + String(usedSize) + ",";
     jsonResponse += "\"free_size\":" + String(freeSize) + ",";
     jsonResponse += "\"file_count\":" + String(fileCount);
-  jsonResponse += "}}";
+  jsonResponse += "},";
+  jsonResponse += "\"mqtt\":{";
+    jsonResponse += "\"status\":\"" + String(mqttStatus) + "\"}";
+  jsonResponse += "}";
   server.send(200, "application/json", jsonResponse);
  }     
 
