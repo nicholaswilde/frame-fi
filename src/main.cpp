@@ -628,7 +628,8 @@ void handleStatus() {
     jsonResponse += "\"file_count\":" + String(fileCount);
   jsonResponse += "},";
   jsonResponse += "\"mqtt\":{";
-    jsonResponse += "\"status\":\"" + String(mqttStatus) + "\"}";
+    jsonResponse += "\"state\":" + String(mqttClient.state()) + ",";
+    jsonResponse += "\"connected\":" + String(mqttClient.connected()) + "}";
   jsonResponse += "}";
   server.send(200, "application/json", jsonResponse);
  }     
