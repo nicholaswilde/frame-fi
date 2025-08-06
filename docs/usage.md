@@ -106,9 +106,23 @@ The device hosts a simple web server that allows you to check status and switch 
         "used_space": 1234567890,
         "total_space": 9876543210,
         "file_count": 42
+      },
+      "mqtt": {
+        "state": 0,
+        "connected": 1
       }
     }
     ```
+
+??? abstract "MQTT State"
+
+    | State | Description                   | State | Description                   |
+    |:-----:|-------------------------------|:-----:|-------------------------------|
+    | `-4`  | MQTT_CONNECTION_TIMEOUT       |  `1`  | MQTT_CONNECT_BAD_PROTOCOL     |
+    | `-3`  | MQTT_CONNECTION_LOST          |  `2`  | MQTT_CONNECT_BAD_CLIENT_ID    |
+    | `-2`  | MQTT_CONNECT_FAILED           |  `3`  | MQTT_CONNECT_UNAVAILABLE      |  
+    | `-1`  | MQTT_DISCONNECTED             |  `4`  | MQTT_CONNECT_BAD_CREDENTIALS  |
+    |  `0`  | MQTT_CONNECTED                |  `5`  | MQTT_CONNECT_UNAUTHORIZED     |    
 
 **`POST /msc`**: Switches the device to USB Mass Storage (MSC) mode.
 
