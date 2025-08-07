@@ -67,6 +67,9 @@ function check_dependencies() {
 }
 
 function download_release(){
+  RELEASE=$(curl -fsSL https://api.github.com/repos/${GITHUB_REPO}/releases/latest | grep -o '"tag_name": *"[^"]*"' | cut -d '"' -f 4 | sed 's/^v//')
+  log "INFO" "Latest release: ${RELEASE}"
+
   # --- get the latest release download URL ---
   echo "Fetching the latest release from ${GITHUB_REPO}..."
   LATEST_RELEASE_URL=$(curl -s "https://api.github.com/repos/${GITHUB_REPO}/releases/latest" |  grep "browser_download_url" | grep -o 'https://[^"]*')
