@@ -33,7 +33,7 @@
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <FastLED.h>   // https://github.com/FastLED/FastLED
 #include <PubSubClient.h>
-#include "json.hpp"
+#include <nlohmann/json.hpp> // https://github.com/nlohmann/json
 #include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
 
 using json = nlohmann::json;
@@ -65,6 +65,18 @@ bool isDisplayOn = true; // A flag to track the display status
 volatile bool msc_disk_dirty = false;
 volatile unsigned long last_msc_write_time = 0;
 const unsigned long MSC_REFRESH_DEBOUNCE_MS = 2000; // 2 seconds
+
+// --- MQTT Topics ---
+#define MQTT_STATE_TOPIC "frame-fi/state"
+#define MQTT_DISPLAY_STATUS_TOPIC "frame-fi/display/status"
+#define MQTT_DISPLAY_SET_TOPIC "frame-fi/display/set"
+
+// --- Timers ---
+unsigned long lastMqttPublish = 0;
+const long mqttPublishInterval = 300000; // 5 minutes
+// Timer variables for non-blocking reconnection
+unsigned long lastReconnectAttempt = 0;
+const long reconnectInterval = 5000; // Interval to wait between retries (5 seconds)
 
 // --- Function prototypes ---
 void connectToWiFi();
@@ -111,15 +123,6 @@ void setupMqtt();
 void publishMqttStatus();
 void callback(char *topic, byte *payload, unsigned int length);
 void reconnect();
-
-// --- MQTT Topics ---
-#define MQTT_STATE_TOPIC "frame-fi/state"
-#define MQTT_DISPLAY_STATUS_TOPIC "frame-fi/display/status"
-#define MQTT_DISPLAY_SET_TOPIC "frame-fi/display/set"
-
-// --- Timers ---
-unsigned long lastMqttPublish = 0;
-const long mqttPublishInterval = 300000; // 5 minutes
 
 // --- Main Logic ---
 
@@ -170,8 +173,10 @@ void setup(){
   // --- Connect to WiFi ---
   connectToWiFi();
 
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   // --- Setup MQTT ---
   setupMqtt();
+#endif
 
   // --- Setup and start Web Server ---
   setupApiRoutes();
@@ -208,16 +213,24 @@ void loop(){
   button.tick();
   server.handleClient();
 
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   if (!mqttClient.connected()) {
-    reconnect();
+    long now = millis();
+    // 2. Check if the reconnection interval has passed
+    if (now - lastReconnectAttempt > reconnectInterval) {
+      lastReconnectAttempt = now;
+      reconnect();
+    }
+  } else {
+    mqttClient.loop();  
   }
-  mqttClient.loop();
 
   unsigned long currentMillis = millis();
   if (currentMillis - lastMqttPublish >= mqttPublishInterval) {
     lastMqttPublish = currentMillis;
     publishMqttStatus();
   }
+#endif
 
   if (!isInMscMode) {
     ftpServer.handleFTP(); // Continuously process FTP requests  
@@ -470,7 +483,9 @@ void toggleMode() {
   } else {
     enterMscMode();
   }
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
+#endif
 }
 
 // --- Web Server ---
@@ -524,7 +539,9 @@ void enterMscMode() {
 
     // --- Display MSC mode screen ---
     updateAndDrawMscScreen();
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
     publishMqttStatus();
+#endif
   } else {
     HWSerial.println("\n❌ Failed to switch to MSC mode. SD Card not found.");
   }
@@ -579,7 +596,9 @@ bool enterFtpMode() {
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
 #endif
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
+#endif
   return true;
 }
 
@@ -703,7 +722,9 @@ void handleDisplayOn() {
   jsonResponse["status"] = "success";
   jsonResponse["message"] = "Display turned on.";
   server.send(200, "application/json", jsonResponse.dump().c_str());
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
+#endif
 #else
   json jsonResponse;
   jsonResponse["status"] = "no_change";
@@ -723,7 +744,9 @@ void handleDisplayOff() {
   jsonResponse["status"] = "success";
   jsonResponse["message"] = "Display turned off.";
   server.send(200, "application/json", jsonResponse.dump().c_str());
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
+#endif
 #else
   json jsonResponse;
   jsonResponse["status"] = "no_change";
@@ -748,7 +771,9 @@ void handleDisplayToggle() {
     jsonResponse["message"] = "Display toggled off.";
   }
   server.send(200, "application/json", jsonResponse.dump().c_str());
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
+#endif
 #else
   json jsonResponse;
   jsonResponse["status"] = "no_change";
@@ -798,7 +823,9 @@ void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, un
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
     drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
 #endif
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
     publishMqttStatus();
+#endif
   }
 }
 
@@ -866,6 +893,7 @@ void setupMqtt() {
  * @brief Publishes the current status to the MQTT state topic.
  */
 void publishMqttStatus() {
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   if (!mqttClient.connected()) {
     return; // Don't publish if not connected
   }
@@ -911,12 +939,14 @@ void publishMqttStatus() {
   mqttClient.publish(MQTT_STATE_TOPIC, jsonResponse.dump().c_str(), true); // Retain message
   mqttClient.publish(MQTT_DISPLAY_STATUS_TOPIC, displayStatus, true); // Retain message
   HWSerial.println("Published MQTT status.");
+#endif
 }
 
 /**
  * @brief Handles incoming MQTT messages.
  */
 void callback(char *topic, byte *payload, unsigned int length) {
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   HWSerial.print("Message arrived [");
   HWSerial.print(topic);
   HWSerial.print("] ");
@@ -935,30 +965,29 @@ void callback(char *topic, byte *payload, unsigned int length) {
       handleDisplayOff();
     }
   }
+#endif
 }
 
 /**
  * @brief Reconnects to the MQTT broker.
  */
 void reconnect() {
-  // Loop until we're reconnected
-  while (!mqttClient.connected()) {
-    HWSerial.print("Attempting MQTT connection...");
-    // Attempt to connect
-    if (mqttClient.connect(MQTT_CLIENT_ID, MQTT_USER, MQTT_PASSWORD)) {
-      HWSerial.println("connected");
-      // Subscribe
-      mqttClient.subscribe(MQTT_DISPLAY_SET_TOPIC);
-      // Publish initial status
-      publishMqttStatus();
-    } else {
-      HWSerial.print("failed, rc=");
-      HWSerial.print(mqttClient.state());
-      HWSerial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  HWSerial.print("Attempting MQTT connection...");
+  // Attempt to connect
+  if (mqttClient.connect(MQTT_CLIENT_ID, MQTT_USER, MQTT_PASSWORD)) {
+    HWSerial.println("connected");
+    // Subscribe
+    mqttClient.subscribe(MQTT_DISPLAY_SET_TOPIC);
+    // Publish initial status
+    publishMqttStatus();
+  } else {
+    HWSerial.print("failed, rc=");
+    HWSerial.print(mqttClient.state());
+    HWSerial.println(" try again in 5 seconds");
+    // Wait 5 seconds before retrying
   }
+#endif
 }
 
 // --- Display ---

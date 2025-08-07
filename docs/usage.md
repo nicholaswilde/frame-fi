@@ -35,10 +35,21 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
 The device can connect to an MQTT broker to integrate with home automation platforms like Home Assistant. For a detailed guide, see the [Home Assistant Integration](home-assistant.md) page.
 
 - **Enable MQTT:**
+
+    1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
+    2.  **Find `MQTT_ENABLED`**: Locate the `build_flags` section and find the `-D MQTT_ENABLED` line.
+    3.  **Change the Value**:
+
+    | Value | Description            |
+    |:-----:|------------------------|
+    | `1`   | Enable MQTT (Default)  |
+    | `0`   | Disable MQTT           |
+
+- **Set MQTT Settings:**
+
     1.  Open `include/secrets.h`.
-    2.  Set `MQTT_ENABLED` to `1`.
-    3.  Configure your MQTT broker's IP address, port, and credentials.
-    4.  Rebuild and upload the firmware.
+    2.  Configure your MQTT broker's IP address, port, and credentials.
+    3.  Rebuild and upload the firmware.
 
 - **Topics:**
     - **Status Topic:** `frame-fi/status` (publishes `USB MSC` or `Application (FTP Server)`)
