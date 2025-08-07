@@ -19,7 +19,6 @@ set -euo pipefail
 
 # --- variables ---
 GITHUB_REPO="nicholaswilde/frame-fi"
-TMP_DIR="/tmp/frame-fi-latest"
 SERIAL_PORT="${1:-/dev/ttyUSB0}" # Default to /dev/ttyUSB0 if no port is provided
 
 # --- functions ---
@@ -77,7 +76,7 @@ function download_release(){
     exit 1
   fi
   # --- download and extract the release ---
-  mkdir -p "${TMP_DIR}"
+  TMP_DIR=$(mktemp -d)
   log "INFO" "Downloading latest release from ${LATEST_RELEASE_URL}..."
   curl -sL "${LATEST_RELEASE_URL}" -o "${TMP_DIR}/latest_release.zip"
 }
