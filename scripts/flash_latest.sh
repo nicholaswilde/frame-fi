@@ -82,21 +82,15 @@ function download_release(){
   curl -sL "${LATEST_RELEASE_URL}" -o "${TMP_DIR}/latest_release.zip"
 }
 
-# Downloads and flashes the latest release.
-function main() {
-  check_dependencies  
-  download_release
-  
+function extract_files() {
   log "INFO" "Extracting bin files to ${TMP_DIR}..."
   unzip -o "${TMP_DIR}/latest_release.zip" -d "${TMP_DIR}" "*.bin" &> /dev/null
+}
 
-  # --- flash the device ---
+function flash_device() {
   log "INFO" "Ready to flash the device on port ${SERIAL_PORT}."
   log "INFO" "The following .bin files were extracted:"
-  # find "${TMP_DIR}" -name "*.bin" -print
 
-  # IMPORTANT: You must customize the esptool.py command below based on
- 
   esptool.py \
     --chip esp32s3 \
     --port "${SERIAL_PORT}" \
@@ -106,7 +100,15 @@ function main() {
     0x0000 "${TMP_DIR}/bootloader.bin" \
     0x8000 "${TMP_DIR}/partitions.bin" \
     0x10000 "${TMP_DIR}/firmware.bin"
+}
 
+# Downloads and flashes the latest release.
+function main() {
+  check_dependencies  
+  download_release
+  extract_files
+  # find "${TMP_DIR}" -name "*.bin" -print
+  flash_device
   log "INFO" "--- Flashing complete (simulation) ---"
 }
 
