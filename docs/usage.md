@@ -36,7 +36,7 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
 
 1.  **Switch to FTP Mode:**
     - Press the onboard button (single click) to switch from MSC to FTP mode.
-    - Alternatively, use the web API by sending a `POST` request to `/ftp`.
+    - Alternatively, use the web API by sending a `POST` request to `/mode/ftp`.
 
 2.  **Connect with an FTP Client:**
     - Use any standard FTP client (e.g., [FileZilla][8], [WinSCP][9], or the command-line `ftp`).
@@ -44,11 +44,49 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
     - **Port:** `21` (the default FTP port).
     - **Username:** The `FTP_USER` you configured in `include/secrets.h`.
     - **Password:** The `FTP_PASSWORD` you configured in `include/secrets.h`.
+  
+- **Upload File:**
+
+    1. **Open the Command Line:**
+       - **Windows:** Open the Command Prompt or PowerShell.
+       - **macOS or Linux:** Open the Terminal application.
+
+     2. **Connect to the FTP Server:** Type the ftp command followed by the server address:
+
+    ```shell
+    ftp <HOST>
+    ```
+
+    3. **Enter Your Credentials:** The server will prompt you for your username and password. Enter them as requested. For security reasons, the password you type may not be displayed on the screen.
+
+    4. **Navigate to the Correct Directory (Optional):** You might need to upload your file to a specific folder on the server. You can navigate through the remote directories using the cd (change directory) command:
+
+    ```shell
+    cd public_html
+    ```
+
+    !!! tip
+
+        To see a list of files and directories on the remote server, you can use the `ls` or `dir` command.
+
+    5. **Navigate to the Local Directory (Optional):** If the file you want to upload is not in your current local directory, you can change your local directory using the lcd (local change directory) command:
+
+    ```shell
+    lcd C:\Users\YourUser\Documents
+    ```
+    
+    6. **Upload a Single File:** Use the put command followed by the name of the file you want to upload:
+
+    ```shell
+    put my-file.txt
+    ```
 
 !!! warning "Insecure Protocol"
+
     FTP is an inherently insecure protocol that transmits data, including credentials, in plain text. Only use this feature on a trusted, private network.
 
 !!! tip "Using lftp"
+
     For automated synchronization, the `scripts/sync.sh` script uses `lftp` to mirror a local directory to the device. See the [Synchronizing Files](#arrow_right_hook-synchronizing-files) section for more details.
 
 ## :satellite: MQTT Integration
