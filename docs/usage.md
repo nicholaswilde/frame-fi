@@ -97,12 +97,6 @@ The device can connect to an MQTT broker to integrate with home automation platf
     | `1`   | Enable MQTT (Default)  |
     | `0`   | Disable MQTT           |
 
-- **Set MQTT Settings:**
-
-    1.  Open `include/secrets.h`.
-    2.  Configure your MQTT broker's IP address, port, and credentials.
-    3.  Rebuild and upload the firmware.
-
 !!! abstract "platformio.ini"
 
     ```ini
@@ -112,6 +106,12 @@ The device can connect to an MQTT broker to integrate with home automation platf
       ...
       -D MQTT_ENABLED=1
     ```
+
+- **Set MQTT Settings:**
+
+    1.  Open `include/secrets.h`.
+    2.  Configure your MQTT broker's IP address, port, and credentials.
+    3.  Rebuild and upload the firmware.
     
 - **Topics:**
     - **Status Topic:** `frame-fi/status` (publishes `USB MSC` or `Application (FTP Server)`)
