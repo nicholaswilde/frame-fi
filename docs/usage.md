@@ -48,8 +48,8 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
 - **Upload File:**
 
     1. **Open the Command Line:**
-       - **Windows:** Open the Command Prompt or PowerShell.
-       - **macOS or Linux:** Open the Terminal application.
+        a. **Windows:** Open the Command Prompt or PowerShell.
+        b. **macOS or Linux:** Open the Terminal application.
 
      2. **Connect to the FTP Server:** Type the ftp command followed by the server address:
 
