@@ -94,6 +94,7 @@ function flash_device() {
   esptool.py \
     --chip esp32s3 \
     --port "${SERIAL_PORT}" \
+    --baud 921600 \
     --before default_reset \
     --after hard_reset \
     write_flash \
