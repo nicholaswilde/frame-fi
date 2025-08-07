@@ -59,6 +59,18 @@ curl -X POST http://<DEVICE_IP>/mode/msc
 
 - **FTP Access:** Connect to the device with an FTP client using the IP on the display and credentials from `include/secrets.h` to upload files.
 
+Log into the device via FTP.
+
+```shell
+ftp <HOST>
+```
+
+Upload pictures to the device.
+
+```shell
+put my-picture.png
+```
+
 - **FTP Mode:** Upload pictures to the dongle via FTP using `lftp` or `scripts/sync.sh`.
 
 ```shell
