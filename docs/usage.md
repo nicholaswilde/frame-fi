@@ -59,7 +59,7 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
 
     3. **Enter Your Credentials:** The server will prompt you for your username and password. Enter them as requested. For security reasons, the password you type may not be displayed on the screen.
 
-    4. **Navigate to the Correct Directory (Optional):** You might need to upload your file to a specific folder on the server. You can navigate through the remote directories using the cd (change directory) command:
+    4. **Navigate to the Correct Directory (Optional):** You might need to upload your file to a specific folder on the server. You can navigate through the remote directories using the `cd` (change directory) command:
 
         ```shell
         cd public_html
@@ -69,16 +69,16 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
 
             To see a list of files and directories on the remote server, you can use the `ls` or `dir` command.
 
-    5. **Navigate to the Local Directory (Optional):** If the file you want to upload is not in your current local directory, you can change your local directory using the lcd (local change directory) command:
+    5. **Navigate to the Local Directory (Optional):** If the file you want to upload is not in your current local directory, you can change your local directory using the `lcd` (local change directory) command:
 
         ```shell
-        lcd C:\Users\YourUser\Documents
+        lcd /path/to/data
         ```
     
-    6. **Upload a Single File:** Use the put command followed by the name of the file you want to upload:
+    6. **Upload a Single File:** Use the `put` command followed by the name of the file you want to upload:
 
         ```shell
-        put my-file.txt
+        put my-picture.png
         ```
 
 !!! warning "Insecure Protocol"
