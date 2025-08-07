@@ -27,14 +27,12 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
     2. The device will clear its stored Wi-Fi credentials and restart.
     3. Follow the steps for the first-time Wi-Fi setup using the captive portal.
 
-!!! warning
+!!! warning "Insecure Protocol"
 
     FTP is an inherently insecure protocol that transmits data, including credentials, in plain text. Only use this feature on a trusted, private network.
 
 ## :inbox_tray: FTP Access
-!!! warning "Insecure Protocol"
 
-    
 When the device is in **FTP Server Mode**, you can access the microSD card over the network using an FTP client.
 
 1.  **Switch to FTP Mode:**
