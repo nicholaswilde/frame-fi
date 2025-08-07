@@ -66,8 +66,6 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
         ls
         ```
 
-        !!! tip
-
     5. **Navigate to the Local Directory (Optional):** If the file you want to upload is not in your current local directory, you can change your local directory using the `lcd` (local change directory) command:
 
         ```shell
