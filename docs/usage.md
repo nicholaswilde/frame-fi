@@ -103,6 +103,16 @@ The device can connect to an MQTT broker to integrate with home automation platf
     2.  Configure your MQTT broker's IP address, port, and credentials.
     3.  Rebuild and upload the firmware.
 
+!!! abstract "platformio.ini"
+
+    ```ini
+    [env]
+    ...
+    build_flags =
+      ...
+      -D MQTT_ENABLED=1
+    ```
+    
 - **Topics:**
     - **Status Topic:** `frame-fi/status` (publishes `USB MSC` or `Application (FTP Server)`)
     - **Command Topic:** `frame-fi/display/set` (accepts `ON` or `OFF` to control the display)
