@@ -27,19 +27,92 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
     2. The device will clear its stored Wi-Fi credentials and restart.
     3. Follow the steps for the first-time Wi-Fi setup using the captive portal.
 
-!!! warning
-    FTP is an insecure protocol. Only use this feature on a trusted network.
+!!! warning "Insecure Protocol"
+
+    FTP is an inherently insecure protocol that transmits data, including credentials, in plain text. Only use this feature on a trusted, private network.
+
+## :inbox_tray: FTP Access
+
+When the device is in **FTP Server Mode**, you can access the microSD card over the network using an FTP client.
+
+1.  **Switch to FTP Mode:**
+    - Press the onboard button (single click) to switch from MSC to FTP mode.
+    - Alternatively, use the web API by sending a `POST` request to `/mode/ftp`.
+
+2.  **Connect with an FTP Client:**
+    - Use any standard FTP client (e.g., [FileZilla][8], [WinSCP][9], or the command-line `ftp`).
+    - **Host:** The IP address of your device (shown on the LCD).
+    - **Port:** `21` (the default FTP port).
+    - **Username:** The `FTP_USER` you configured in `include/secrets.h`.
+    - **Password:** The `FTP_PASSWORD` you configured in `include/secrets.h`.
+  
+- **Upload File:**
+
+    1. **Open the Command Line:**
+        1. **Windows:** Open the Command Prompt or PowerShell.
+        2. **macOS or Linux:** Open the Terminal application.
+
+     2. **Connect to the FTP Server:** Type the ftp command followed by the server address:
+
+        ```shell
+        ftp <HOST>
+        ```
+
+    3. **Enter Your Credentials:** The server will prompt you for your username and password from`include/secrets.h`. Enter them as requested. For security reasons, the password you type may not be displayed on the screen.
+
+    4. **List Remote Files (Optional):** You can list the files on the device by using the `ls` command:
+
+        ```shell
+        ls
+        ```
+
+    5. **Navigate to the Local Directory (Optional):** If the file you want to upload is not in your current local directory, you can change your local directory using the `lcd` (local change directory) command:
+
+        ```shell
+        lcd /path/to/data
+        ```
+    
+    6. **Upload a Single File:** Use the `put` command followed by the name of the file you want to upload:
+
+        ```shell
+        put my-picture.png
+        ```
+
+!!! tip "Using lftp"
+
+    For automated synchronization, the `scripts/sync.sh` script uses `lftp` to mirror a local directory to the device. See the [Synchronizing Files](#arrow_right_hook-synchronizing-files) section for more details.
 
 ## :satellite: MQTT Integration
 
 The device can connect to an MQTT broker to integrate with home automation platforms like Home Assistant. For a detailed guide, see the [Home Assistant Integration](home-assistant.md) page.
 
 - **Enable MQTT:**
-    1.  Open `include/secrets.h`.
-    2.  Set `MQTT_ENABLED` to `1`.
-    3.  Configure your MQTT broker's IP address, port, and credentials.
-    4.  Rebuild and upload the firmware.
 
+    1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
+    2.  **Find `MQTT_ENABLED`**: Locate the `build_flags` section and find the `-D MQTT_ENABLED` line.
+    3.  **Change the Value**:
+
+    | Value | Description            |
+    |:-----:|------------------------|
+    | `1`   | Enable MQTT (Default)  |
+    | `0`   | Disable MQTT           |
+
+!!! abstract "platformio.ini"
+
+    ```ini
+    [env]
+    ...
+    build_flags =
+      ...
+      -D MQTT_ENABLED=1
+    ```
+
+- **Set MQTT Settings:**
+
+    1.  Open `include/secrets.h`.
+    2.  Configure your MQTT broker's IP address, port, and credentials.
+    3.  Rebuild and upload the firmware.
+    
 - **Topics:**
     - **Status Topic:** `frame-fi/status` (publishes `USB MSC` or `Application (FTP Server)`)
     - **Command Topic:** `frame-fi/display/set` (accepts `ON` or `OFF` to control the display)
@@ -124,12 +197,12 @@ The device hosts a simple web server that allows you to check status and switch 
     | `-1`  | MQTT_DISCONNECTED             |  `4`  | MQTT_CONNECT_BAD_CREDENTIALS  |
     |  `0`  | MQTT_CONNECTED                |  `5`  | MQTT_CONNECT_UNAUTHORIZED     |    
 
-**`POST /msc`**: Switches the device to USB Mass Storage (MSC) mode.
+**`POST /mode/msc`**: Switches the device to USB Mass Storage (MSC) mode.
 
 !!! code ""
 
     ```sh
-    curl -X POST http://<DEVICE_IP>/msc
+    curl -X POST http://<DEVICE_IP>/mode/msc
     ```
 
 !!! success "Example Responses"
@@ -149,12 +222,12 @@ The device hosts a simple web server that allows you to check status and switch 
         {"status":"error","message":"Failed to switch to MSC mode."}
         ```
 
-**`POST /ftp`**: Switches the device to FTP mode.
+**`POST /mode/ftp`**: Switches the device to FTP mode.
 
 !!! code ""
 
     ```sh
-    curl -X POST http://<DEVICE_IP>/ftp
+    curl -X POST http://<DEVICE_IP>/mode/ftp
     ```
 
 !!! success "Example Responses"
@@ -606,3 +679,5 @@ You can customize the color scheme of the display by selecting a [Catppuccin the
 [5]: <https://github.com/Bodmer/TFT_eSPI>
 [6]: <https://github.com/nicholaswilde/frame-fi/releases/latest>
 [7]: <https://catppuccin.com/palette/>
+[8]: <https://filezilla-project.org/>
+[9]: <https://winscp.net/>

@@ -31,11 +31,11 @@ tasks:
   msc:
     desc: Switch to MSC mode
     cmds:
-      - curl -X POST http://{{.IP}}/msc
+      - curl -X POST http://{{.IP}}/mode/msc
   ftp:
     desc: Switch to FTP mode
     cmds:
-      - curl -X POST http://{{.IP}}/ftp
+      - curl -X POST http://{{.IP}}/mode/ftp
   restart:
     desc: Restart the device
     cmds:

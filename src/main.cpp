@@ -33,7 +33,10 @@
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <FastLED.h>   // https://github.com/FastLED/FastLED
 #include <PubSubClient.h>
+#include <nlohmann/json.hpp> // https://github.com/nlohmann/json
 #include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
+
+using json = nlohmann::json;
 
 // --- Mode Descriptions ---
 const char* MODE_MSC_DESC = "USB MSC";
@@ -62,6 +65,18 @@ bool isDisplayOn = true; // A flag to track the display status
 volatile bool msc_disk_dirty = false;
 volatile unsigned long last_msc_write_time = 0;
 const unsigned long MSC_REFRESH_DEBOUNCE_MS = 2000; // 2 seconds
+
+// --- MQTT Topics ---
+#define MQTT_STATE_TOPIC "frame-fi/state"
+#define MQTT_DISPLAY_STATUS_TOPIC "frame-fi/display/status"
+#define MQTT_DISPLAY_SET_TOPIC "frame-fi/display/set"
+
+// --- Timers ---
+unsigned long lastMqttPublish = 0;
+const long mqttPublishInterval = 300000; // 5 minutes
+// Timer variables for non-blocking reconnection
+unsigned long lastReconnectAttempt = 0;
+const long reconnectInterval = 5000; // Interval to wait between retries (5 seconds)
 
 // --- Function prototypes ---
 void connectToWiFi();
@@ -108,15 +123,6 @@ void setupMqtt();
 void publishMqttStatus();
 void callback(char *topic, byte *payload, unsigned int length);
 void reconnect();
-
-// --- MQTT Topics ---
-#define MQTT_STATE_TOPIC "frame-fi/state"
-#define MQTT_DISPLAY_STATUS_TOPIC "frame-fi/display/status"
-#define MQTT_DISPLAY_SET_TOPIC "frame-fi/display/set"
-
-// --- Timers ---
-unsigned long lastMqttPublish = 0;
-const long mqttPublishInterval = 300000; // 5 minutes
 
 // --- Main Logic ---
 
@@ -167,8 +173,10 @@ void setup(){
   // --- Connect to WiFi ---
   connectToWiFi();
 
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   // --- Setup MQTT ---
   setupMqtt();
+#endif
 
   // --- Setup and start Web Server ---
   setupApiRoutes();
@@ -205,16 +213,24 @@ void loop(){
   button.tick();
   server.handleClient();
 
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   if (!mqttClient.connected()) {
-    reconnect();
+    long now = millis();
+    // 2. Check if the reconnection interval has passed
+    if (now - lastReconnectAttempt > reconnectInterval) {
+      lastReconnectAttempt = now;
+      reconnect();
+    }
+  } else {
+    mqttClient.loop();  
   }
-  mqttClient.loop();
 
   unsigned long currentMillis = millis();
   if (currentMillis - lastMqttPublish >= mqttPublishInterval) {
     lastMqttPublish = currentMillis;
     publishMqttStatus();
   }
+#endif
 
   if (!isInMscMode) {
     ftpServer.handleFTP(); // Continuously process FTP requests  
@@ -467,7 +483,9 @@ void toggleMode() {
   } else {
     enterMscMode();
   }
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
+#endif
 }
 
 // --- Web Server ---
@@ -477,8 +495,8 @@ void toggleMode() {
  */
 void setupApiRoutes() {
   server.on("/", HTTP_GET, handleStatus);
-  server.on("/msc", HTTP_POST, handleSwitchToMsc);
-  server.on("/ftp", HTTP_POST, handleSwitchToFtp);
+  server.on("/mode/msc", HTTP_POST, handleSwitchToMsc);
+  server.on("/mode/ftp", HTTP_POST, handleSwitchToFtp);
   server.on("/device/restart", HTTP_POST, handleRestart);
   server.on("/display/toggle", HTTP_POST, handleDisplayToggle);
   server.on("/display/on", HTTP_POST, handleDisplayOn);
@@ -521,7 +539,9 @@ void enterMscMode() {
 
     // --- Display MSC mode screen ---
     updateAndDrawMscScreen();
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
     publishMqttStatus();
+#endif
   } else {
     HWSerial.println("\n❌ Failed to switch to MSC mode. SD Card not found.");
   }
@@ -576,7 +596,9 @@ bool enterFtpMode() {
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
 #endif
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
+#endif
   return true;
 }
 
@@ -613,25 +635,18 @@ void handleStatus() {
     freeSize = totalSize - usedSize;
   }
 
-  const char* mqttStatus = mqttClient.connected() ? "connected" : "disconnected";
-    
-  String jsonResponse = "{";
-  jsonResponse += "\"mode\":\"" + String(modeString) + "\",";
-  jsonResponse += "\"display\":{";
-    jsonResponse += "\"status\":\"" + String(displayStatus) + "\",";
-    jsonResponse += "\"orientation\":" + String(tft.getRotation());
-  jsonResponse += "},";
-  jsonResponse += "\"sd_card\":{";
-    jsonResponse += "\"total_size\":" + String(totalSize) + ",";
-    jsonResponse += "\"used_size\":" + String(usedSize) + ",";
-    jsonResponse += "\"free_size\":" + String(freeSize) + ",";
-    jsonResponse += "\"file_count\":" + String(fileCount);
-  jsonResponse += "},";
-  jsonResponse += "\"mqtt\":{";
-    jsonResponse += "\"state\":" + String(mqttClient.state()) + ",";
-    jsonResponse += "\"connected\":" + String(mqttClient.connected()) + "}";
-  jsonResponse += "}";
-  server.send(200, "application/json", jsonResponse);
+  json jsonResponse;
+  jsonResponse["mode"] = modeString;
+  jsonResponse["display"]["status"] = displayStatus;
+  jsonResponse["display"]["orientation"] = tft.getRotation();
+  jsonResponse["sd_card"]["total_size"] = totalSize;
+  jsonResponse["sd_card"]["used_size"] = usedSize;
+  jsonResponse["sd_card"]["free_size"] = freeSize;
+  jsonResponse["sd_card"]["file_count"] = fileCount;
+  jsonResponse["mqtt"]["state"] = mqttClient.state();
+  jsonResponse["mqtt"]["connected"] = mqttClient.connected();
+
+  server.send(200, "application/json", jsonResponse.dump().c_str());
  }     
 
 /**
@@ -639,16 +654,22 @@ void handleStatus() {
  */
 void handleSwitchToMsc() {
   if (isInMscMode) {
-    String jsonResponse = "{\"status\":\"no_change\", \"message\":\"Already in MSC mode.\"}";
-    server.send(200, "application/json", jsonResponse);
+    json jsonResponse;
+    jsonResponse["status"] = "no_change";
+    jsonResponse["message"] = "Already in MSC mode.";
+    server.send(200, "application/json", jsonResponse.dump().c_str());
   } else {
     enterMscMode();
     if (isInMscMode) {
-      String jsonResponse = "{\"status\":\"success\", \"message\":\"Switched to MSC mode.\"}";
-      server.send(200, "application/json", jsonResponse);
+      json jsonResponse;
+      jsonResponse["status"] = "success";
+      jsonResponse["message"] = "Switched to MSC mode.";
+      server.send(200, "application/json", jsonResponse.dump().c_str());
     } else {
-      String jsonResponse = "{\"status\":\"error\", \"message\":\"Failed to switch to MSC mode.\"}";
-      server.send(500, "application/json", jsonResponse);
+      json jsonResponse;
+      jsonResponse["status"] = "error";
+      jsonResponse["message"] = "Failed to switch to MSC mode.";
+      server.send(500, "application/json", jsonResponse.dump().c_str());
     }
   }  
 }
@@ -659,16 +680,22 @@ void handleSwitchToMsc() {
 void handleSwitchToFtp() {
   if (isInMscMode) {
     if (enterFtpMode()) {
-      String jsonResponse = "{\"status\":\"success\", \"message\":\"Switched to Application (FTP) mode.\"}";
-      server.send(200, "application/json", jsonResponse);
+      json jsonResponse;
+      jsonResponse["status"] = "success";
+      jsonResponse["message"] = "Switched to Application (FTP) mode.";
+      server.send(200, "application/json", jsonResponse.dump().c_str());
     } else {
-      String jsonResponse = "{\"status\":\"error\", \"message\":\"Failed to re-initialize SD card.\"}";
-      server.send(500, "application/json", jsonResponse);
+      json jsonResponse;
+      jsonResponse["status"] = "error";
+      jsonResponse["message"] = "Failed to re-initialize SD card.";
+      server.send(500, "application/json", jsonResponse.dump().c_str());
     }
   }
   else {
-    String jsonResponse = "{\"status\":\"no_change\", \"message\":\"Already in Application (FTP) mode.\"}";
-    server.send(200, "application/json", jsonResponse);
+    json jsonResponse;
+    jsonResponse["status"] = "no_change";
+    jsonResponse["message"] = "Already in Application (FTP) mode.";
+    server.send(200, "application/json", jsonResponse.dump().c_str());
   }
 }
 
@@ -676,7 +703,10 @@ void handleSwitchToFtp() {
  * @brief Handles the POST request to restart the device.
  */
 void handleRestart() {
-  server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Restarting device...\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "success";
+  jsonResponse["message"] = "Restarting device...";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
   delay(100);
   ESP.restart();
 }
@@ -688,10 +718,18 @@ void handleDisplayOn() {
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   digitalWrite(TFT_LEDA, LOW);
   isDisplayOn = true;
-  server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display turned on.\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "success";
+  jsonResponse["message"] = "Display turned on.";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
+#endif
 #else
-  server.send(200, "application/json", "{\"status\":\"no_change\", \"message\":\"Display is disabled in firmware.\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "no_change";
+  jsonResponse["message"] = "Display is disabled in firmware.";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
 #endif
 }
 
@@ -702,10 +740,18 @@ void handleDisplayOff() {
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   digitalWrite(TFT_LEDA, HIGH);
   isDisplayOn = false;
-  server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display turned off.\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "success";
+  jsonResponse["message"] = "Display turned off.";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
+#endif
 #else
-  server.send(200, "application/json", "{\"status\":\"no_change\", \"message\":\"Display is disabled in firmware.\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "no_change";
+  jsonResponse["message"] = "Display is disabled in firmware.";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
 #endif
 }
 
@@ -715,16 +761,24 @@ void handleDisplayOff() {
 void handleDisplayToggle() {
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   isDisplayOn = !isDisplayOn;
+  json jsonResponse;
+  jsonResponse["status"] = "success";
   if (isDisplayOn) {
     digitalWrite(TFT_LEDA, LOW);
-    server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display toggled on.\"}");
+    jsonResponse["message"] = "Display toggled on.";
   } else {
     digitalWrite(TFT_LEDA, HIGH);
-    server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Display toggled off.\"}");
+    jsonResponse["message"] = "Display toggled off.";
   }
+  server.send(200, "application/json", jsonResponse.dump().c_str());
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
+#endif
 #else
-  server.send(200, "application/json", "{\"status\":\"no_change\", \"message\":\"Display is disabled in firmware.\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "no_change";
+  jsonResponse["message"] = "Display is disabled in firmware.";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
 #endif
 }
 
@@ -732,7 +786,10 @@ void handleDisplayToggle() {
  * @brief Handles the POST request to reset WiFi settings.
  */
 void handleWifiReset() {
-  server.send(200, "application/json", "{\"status\":\"success\", \"message\":\"Resetting WiFi and restarting...\"}");
+  json jsonResponse;
+  jsonResponse["status"] = "success";
+  jsonResponse["message"] = "Resetting WiFi and restarting...";
+  server.send(200, "application/json", jsonResponse.dump().c_str());
   delay(200);
   resetWifiSettings();
 }
@@ -766,7 +823,9 @@ void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, un
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
     drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
 #endif
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
     publishMqttStatus();
+#endif
   }
 }
 
@@ -834,6 +893,7 @@ void setupMqtt() {
  * @brief Publishes the current status to the MQTT state topic.
  */
 void publishMqttStatus() {
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   if (!mqttClient.connected()) {
     return; // Don't publish if not connected
   }
@@ -867,28 +927,26 @@ void publishMqttStatus() {
     freeSize = totalSize - usedSize;
   }
 
-  String jsonResponse = "{";
-  jsonResponse += "\"mode\":\"" + String(modeString) + "\",";
-  jsonResponse += "\"display\":{";
-    jsonResponse += "\"status\":\"" + String(displayStatus) + "\",";
-    jsonResponse += "\"orientation\":\"" + String(tft.getRotation()) + "\"";
-  jsonResponse += "},";
-  jsonResponse += "\"sd_card\":{";
-    jsonResponse += "\"total_size\":" + String(totalSize) + ",";
-    jsonResponse += "\"used_size\":" + String(usedSize) + ",";
-    jsonResponse += "\"free_size\":" + String(freeSize) + ",";
-    jsonResponse += "\"file_count\":" + String(fileCount);
-  jsonResponse += "}}";
+  json jsonResponse;
+  jsonResponse["mode"] = modeString;
+  jsonResponse["display"]["status"] = displayStatus;
+  jsonResponse["display"]["orientation"] = tft.getRotation();
+  jsonResponse["sd_card"]["total_size"] = totalSize;
+  jsonResponse["sd_card"]["used_size"] = usedSize;
+  jsonResponse["sd_card"]["free_size"] = freeSize;
+  jsonResponse["sd_card"]["file_count"] = fileCount;
 
-  mqttClient.publish(MQTT_STATE_TOPIC, jsonResponse.c_str(), true); // Retain message
+  mqttClient.publish(MQTT_STATE_TOPIC, jsonResponse.dump().c_str(), true); // Retain message
   mqttClient.publish(MQTT_DISPLAY_STATUS_TOPIC, displayStatus, true); // Retain message
   HWSerial.println("Published MQTT status.");
+#endif
 }
 
 /**
  * @brief Handles incoming MQTT messages.
  */
 void callback(char *topic, byte *payload, unsigned int length) {
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   HWSerial.print("Message arrived [");
   HWSerial.print(topic);
   HWSerial.print("] ");
@@ -907,30 +965,29 @@ void callback(char *topic, byte *payload, unsigned int length) {
       handleDisplayOff();
     }
   }
+#endif
 }
 
 /**
  * @brief Reconnects to the MQTT broker.
  */
 void reconnect() {
-  // Loop until we're reconnected
-  while (!mqttClient.connected()) {
-    HWSerial.print("Attempting MQTT connection...");
-    // Attempt to connect
-    if (mqttClient.connect(MQTT_CLIENT_ID, MQTT_USER, MQTT_PASSWORD)) {
-      HWSerial.println("connected");
-      // Subscribe
-      mqttClient.subscribe(MQTT_DISPLAY_SET_TOPIC);
-      // Publish initial status
-      publishMqttStatus();
-    } else {
-      HWSerial.print("failed, rc=");
-      HWSerial.print(mqttClient.state());
-      HWSerial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  HWSerial.print("Attempting MQTT connection...");
+  // Attempt to connect
+  if (mqttClient.connect(MQTT_CLIENT_ID, MQTT_USER, MQTT_PASSWORD)) {
+    HWSerial.println("connected");
+    // Subscribe
+    mqttClient.subscribe(MQTT_DISPLAY_SET_TOPIC);
+    // Publish initial status
+    publishMqttStatus();
+  } else {
+    HWSerial.print("failed, rc=");
+    HWSerial.print(mqttClient.state());
+    HWSerial.println(" try again in 5 seconds");
+    // Wait 5 seconds before retrying
   }
+#endif
 }
 
 // --- Display ---

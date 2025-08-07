@@ -8,7 +8,7 @@ Status: :ballot_box_with_check: `working`
 
 Start sketch.
 
-Connect to AP specified in `secrets.h`, `WIFI_AP_SSID`. Default: `AutoConnectAP-T-Dongle`.
+Connect to AP, `AutoConnectAP-FrameFi`.
 
 > [!NOTE]
 > `WIFI_SSID` and `WIFI_PASSWORD` are not used from `secrets.h`

@@ -14,7 +14,10 @@
 // Include the required libraries
 #include <WiFi.h>
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
-#include "secrets.h"
+
+// --- AP Mode ---
+#define WIFI_AP_SSID "AutoConnectAP-FrameFi"
+#define WIFI_AP_PASSWORD "password"
 
 void setup() {
   // Start Serial for debugging purposes

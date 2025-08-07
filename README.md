@@ -6,6 +6,9 @@
 
 FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any digital picture frame. It enables you to remotely manage your photo library via FTP or access the SD card directly in USB Mass Storage mode.
 
+> [!WARNING]
+> This project is currently in a `v0.X.X` development stage. Features and configurations are subject to change, and breaking changes may be introduced at any time.
+
 ---
 
 ## :book: Documentation
@@ -47,11 +50,25 @@ pio run --target upload
 - **Mode Switching:** A button or API call switches between FTP and USB Mass Storage modes.
 
 ```sh
-curl -X POST http://<DEVICE_IP>/ftp
+curl -X POST http://<DEVICE_IP>/mode/ftp
 ```
 
 ```sh
-curl -X POST http://<DEVICE_IP>/msc
+curl -X POST http://<DEVICE_IP>/mode/msc
+```
+
+- **FTP Access:** Connect to the device with an FTP client using the IP on the display and credentials from `include/secrets.h` to upload files.
+
+Log into the device via FTP.
+
+```shell
+ftp <HOST>
+```
+
+Upload pictures to the device.
+
+```shell
+put my-picture.png
 ```
 
 - **FTP Mode:** Upload pictures to the dongle via FTP using `lftp` or `scripts/sync.sh`.
