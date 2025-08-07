@@ -1,11 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# ==============================================================================
 #
+# flash_latest.sh
+# -------
 # Downloads the latest release from GitHub to the /tmp directory,
 # extracts the bin files to the /tmp directory, checks if esptool is
 # installed, and flashes the device.
 #
-# Usage: ./flash_latest.sh <SERIAL_PORT>
+# Usage: ./flash_latest.sh <SERIAL_PORT
 #
+# @author Nicholas Wilde, 0xb299a622                                                        
+# @date 28 Jul 2025  
+# @version 0.1.0
+# ==============================================================================
+# 
 set -euo pipefail
 
 # --- variables ---
@@ -67,6 +75,10 @@ function download_release(){
     log "ERRO" "Could not find the latest release zip file." >&2
     exit 1
   fi
+  # --- download and extract the release ---
+  mkdir -p "${TMP_DIR}"
+  log "INFO" "Downloading latest release from ${LATEST_RELEASE_URL}..."
+  curl -sL "${LATEST_RELEASE_URL}" -o "${TMP_DIR}/latest_release.zip"
 }
 
 # Downloads and flashes the latest release.
@@ -74,11 +86,6 @@ function main() {
   check_dependencies  
   download_release
   
-  # --- download and extract the release ---
-  mkdir -p "${TMP_DIR}"
-  log "INFO" "Downloading latest release from ${LATEST_RELEASE_URL}..."
-  curl -sL "${LATEST_RELEASE_URL}" -o "${TMP_DIR}/latest_release.zip"
-
   log "INFO" "Extracting bin files to ${TMP_DIR}..."
   unzip -o "${TMP_DIR}/latest_release.zip" -d "${TMP_DIR}" "*.bin" &> /dev/null
 
