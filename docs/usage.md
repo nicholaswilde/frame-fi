@@ -441,6 +441,7 @@ If you don't want to build the project from source, you can flash a pre-compiled
         esptool.py \
             --chip esp32s3 \
             --port <YOUR_SERIAL_PORT> \
+            --baud 921600 \
             --before default_reset \
             --after hard_reset \
             write_flash \
@@ -459,6 +460,7 @@ If you don't want to build the project from source, you can flash a pre-compiled
         esptool.py \
             --chip esp32s3 \
             --port <YOUR_SERIAL_PORT> \
+            --baud 921600 \
             --before default_reset \
             --after hard_reset \
             write_flash \
