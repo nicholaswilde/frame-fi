@@ -28,10 +28,13 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
     3. Follow the steps for the first-time Wi-Fi setup using the captive portal.
 
 !!! warning
-    FTP is an insecure protocol. Only use this feature on a trusted network.
+
+    FTP is an inherently insecure protocol that transmits data, including credentials, in plain text. Only use this feature on a trusted, private network.
 
 ## :inbox_tray: FTP Access
+!!! warning "Insecure Protocol"
 
+    
 When the device is in **FTP Server Mode**, you can access the microSD card over the network using an FTP client.
 
 1.  **Switch to FTP Mode:**
@@ -57,17 +60,15 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
         ftp <HOST>
         ```
 
-    3. **Enter Your Credentials:** The server will prompt you for your username and password. Enter them as requested. For security reasons, the password you type may not be displayed on the screen.
+    3. **Enter Your Credentials:** The server will prompt you for your username and password from`include/secrets.h`. Enter them as requested. For security reasons, the password you type may not be displayed on the screen.
 
-    4. **Navigate to the Correct Directory (Optional):** You might need to upload your file to a specific folder on the server. You can navigate through the remote directories using the `cd` (change directory) command:
+    4. **List Remote Files (Optional):** You can list the files on the device by using the `ls` command:
 
         ```shell
-        cd public_html
+        ls
         ```
 
         !!! tip
-
-            To see a list of files and directories on the remote server, you can use the `ls` or `dir` command.
 
     5. **Navigate to the Local Directory (Optional):** If the file you want to upload is not in your current local directory, you can change your local directory using the `lcd` (local change directory) command:
 
@@ -80,10 +81,6 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
         ```shell
         put my-picture.png
         ```
-
-!!! warning "Insecure Protocol"
-
-    FTP is an inherently insecure protocol that transmits data, including credentials, in plain text. Only use this feature on a trusted, private network.
 
 !!! tip "Using lftp"
 
