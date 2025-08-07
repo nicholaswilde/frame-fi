@@ -98,9 +98,13 @@ function flash_device() {
     --before default_reset \
     --after hard_reset \
     write_flash \
-    0x0000 "${TMP_DIR}/bootloader.bin" \
-    0x8000 "${TMP_DIR}/partitions.bin" \
-    0x10000 "${TMP_DIR}/firmware.bin"
+      -z \
+      --flash_mode dio \
+      --flash_freq 80m \
+      --flash_size 16MB \
+      0x0000 "${TMP_DIR}/bootloader.bin" \
+      0x8000 "${TMP_DIR}/partitions.bin" \
+      0x10000 "${TMP_DIR}/firmware.bin"
 }
 
 # Downloads and flashes the latest release.
