@@ -71,6 +71,18 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 
 - **FTP Access:** Connect to the device with an FTP client using the IP on the display and credentials from `include/secrets.h` to upload files.
 
+!!! code "Log into the device via FTP"
+
+    ```shell
+    ftp <HOST>
+    ```
+
+!!! code "Upload pictures to the device"
+
+    ```shell
+    put my-picture.png
+    ```
+
 - **FTP Mode:** Upload pictures to the dongle via FTP using `lftp` or `scripts/sync.sh`.
 
 !!! code ""
