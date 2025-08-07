@@ -444,9 +444,13 @@ If you don't want to build the project from source, you can flash a pre-compiled
             --before default_reset \
             --after hard_reset \
             write_flash \
-            0x0000 bootloader.bin \
-            0x8000 partitions.bin \
-            0x10000 firmware.bin
+              -z \
+              --flash_mode dio \
+              --flash_freq 80m \
+              --flash_size 16MB \
+              0x0000 bootloader.bin \
+              0x8000 partitions.bin \
+              0x10000 firmware.bin
         ```
 
     === "With boot_app0"
@@ -458,10 +462,14 @@ If you don't want to build the project from source, you can flash a pre-compiled
             --before default_reset \
             --after hard_reset \
             write_flash \
-            0x0000 bootloader.bin \
-            0xe000 boot_app0.bin \
-            0x8000 partitions.bin \
-            0x10000 firmware.bin
+              -z \
+              --flash_mode dio \
+              --flash_freq 80m \
+              --flash_size 16MB \
+              0x0000 bootloader.bin \
+              0xe000 boot_app0.bin \
+              0x8000 partitions.bin \
+              0x10000 firmware.bin
         ```
 
 | Address | Bin File         |
