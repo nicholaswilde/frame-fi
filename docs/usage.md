@@ -30,6 +30,27 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
 !!! warning
     FTP is an insecure protocol. Only use this feature on a trusted network.
 
+## :inbox_tray: FTP Access
+
+When the device is in **FTP Server Mode**, you can access the microSD card over the network using an FTP client.
+
+1.  **Switch to FTP Mode:**
+    - Press the onboard button (single click) to switch from MSC to FTP mode.
+    - Alternatively, use the web API by sending a `POST` request to `/ftp`.
+
+2.  **Connect with an FTP Client:**
+    - Use any standard FTP client (e.g., [FileZilla][8], [WinSCP][9], or the command-line `ftp`).
+    - **Host:** The IP address of your device (shown on the LCD).
+    - **Port:** `21` (the default FTP port).
+    - **Username:** The `FTP_USER` you configured in `include/secrets.h`.
+    - **Password:** The `FTP_PASSWORD` you configured in `include/secrets.h`.
+
+!!! warning "Insecure Protocol"
+    FTP is an inherently insecure protocol that transmits data, including credentials, in plain text. Only use this feature on a trusted, private network.
+
+!!! tip "Using lftp"
+    For automated synchronization, the `scripts/sync.sh` script uses `lftp` to mirror a local directory to the device. See the [Synchronizing Files](#arrow_right_hook-synchronizing-files) section for more details.
+
 ## :satellite: MQTT Integration
 
 The device can connect to an MQTT broker to integrate with home automation platforms like Home Assistant. For a detailed guide, see the [Home Assistant Integration](home-assistant.md) page.
@@ -135,12 +156,12 @@ The device hosts a simple web server that allows you to check status and switch 
     | `-1`  | MQTT_DISCONNECTED             |  `4`  | MQTT_CONNECT_BAD_CREDENTIALS  |
     |  `0`  | MQTT_CONNECTED                |  `5`  | MQTT_CONNECT_UNAUTHORIZED     |    
 
-**`POST /msc`**: Switches the device to USB Mass Storage (MSC) mode.
+**`POST /mode/msc`**: Switches the device to USB Mass Storage (MSC) mode.
 
 !!! code ""
 
     ```sh
-    curl -X POST http://<DEVICE_IP>/msc
+    curl -X POST http://<DEVICE_IP>/mode/msc
     ```
 
 !!! success "Example Responses"
@@ -160,12 +181,12 @@ The device hosts a simple web server that allows you to check status and switch 
         {"status":"error","message":"Failed to switch to MSC mode."}
         ```
 
-**`POST /ftp`**: Switches the device to FTP mode.
+**`POST /mode/ftp`**: Switches the device to FTP mode.
 
 !!! code ""
 
     ```sh
-    curl -X POST http://<DEVICE_IP>/ftp
+    curl -X POST http://<DEVICE_IP>/mode/ftp
     ```
 
 !!! success "Example Responses"
@@ -617,3 +638,5 @@ You can customize the color scheme of the display by selecting a [Catppuccin the
 [5]: <https://github.com/Bodmer/TFT_eSPI>
 [6]: <https://github.com/nicholaswilde/frame-fi/releases/latest>
 [7]: <https://catppuccin.com/palette/>
+[8]: <https://filezilla-project.org/>
+[9]: <https://winscp.net/>

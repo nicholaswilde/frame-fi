@@ -495,8 +495,8 @@ void toggleMode() {
  */
 void setupApiRoutes() {
   server.on("/", HTTP_GET, handleStatus);
-  server.on("/msc", HTTP_POST, handleSwitchToMsc);
-  server.on("/ftp", HTTP_POST, handleSwitchToFtp);
+  server.on("/mode/msc", HTTP_POST, handleSwitchToMsc);
+  server.on("/mode/ftp", HTTP_POST, handleSwitchToFtp);
   server.on("/device/restart", HTTP_POST, handleRestart);
   server.on("/display/toggle", HTTP_POST, handleDisplayToggle);
   server.on("/display/on", HTTP_POST, handleDisplayOn);
