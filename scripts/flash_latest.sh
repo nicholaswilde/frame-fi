@@ -13,7 +13,6 @@
 # @date 28 Jul 2025  
 # @version 0.1.0
 # ==============================================================================
-# 
 set -euo pipefail
 
 # --- variables ---
@@ -60,8 +59,8 @@ function commandExists() {
 
 function check_dependencies() {
   # --- check for dependencies ---
-  if ! commandExists curl || ! commandExists grep || ! commandExists unzip; then
-    log "ERRO" "Required dependencies (curl, grep, unzip) are not installed." >&2
+  if ! commandExists curl || ! commandExists grep || ! commandExists unzip || ! commandExists esptool ; then
+    log "ERRO" "Required dependencies (curl, grep, unzip, esptool) are not installed." >&2
     exit 1
   fi  
 }
@@ -88,14 +87,6 @@ function main() {
   
   log "INFO" "Extracting bin files to ${TMP_DIR}..."
   unzip -o "${TMP_DIR}/latest_release.zip" -d "${TMP_DIR}" "*.bin" &> /dev/null
-
-  # --- check for esptool ---
-  if ! commandExists esptool.py; then
-      log "ERRO" "esptool.py is not installed. Please install it to continue." >&2
-      log "ERRO" "You can typically install it with: pip install esptool"
-      exit 1
-  fi
-  log "INFO" "esptool found."
 
   # --- flash the device ---
   log "INFO" "Ready to flash the device on port ${SERIAL_PORT}."
