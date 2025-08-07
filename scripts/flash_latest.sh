@@ -12,7 +12,9 @@
 # @author Nicholas Wilde, 0xb299a622                                                        
 # @date 28 Jul 2025  
 # @version 0.1.0
+#
 # ==============================================================================
+
 set -euo pipefail
 
 # --- variables ---
@@ -94,29 +96,16 @@ function main() {
   # find "${TMP_DIR}" -name "*.bin" -print
 
   # IMPORTANT: You must customize the esptool.py command below based on
-  # the specific .bin files and memory addresses for your device.
-  # The following is a common example.
-  #
-  # Example command:
-          # esptool
-        # --chip esp32s3
-        # --baud 921600
-        # --before default-reset
-        # --after hard-reset write-flash -z
-        # --flash-mode dio
-        # --flash-freq 80m
-        # --flash-size 16MB
-        # 0x0 firmware.bin
-  # esptool --chip esp32 --port "${SERIAL_PORT}" --baud 460800 write_flash \
-  #   -z 0x1000 "${TMP_DIR}/bootloader.bin" \
-  #   0x8000 "${TMP_DIR}/partitions.bin" \
-  #   0x10000 "${TMP_DIR}/firmware.bin"
-
-  log "INFO" "Please edit this script and uncomment/modify the 'esptool.py' command below."
-  # esptool.py --chip esp32 --port "${SERIAL_PORT}" --baud 460800 write_flash -z \
-  #    0x1000 "${TMP_DIR}/path/to/your/bootloader.bin" \
-  #    0x8000 "${TMP_DIR}/path/to/your/partitions.bin" \
-  #    0x10000 "${TMP_DIR}/path/to/your/firmware.bin"
+ 
+  esptool.py \
+    --chip esp32s3 \
+    --port "${SERIAL_PORT}" \
+    --before default_reset \
+    --after hard_reset \
+    write_flash \
+    0x0000 "${TMP_DIR}/bootloader.bin" \
+    0x8000 "${TMP_DIR}/partitions.bin" \
+    0x10000 "${TMP_DIR}/firmware.bin"
 
   log "INFO" "--- Flashing complete (simulation) ---"
 }
