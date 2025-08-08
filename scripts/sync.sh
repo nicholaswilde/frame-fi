@@ -39,14 +39,42 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 : "${LOCAL_DIR:="data"}" # Default local directory to sync
 : "${REMOTE_DIR:="/"}"   # Default remote directory on the device
 
+# --- Constants ---
+readonly BLUE=$(tput setaf 4)
+readonly RED=$(tput setaf 1)
+readonly YELLOW=$(tput setaf 3)
+readonly RESET=$(tput sgr0)
+
+readonly SCRIPT_NAME=$(basename "$0")
+
+# --- functions ---
+
+# Logging function
+function log() {
+  local type="$1"
+  local message="$2"
+  local color="$RESET"
+
+  case "$type" in
+    INFO)
+      color="$BLUE";;
+    WARN)
+      color="$YELLOW";;
+    ERRO)
+      color="$RED";;
+  esac
+
+  echo -e "${color}${type}${RESET}[$(date +'%Y-%m-%d %H:%M:%S')] ${message}"
+}
+
 # --- Pre-flight Checks ---
 # Check if lftp is installed
 function check_lftp(){
   if ! command -v lftp &> /dev/null; then
-    echo "Error: lftp is not installed."
-    echo "Please install it to use this script."
-    echo "  - Debian/Ubuntu: sudo apt install lftp"
-    echo "  - macOS (Homebrew): brew install lftp"
+    log "ERRO" "lftp is not installed."
+    log "ERRO" "Please install it to use this script."
+    log "ERRO" "  - Debian/Ubuntu: sudo apt install lftp"
+    log "ERRO" "  - macOS (Homebrew): brew install lftp"
     exit 1
   fi
 }
@@ -54,30 +82,31 @@ function check_lftp(){
 # Check if the local directory exists
 function check_dir(){
   if [ ! -d "${SCRIPT_DIR}/$LOCAL_DIR" ]; then
-    echo "Error: Local directory '${SCRIPT_DIR}/$LOCAL_DIR' not found."
-    echo "Please create it or specify a different LOCAL_DIR."
+    log "ERRO" "Local directory '${SCRIPT_DIR}/$LOCAL_DIR' not found."
+    log "ERRO" "Please create it or specify a different LOCAL_DIR."
     exit 1
   fi
 }
 
 # --- Main Sync Logic ---
 function start_sync(){
-  echo "Starting FTP sync..."
-  echo "  - Host: $FTP_HOST"
-  echo "  - User: $FTP_USER"
-  echo "  - Local Dir: ${SCRIPT_DIR}/$LOCAL_DIR"
-  echo "  - Remote Dir: $REMOTE_DIR"
-  echo ""
+  log "INFO" "Starting FTP sync..."
+  log "INFO" "  - Host: $FTP_HOST"
+  log "INFO" "  - User: $FTP_USER"
+  log "INFO" "  - Local Dir: $LOCAL_DIR"
+  log "INFO" "  - Remote Dir: $REMOTE_DIR"
 
   # Use lftp to mirror the directory.
   # -R: Reverse mirror (uploads from local to remote)
   # --delete: Deletes files on the remote that are not present locally
   # --verbose: Shows detailed transfer information
   # --parallel=1: Disables parallel transfers to avoid overloading the ESP32
+  # --no-perms: Don't set file permissions
+  # --only-missing: download only missing files
   lftp -c "
   set ftp:ssl-allow no;
   open -u '$FTP_USER','$FTP_PASSWORD' '$FTP_HOST';
-  mirror -R --delete --verbose --parallel=1 '$LOCAL_DIR' '$REMOTE_DIR';
+  mirror -R --delete --verbose --only-missing --no-perms --parallel=1 '$LOCAL_DIR' '$REMOTE_DIR';
   "
 }
 
@@ -85,8 +114,7 @@ function main(){
   check_lftp
   check_dir
   start_sync
-  echo ""
-  echo "Sync complete."  
+  log "INFO" "--- Sync complete. ---"  
 }
 
 main "@"
