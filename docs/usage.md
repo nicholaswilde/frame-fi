@@ -54,33 +54,41 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
 
      2. **Connect to the FTP Server:** Type the ftp command followed by the server address:
 
-        ```shell
-        ftp <HOST>
-        ```
+        !!! code ""
+        
+            ```shell
+            ftp <HOST>
+            ```
 
     3. **Enter Your Credentials:** The server will prompt you for your username and password from`include/secrets.h`. Enter them as requested. For security reasons, the password you type may not be displayed on the screen.
 
     4. **List Remote Files (Optional):** You can list the files on the device by using the `ls` command:
 
-        ```shell
-        ls
-        ```
+        !!! code ""
+        
+            ```shell
+            ls
+            ```
 
     5. **Navigate to the Local Directory (Optional):** If the file you want to upload is not in your current local directory, you can change your local directory using the `lcd` (local change directory) command:
 
-        ```shell
-        lcd /path/to/data
-        ```
+        !!! code ""
+        
+            ```shell
+            lcd /path/to/data
+            ```
     
     6. **Upload a Single File:** Use the `put` command followed by the name of the file you want to upload:
 
-        ```shell
-        put my-picture.png
-        ```
+        !!! code ""
+        
+            ```shell
+            put my-picture.png
+            ```
 
 !!! tip "Using lftp"
 
-    For automated synchronization, the `scripts/sync.sh` script uses `lftp` to mirror a local directory to the device. See the [Synchronizing Files](#arrow_right_hook-synchronizing-files) section for more details.
+    For automated synchronization, the `scripts/sync.sh` script uses `lftp` to mirror a local directory to the device. See the [Synchronizing Files](#synchronizing-files) section for more details.
 
 ## :satellite: MQTT Integration
 
@@ -419,9 +427,11 @@ Before you begin, ensure you have the following dependencies installed:
 
 You can typically install these using your system's package manager. For `esptool`, you can install it with pip:
 
-```shell
-pip install esptool
-```
+!!! code ""
+
+    ```shell
+    pip install esptool
+    ```
 
 #### :hammer_and_wrench: Usage
 
@@ -463,7 +473,12 @@ pip install esptool
             bash -c "$(curl -fsSL https://raw.githubusercontent.com/nicholaswilde/frame-fi/main/scripts/flash.sh)" _ /dev/ttyUSB0
             ```
 
+!!! warning "Security Risk"
+
+    Running a script directly from the internet with `bash -c "$(curl...)"` is a potential security risk. Always review the script's source code before executing it to ensure it is safe. You can view the script [here](https://github.com/nicholaswilde/frame-fi/blob/main/scripts/flash.sh).
+
 The script will then:
+
 1.  Fetch the latest release from the [nicholaswilde/frame-fi](https://github.com/nicholaswilde/frame-fi) repository.
 2.  Download the release archive to a temporary directory.
 3.  Extract the necessary `.bin` files.
@@ -556,29 +571,33 @@ If you don't want to build the project from source, you can flash a pre-compiled
 !!! tip
     If you have PlatformIO installed, you can use the `pio run --target upload` command, which handles the flashing process automatically.
 
-
-
 ## :arrow_right_hook: Synchronizing Files
+
+This guide provides instructions on how to sync files to your device. You can use the automated `sync.sh` script for a streamlined experience, or follow the manual instructions for more control.
+
+### :zap: Automated Syncing with `sync.sh`
 
 The `scripts/sync.sh` script provides an easy way to synchronize a local directory with the device's microSD card over FTP. It uses [lftp][4] to mirror the contents, deleting any files on the device that are not present locally.
 
-### :package: Dependencies
+#### :package: Dependencies
 
 You must have `lftp` installed on your system.
 
 !!! code ""
 
     === "Debian/Ubuntu"
+
         ```shell
         sudo apt install lftp
         ```
 
     === "macOS (Homebrew)"
+    
         ```shell
         brew install lftp
         ```
 
-### :gear: Configuration
+#### :gear: Configuration
 
 There are two ways to configure the script:
 
@@ -602,7 +621,7 @@ There are two ways to configure the script:
 
     You can override the `.env` file settings by passing environment variables directly.
 
-### :pencil: Script Usage
+#### :pencil: Script Usage
 
 1. Make sure the device is in **FTP Server Mode**.
 2. Run the script from the scripts directory:
@@ -621,6 +640,20 @@ This command syncs a specific local directory to the device, overriding any sett
 
     ```shell
     FTP_HOST="192.168.1.100" LOCAL_DIR="path/to/your/pictures" ./sync.sh
+    ```
+
+### :wrench: Manual Syncing
+
+If you don't want to use the `sync.sh` script, you can manually sync a directory using `lftp`.
+
+!!! code ""
+
+    ```shell
+    lftp -c "
+    set ftp:ssl-allow no;
+    open -u '<FTP_USER>','<FTP_PASSWORD>' '<FTP_HOST>';
+    mirror -R --delete --verbose --parallel=1 '<LOCAL_DIR>' '<REMOTE_DIR>';
+    "
     ```
 
 ## :desktop_computer: Display
