@@ -88,6 +88,51 @@ function check_dir(){
   fi
 }
 
+# Check if curl is installed
+function check_curl(){
+  if ! command -v curl &> /dev/null; then
+    log "ERRO" "curl is not installed."
+    log "ERRO" "Please install it to use this script for device checks."
+    log "ERRO" "  - Debian/Ubuntu: sudo apt install curl"
+    log "ERRO" "  - macOS (Homebrew): brew install curl"
+    exit 1
+  fi
+}
+
+# Check if the device is online by pinging it
+function check_device_online(){
+  log "INFO" "Checking if device at $FTP_HOST is online..."
+  if ping -c 1 -W 1 "$FTP_HOST" &> /dev/null; then
+    log "INFO" "Device is online."
+  else
+    log "ERRO" "Device at $FTP_HOST is offline or unreachable."
+    exit 1
+  fi
+}
+
+# Check the device's current mode via its web API
+function check_device_mode(){
+  log "INFO" "Checking device mode..."
+  local mode_url="http://$FTP_HOST/mode"
+  local response=$(curl -s "$mode_url")
+
+  if [ $? -ne 0 ]; then
+    log "ERRO" "Failed to connect to device API at $mode_url. Is the web server running?"
+    exit 1
+  fi
+
+  if echo "$response" | grep -q '"mode":"ftp"'; then
+    log "INFO" "Device is in FTP mode."
+  elif echo "$response" | grep -q '"mode":"msc"'; then
+    log "ERRO" "Device is in USB MSC mode. Please switch to FTP mode."
+    log "ERRO" "You can switch by pressing the button on the device or by sending a POST request to http://$FTP_HOST/mode/ftp"
+    exit 1
+  else
+    log "ERRO" "Could not determine device mode from API response: $response"
+    exit 1
+  fi
+}
+
 # --- Main Sync Logic ---
 function start_sync(){
   log "INFO" "Starting FTP sync..."
@@ -113,6 +158,9 @@ function start_sync(){
 function main(){
   check_lftp
   check_dir
+  check_curl
+  check_device_online
+  check_device_mode
   start_sync
   log "INFO" "--- Sync complete. ---"  
 }
