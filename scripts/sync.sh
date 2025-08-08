@@ -21,7 +21,7 @@
 #
 # @author Nicholas Wilde, 0xb299a622                                                        │
 # @date 28 Jul 2025  
-# @version 0.2.0
+# @version 0.3.0
 #
 # ==============================================================================
 
@@ -113,7 +113,7 @@ function check_device_online(){
 # Check the device's current mode via its web API
 function check_device_mode(){
   log "INFO" "Checking device mode..."
-  local mode_url="http://$FTP_HOST/mode"
+  local mode_url="http://$FTP_HOST/"
   local response=$(curl -s "$mode_url")
 
   if [ $? -ne 0 ]; then
@@ -121,9 +121,9 @@ function check_device_mode(){
     exit 1
   fi
 
-  if echo "$response" | grep -q '"mode":"ftp"'; then
+  if echo "$response" | grep -q '"mode":"Application (FTP Server)"'; then
     log "INFO" "Device is in FTP mode."
-  elif echo "$response" | grep -q '"mode":"msc"'; then
+  elif echo "$response" | grep -q '"mode":"USB MSC"'; then
     log "ERRO" "Device is in USB MSC mode. Please switch to FTP mode."
     log "ERRO" "You can switch by pressing the button on the device or by sending a POST request to http://$FTP_HOST/mode/ftp"
     exit 1
