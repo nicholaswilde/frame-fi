@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
 #
-# flash_latest.sh
+# flash.sh
 # -------
 # Downloads the latest release from GitHub to the /tmp directory,
 # extracts the bin files to the /tmp directory, checks if esptool is
@@ -10,7 +10,7 @@
 # Usage: ./flash_latest.sh <SERIAL_PORT
 #
 # @author Nicholas Wilde, 0xb299a622                                                        
-# @date 28 Jul 2025  
+# @date 07 Aug 2025  
 # @version 0.1.0
 #
 # ==============================================================================
@@ -19,7 +19,7 @@ set -euo pipefail
 
 # --- variables ---
 GITHUB_REPO="nicholaswilde/frame-fi"
-SERIAL_PORT="${1:-/dev/ttyUSB0}" # Default to /dev/ttyUSB0 if no port is provided
+SERIAL_PORT="${1:-/dev/ttyACM0}"
 
 # --- Constants ---
 readonly BLUE=$(tput setaf 4)
@@ -39,14 +39,11 @@ function log() {
 
   case "$type" in
     INFO)
-      color="$BLUE"
-      ;;
+      color="$BLUE";;
     WARN)
-      color="$YELLOW"
-      ;;
+      color="$YELLOW";;
     ERRO)
-      color="$RED"
-      ;;
+      color="$RED";;
   esac
 
   echo -e "${color}${type}${RESET}[$(date +'%Y-%m-%d %H:%M:%S')] ${message}"
@@ -67,7 +64,7 @@ function check_dependencies() {
 }
 
 function download_release(){
-  RELEASE=$(curl -fsSL https://api.github.com/repos/${GITHUB_REPO}/releases/latest | grep -o '"tag_name": *"[^"]*"' | cut -d '"' -f 4 | sed 's/^v//')
+  RELEASE=$(curl -fsSL https://api.github.com/repos/${GITHUB_REPO}/releases/latest | grep -o '"tag_name": *"[^"]*"' | cut -d '"' -f 4)
   log "INFO" "Latest release: ${RELEASE}"
 
   # --- get the latest release download URL ---
