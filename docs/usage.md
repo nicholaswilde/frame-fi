@@ -402,6 +402,75 @@ This project uses a `Taskfile.yml` for common development tasks. After installin
 
 ## :inbox_tray: Flashing the Firmware
 
+This guide provides instructions on how to flash the latest firmware to your device. You can use the automated `flash.sh` script for a streamlined experience, or follow the manual instructions for more control.
+
+### :zap: Automated Flashing with `flash.sh`
+
+The `flash.sh` script automates the process of downloading the latest release and flashing it to your device.
+
+#### :warning: Prerequisites
+
+Before you begin, ensure you have the following dependencies installed:
+
+- `curl`: For downloading files from the internet.
+- `grep`: For text searching.
+- `unzip`: For extracting zip archives.
+- `esptool`: A tool for communicating with Espressif chips.
+
+You can typically install these using your system's package manager. For `esptool`, you can install it with pip:
+
+```shell
+pip install esptool
+```
+
+#### :hammer_and_wrench: Usage
+
+1.  **Connect your device:** Ensure your ESP32-S3 device is connected to your computer.
+
+2.  **Run the script:** Execute the `flash.sh` script from the `scripts` directory or remotely from GitHub.
+
+    !!! code ""
+
+        === "Local Execution (Default Port)"
+
+            By default, the script uses `/dev/ttyACM0` as the serial port.
+
+            ```shell
+            ./scripts/flash.sh
+            ```
+
+        === "Local Execution (Custom Port)"
+
+            If your device is on a different port, you can specify it as an argument.
+
+            ```shell
+            ./scripts/flash.sh /dev/ttyUSB0
+            ```
+        
+        === "Remote Execution (Default Port)"
+
+            You can run the script directly from GitHub without cloning the repository.
+
+            ```shell
+            bash -c "$(curl -fsSL https://raw.githubusercontent.com/nicholaswilde/frame-fi/main/scripts/flash.sh)"
+            ```
+
+        === "Remote Execution (Custom Port)"
+
+            To specify a custom port when running remotely, pass it as an argument after the script execution command.
+
+            ```shell
+            bash -c "$(curl -fsSL https://raw.githubusercontent.com/nicholaswilde/frame-fi/main/scripts/flash.sh)" _ /dev/ttyUSB0
+            ```
+
+The script will then:
+1.  Fetch the latest release from the [nicholaswilde/frame-fi](https://github.com/nicholaswilde/frame-fi) repository.
+2.  Download the release archive to a temporary directory.
+3.  Extract the necessary `.bin` files.
+4.  Flash the firmware to your device using `esptool`.
+
+### :wrench: Manual Flashing
+
 If you don't want to build the project from source, you can flash a pre-compiled release directly to your device.
 
 - **Download the Latest Release:**
@@ -430,7 +499,7 @@ If you don't want to build the project from source, you can flash a pre-compiled
 
 - **Flash the Device:**
     - Put your T-Dongle-S3 into bootloader mode. You can usually do this by holding down the `BOOT` button (the one on the side), plugging it into your computer, and then releasing the button.
-    - Find the serial port of your device. It will be something like `COM3` on Windows, `/dev/ttyUSB0` on Linux, or `/dev/cu.usbserial-XXXX` on macOS.
+    - Find the serial port of your device. It will be something like `COM3` on Windows, `/dev/ttyUSB0` on Linux, or `/dev/cu.serial-XXXX` on macOS.
     - Run the following command, replacing `<YOUR_SERIAL_PORT>` with your device's port:
 
 !!! code ""
@@ -486,6 +555,8 @@ If you don't want to build the project from source, you can flash a pre-compiled
 
 !!! tip
     If you have PlatformIO installed, you can use the `pio run --target upload` command, which handles the flashing process automatically.
+
+
 
 ## :arrow_right_hook: Synchronizing Files
 
