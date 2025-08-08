@@ -8,7 +8,7 @@
  * @author Nicholas Wilde, 0xb299a622
  *
  *****************************************************************************/ 
- 
+
 #include "Arduino.h"
 #include <WiFi.h>
 #include <WebServer.h>
@@ -37,6 +37,33 @@
 #include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
 
 using json = nlohmann::json;
+
+// --- Data Structure for Device Information ---
+struct DeviceInfo {
+  // Mode and Display
+  const char* modeString;
+  bool isInMscMode;
+  const char* displayStatus;
+  bool isDisplayOn;
+  int displayOrientation;
+
+  // Network
+  String ipAddress;
+  String macAddress;
+
+  // SD Card
+  int fileCount;
+  uint64_t totalSize;
+  uint64_t usedSize;
+  uint64_t freeSize;
+
+  // MQTT
+  int mqttState;
+  bool mqttConnected;
+};
+
+// --- Function to populate device info ---
+void getDeviceInfo(DeviceInfo& info);
 
 // --- Mode Descriptions ---
 const char* MODE_MSC_DESC = "USB MSC";
@@ -243,11 +270,59 @@ void loop(){
   }
 }
 
+// --- Get Device Info ---
+void getDeviceInfo(DeviceInfo& info) {
+  info.isInMscMode = ::isInMscMode; // Use global isInMscMode
+  info.isDisplayOn = ::isDisplayOn; // Use global isDisplayOn
+  info.modeString = info.isInMscMode ? MODE_MSC_DESC : MODE_FTP_DESC;
+  info.displayStatus = info.isDisplayOn ? "on" : "off";
+  info.displayOrientation = tft.getRotation();
+  info.ipAddress = WiFi.localIP().toString();
+  info.macAddress = WiFi.macAddress();
+  info.mqttState = mqttClient.state();
+  info.mqttConnected = mqttClient.connected();
+
+  if (info.isInMscMode) {
+    if(card) {
+      info.fileCount = countFilesInPath(MOUNT_POINT);
+      FATFS *fs;
+      DWORD fre_clust;
+      if (f_getfree(MOUNT_POINT, &fre_clust, &fs) == FR_OK) {
+        info.totalSize = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
+        info.freeSize = (uint64_t)fre_clust * fs->csize * fs->ssize;
+        info.usedSize = info.totalSize - info.freeSize;
+      } else {
+        info.fileCount = 0;
+        info.totalSize = 0;
+        info.usedSize = 0;
+        info.freeSize = 0;
+      }
+    } else {
+      info.fileCount = 0;
+      info.totalSize = 0;
+      info.usedSize = 0;
+      info.freeSize = 0;
+    }
+  } else {
+    File root = SD_MMC.open("/");
+    if (root) {
+      info.fileCount = countFiles(root);
+      root.close();
+    } else {
+      info.fileCount = 0;
+    }
+    info.totalSize = SD_MMC.cardSize();
+    info.usedSize = SD_MMC.usedBytes();
+    info.freeSize = info.totalSize - info.usedSize;
+  }
+}
+
 // --- Serial Communications ---
 
 /**
  * @brief Initializes the serial communication.
  */
+
 void setupSerial() {
   Serial.begin(115200);
   unsigned long start = millis();
@@ -588,13 +663,10 @@ bool enterFtpMode() {
   isInMscMode = false;
 
   // --- Display FTP mode screen ---
-  File root = SD_MMC.open("/");
-  int numFiles = countFiles(root);
-  root.close();
-  uint64_t totalBytes = SD_MMC.cardSize();
-  uint64_t usedBytes = SD_MMC.usedBytes();
+  DeviceInfo info;
+  getDeviceInfo(info);
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-  drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
+  drawFtpModeScreen(info.ipAddress.c_str(), info.macAddress.c_str(), info.fileCount, info.totalSize / (1024 * 1024), info.freeSize / (1024.0 * 1024.0));
 #endif
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
@@ -606,48 +678,22 @@ bool enterFtpMode() {
  * @brief Handles requests to the root URL ("/"). Sends a JSON status object.
  */
 void handleStatus() {
-  const char* modeString = isInMscMode ? MODE_MSC_DESC : MODE_FTP_DESC;
-  const char* displayStatus = isDisplayOn ? "on" : "off";
-  
-  int fileCount = 0;
-  uint64_t totalSize = 0;
-  uint64_t usedSize = 0;
-  uint64_t freeSize = 0;
-
-  if (isInMscMode) {
-    if(card) {
-      fileCount = countFilesInPath(MOUNT_POINT);
-      FATFS *fs;
-      DWORD fre_clust;
-      f_getfree(MOUNT_POINT, &fre_clust, &fs);
-      totalSize = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
-      freeSize = (uint64_t)fre_clust * fs->csize * fs->ssize;
-      usedSize = totalSize - freeSize;
-    }
-  } else {
-    File root = SD_MMC.open("/");
-    if (root) {
-      fileCount = countFiles(root);
-      root.close();
-    }
-    totalSize = SD_MMC.cardSize();
-    usedSize = SD_MMC.usedBytes();
-    freeSize = totalSize - usedSize;
-  }
+  DeviceInfo info;
+  getDeviceInfo(info);
 
   json jsonResponse;
-  jsonResponse["mode"] = modeString;
-  jsonResponse["display"]["status"] = displayStatus;
-  jsonResponse["display"]["orientation"] = tft.getRotation();
-  jsonResponse["sd_card"]["total_size"] = totalSize;
-  jsonResponse["sd_card"]["used_size"] = usedSize;
-  jsonResponse["sd_card"]["free_size"] = freeSize;
-  jsonResponse["sd_card"]["file_count"] = fileCount;
-  jsonResponse["mqtt"]["state"] = mqttClient.state();
-  jsonResponse["mqtt"]["connected"] = mqttClient.connected();
+  jsonResponse["mode"] = info.modeString;
+  jsonResponse["display"]["status"] = info.displayStatus;
+  jsonResponse["display"]["orientation"] = info.displayOrientation;
+  jsonResponse["sd_card"]["total_size"] = info.totalSize;
+  jsonResponse["sd_card"]["used_size"] = info.usedSize;
+  jsonResponse["sd_card"]["free_size"] = info.freeSize;
+  jsonResponse["sd_card"]["file_count"] = info.fileCount;
+  jsonResponse["mqtt"]["state"] = info.mqttState;
+  jsonResponse["mqtt"]["connected"] = info.mqttConnected;
 
   server.send(200, "application/json", jsonResponse.dump().c_str());
- }     
+}
 
 /**
  * @brief Handles the POST request to switch to MSC mode.
@@ -815,13 +861,10 @@ void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, un
     FastLED.show();
 
     // --- Update storage info on the screen ---
-    File root = SD_MMC.open("/");
-    int numFiles = countFiles(root);
-    root.close();
-    uint64_t totalBytes = SD_MMC.cardSize();
-    uint64_t usedBytes = SD_MMC.usedBytes();
+    DeviceInfo info;
+    getDeviceInfo(info);
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-    drawFtpModeScreen(WiFi.localIP().toString().c_str(), WiFi.macAddress().c_str(), numFiles, totalBytes / (1024 * 1024), (totalBytes - usedBytes) / (1024.0 * 1024.0));
+    drawFtpModeScreen(info.ipAddress.c_str(), info.macAddress.c_str(), info.fileCount, info.totalSize / (1024 * 1024), info.freeSize / (1024.0 * 1024.0));
 #endif
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
     publishMqttStatus();
@@ -898,46 +941,22 @@ void publishMqttStatus() {
     return; // Don't publish if not connected
   }
 
-  const char* modeString = isInMscMode ? MODE_MSC_DESC : MODE_FTP_DESC;
-  const char* displayStatus = isDisplayOn ? "ON" : "OFF";
-
-  int fileCount = 0;
-  uint64_t totalSize = 0;
-  uint64_t usedSize = 0;
-  uint64_t freeSize = 0;
-
-  if (isInMscMode) {
-    if(card) {
-      fileCount = countFilesInPath(MOUNT_POINT);
-      FATFS *fs;
-      DWORD fre_clust;
-      f_getfree(MOUNT_POINT, &fre_clust, &fs);
-      totalSize = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
-      freeSize = (uint64_t)fre_clust * fs->csize * fs->ssize;
-      usedSize = totalSize - freeSize;
-    }
-  } else {
-    File root = SD_MMC.open("/");
-    if (root) {
-      fileCount = countFiles(root);
-      root.close();
-    }
-    totalSize = SD_MMC.cardSize();
-    usedSize = SD_MMC.usedBytes();
-    freeSize = totalSize - usedSize;
-  }
+  DeviceInfo info;
+  getDeviceInfo(info);
 
   json jsonResponse;
-  jsonResponse["mode"] = modeString;
-  jsonResponse["display"]["status"] = displayStatus;
-  jsonResponse["display"]["orientation"] = tft.getRotation();
-  jsonResponse["sd_card"]["total_size"] = totalSize;
-  jsonResponse["sd_card"]["used_size"] = usedSize;
-  jsonResponse["sd_card"]["free_size"] = freeSize;
-  jsonResponse["sd_card"]["file_count"] = fileCount;
+  jsonResponse["mode"] = info.modeString;
+  jsonResponse["display"]["status"] = info.displayStatus;
+  jsonResponse["display"]["orientation"] = info.displayOrientation;
+  jsonResponse["sd_card"]["total_size"] = info.totalSize;
+  jsonResponse["sd_card"]["used_size"] = info.usedSize;
+  jsonResponse["sd_card"]["free_size"] = info.freeSize;
+  jsonResponse["sd_card"]["file_count"] = info.fileCount;
+
+  const char* displayStatusMqtt = info.isDisplayOn ? "ON" : "OFF";
 
   mqttClient.publish(MQTT_STATE_TOPIC, jsonResponse.dump().c_str(), true); // Retain message
-  mqttClient.publish(MQTT_DISPLAY_STATUS_TOPIC, displayStatus, true); // Retain message
+  mqttClient.publish(MQTT_DISPLAY_STATUS_TOPIC, displayStatusMqtt, true); // Retain message
   HWSerial.println("Published MQTT status.");
 #endif
 }
@@ -998,21 +1017,16 @@ void reconnect() {
 void updateAndDrawMscScreen() {
   if (!card) return;
 
-  // --- Recalculate storage info ---
-  int numFiles = countFilesInPath(MOUNT_POINT);
-  FATFS *fs;
-  DWORD fre_clust;
-  f_getfree(MOUNT_POINT, &fre_clust, &fs);
-  uint64_t totalBytes = (uint64_t)(fs->n_fatent - 2) * fs->csize * fs->ssize;
-  uint64_t freeBytes = (uint64_t)fre_clust * fs->csize * fs->ssize;
+  DeviceInfo info;
+  getDeviceInfo(info);
 
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   drawUsbMscModeScreen(
-    WiFi.localIP().toString().c_str(),
-    WiFi.macAddress().c_str(),
-    numFiles,
-    totalBytes / (1024 * 1024),
-    freeBytes / (1024.0 * 1024.0)
+    info.ipAddress.c_str(),
+    info.macAddress.c_str(),
+    info.fileCount,
+    info.totalSize / (1024 * 1024),
+    info.freeSize / (1024.0 * 1024.0)
   );
 #endif
   HWSerial.println("MSC screen refreshed.");
@@ -1140,7 +1154,7 @@ void drawStorageInfoPortrait(int files, int totalSizeMB, float freeSizeMB) {
   tft.print(usedSizeGB, 2);
   tft.print("GB (");
   tft.print((int)usedPercentage);
-  tft.print("%)");
+  tft.print("%) ");
   y_pos += 12;
 
   // --- Draw capacity bar ---
