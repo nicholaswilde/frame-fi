@@ -21,8 +21,6 @@ set -euo pipefail
 GITHUB_REPO="nicholaswilde/frame-fi"
 SERIAL_PORT="${1:-/dev/ttyUSB0}" # Default to /dev/ttyUSB0 if no port is provided
 
-# --- functions ---
-
 # --- Constants ---
 readonly BLUE=$(tput setaf 4)
 readonly RED=$(tput setaf 1)
@@ -30,6 +28,8 @@ readonly YELLOW=$(tput setaf 3)
 readonly RESET=$(tput sgr0)
 
 readonly SCRIPT_NAME=$(basename "$0")
+
+# --- functions ---
 
 # Logging function
 function log() {
@@ -78,6 +78,7 @@ function download_release(){
     log "ERRO" "Could not find the latest release zip file." >&2
     exit 1
   fi
+
   # --- download and extract the release ---
   TMP_DIR=$(mktemp -d)
   log "INFO" "Downloading latest release from ${LATEST_RELEASE_URL}..."
@@ -91,19 +92,18 @@ function extract_files() {
 
 function flash_device() {
   log "INFO" "Ready to flash the device on port ${SERIAL_PORT}."
-  log "INFO" "The following .bin files were extracted:"
 
-  esptool.py \
+  esptool \
     --chip esp32s3 \
     --port "${SERIAL_PORT}" \
     --baud 921600 \
-    --before default_reset \
-    --after hard_reset \
-    write_flash \
+    --before default-reset \
+    --after hard-reset \
+    write-flash \
       -z \
-      --flash_mode dio \
-      --flash_freq 80m \
-      --flash_size 16MB \
+      --flash-mode dio \
+      --flash-freq 80m \
+      --flash-size 16MB \
       0x0000 "${TMP_DIR}/bootloader.bin" \
       0x8000 "${TMP_DIR}/partitions.bin" \
       0x10000 "${TMP_DIR}/firmware.bin"
