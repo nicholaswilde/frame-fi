@@ -35,6 +35,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>     // https://github.com/bblanchon/ArduinoJson
 #include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
+#include <LittleFS.h>
 
 // --- Data Structure for Device Information ---
 struct DeviceInfo {
@@ -80,7 +81,17 @@ PubSubClient mqttClient(espClient);
 
 #define HWSerial    Serial0
 #define MOUNT_POINT "/sdcard"
- sdmmc_card_t *card;
+sdmmc_card_t *card;
+
+// --- MQTT Configuration ---
+#define MQTT_CONFIG_FILE "/mqtt_config.json"
+bool shouldSaveMqttConfig = false;
+char mqtt_host[64] = "192.168.1.100";
+char mqtt_port[6] = "1883";
+char mqtt_user[32] = "";
+char mqtt_pass[32] = "";
+char mqtt_client_id[32] = "FrameFi";
+
 
 // --- A flag to track the current mode ---
 bool isInMscMode = true;
@@ -148,6 +159,9 @@ void setupMqtt();
 void publishMqttStatus();
 void callback(char *topic, byte *payload, unsigned int length);
 void reconnect();
+void saveMqttConfigCallback();
+void saveMqttConfig();
+void loadConfig();
 
 // --- Main Logic ---
 
@@ -192,14 +206,24 @@ void setup(){
   // --- Show boot screen ---
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   drawBootScreen();
-#endif
   delay(2000); // Keep boot screen visible for 2 seconds
-  
+#endif
+
+  // Load existing configuration
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  // Initialize LittleFS
+  if (!LittleFS.begin(true)) {
+    HWSerial.println("LittleFS mount failed");
+    return;
+  }
+
+  loadConfig();
+#endif
+
   // --- Connect to WiFi ---
   connectToWiFi();
 
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
-  // --- Setup MQTT ---
   setupMqtt();
 #endif
 
@@ -266,6 +290,64 @@ void loop(){
     msc_disk_dirty = false; // Reset flag
     updateAndDrawMscScreen();
   }
+}
+
+/**
+ * Loads the configuration from a file.
+ */
+void loadConfig() {
+  if (LittleFS.exists(MQTT_CONFIG_FILE)) {
+    HWSerial.println("Loading config");
+    File configFile = LittleFS.open(MQTT_CONFIG_FILE, "r");
+    if (configFile) {
+      HWSerial.println("configFile is not error");
+      DynamicJsonDocument doc(1024);
+      DeserializationError error = deserializeJson(doc, configFile);
+      if (!error) {
+        Serial.println("No error loading json config");   
+        strcpy(mqtt_host, doc["mqtt_host"]);
+        int myInt = doc["mqtt_port"];
+        char buffer[6];
+        sprintf(buffer, "%d", myInt);
+        strcpy(mqtt_port, buffer);
+        strcpy(mqtt_user, doc["mqtt_user"]);
+        strcpy(mqtt_pass, doc["mqtt_pass"]);
+        strcpy(mqtt_client_id, doc["mqtt_client_id"]);
+      } else {
+        HWSerial.println("Failed to load json config");
+      }
+      configFile.close();
+    }
+  } else {
+    HWSerial.println("Config file not found, using defaults.");
+  }
+}
+
+/**
+ * Saves the configuration to a file.
+ */
+void saveMqttConfig() {
+  HWSerial.println("Saving config");
+  DynamicJsonDocument doc(1024);
+  doc["mqtt_host"] = mqtt_host;
+  doc["mqtt_port"] = mqtt_port;
+  doc["mqtt_user"] = mqtt_user;
+  doc["mqtt_pass"] = mqtt_pass;
+  doc["mqtt_client_id"] = mqtt_client_id;
+
+  File configFile = LittleFS.open(MQTT_CONFIG_FILE, "w");
+  if (!configFile) {
+    Serial.println("Failed to open config file for writing");
+    return;
+  }
+
+  serializeJson(doc, configFile);
+  configFile.close();
+}
+
+void saveMqttConfigCallback() {
+  Serial.println("Should save config");
+  shouldSaveMqttConfig = true;
 }
 
 // --- Get Device Info ---
@@ -493,6 +575,24 @@ void connectToWiFi() {
   ap_password = NULL;
 #endif
 
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  // Set config save notify callback
+  wm.setSaveConfigCallback(saveMqttConfigCallback);
+
+  // Add custom parameters for MQTT
+  WiFiManagerParameter custom_mqtt_client_id("mqtt_client_id", "MQTT Client ID", mqtt_client_id, 32);
+  WiFiManagerParameter custom_mqtt_host("mqtt_host", "MQTT Host", mqtt_host, 64);
+  WiFiManagerParameter custom_mqtt_port("mqtt_port", "MQTT Port", mqtt_port, 6);
+  WiFiManagerParameter custom_mqtt_user("mqtt_user", "MQTT User", mqtt_user, 32);
+  WiFiManagerParameter custom_mqtt_pass("mqtt_pass", "MQTT Password", mqtt_pass, 32);
+
+  wm.addParameter(&custom_mqtt_client_id);  
+  wm.addParameter(&custom_mqtt_host);
+  wm.addParameter(&custom_mqtt_port);
+  wm.addParameter(&custom_mqtt_user);
+  wm.addParameter(&custom_mqtt_pass);
+#endif
+
   // --- Set up a callback for when the captive portal is entered ---
   wm.setAPCallback([](WiFiManager *myWiFiManager) {
     HWSerial.println("Entered config mode");
@@ -528,6 +628,15 @@ void connectToWiFi() {
     HWSerial.printf("Connected to: %s\n", WIFI_SSID);
     HWSerial.printf("IP Address: %s\n", WiFi.localIP().toString().c_str());
   }
+  
+  // Read updated parameters
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  strcpy(mqtt_host, custom_mqtt_host.getValue());
+  strcpy(mqtt_port, custom_mqtt_port.getValue());
+  strcpy(mqtt_user, custom_mqtt_user.getValue());
+  strcpy(mqtt_pass, custom_mqtt_pass.getValue());
+  strcpy(mqtt_client_id, custom_mqtt_client_id.getValue());
+#endif
 }
 
 // --- Button Actions ---
@@ -542,6 +651,12 @@ void resetWifiSettings() {
   HWSerial.println("Button held for 3 seconds. Resetting WiFi settings...");
   WiFiManager wm;
   wm.resetSettings();
+
+  // Erase the configuration file
+  if (LittleFS.exists(MQTT_CONFIG_FILE)) {
+    LittleFS.remove(MQTT_CONFIG_FILE);
+    HWSerial.println("Configuration file has been deleted.");
+  }
   HWSerial.println("WiFi settings reset. Restarting...");
   ESP.restart();
 }
@@ -958,7 +1073,11 @@ int countFiles(File dir) {
  * @brief Sets up the MQTT client and connection.
  */
 void setupMqtt() {
-  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+  // Save the custom parameters to FS
+  if (shouldSaveMqttConfig) {
+    saveMqttConfig();
+  }
+  mqttClient.setServer(mqtt_host, String(mqtt_port).toInt());
   mqttClient.setCallback(callback);
   HWSerial.println("MQTT client setup complete.");
 }
@@ -1030,7 +1149,7 @@ void reconnect() {
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   HWSerial.print("Attempting MQTT connection...");
   // Attempt to connect
-  if (mqttClient.connect(MQTT_CLIENT_ID, MQTT_USER, MQTT_PASSWORD)) {
+  if (mqttClient.connect(mqtt_client_id, mqtt_user, mqtt_pass)) {
     HWSerial.println("connected");
     // Subscribe
     mqttClient.subscribe(MQTT_DISPLAY_SET_TOPIC);
