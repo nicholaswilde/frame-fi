@@ -29,7 +29,7 @@
 #include "catppuccin_colors.h" // Include our custom color palette
 
 // --- External libraries ---
-#include <OneButton.h>
+#include <OneButton.h> // https://github.com/ck Conrad/esp32-onebutton
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <FastLED.h>   // https://github.com/FastLED/FastLED
 #include <PubSubClient.h>
@@ -47,8 +47,8 @@ struct DeviceInfo {
   int displayOrientation;
 
   // Network
-  String ipAddress;
-  String macAddress;
+  char ipAddress[16];
+  char macAddress[18];
 
   // SD Card
   int fileCount;
@@ -506,8 +506,10 @@ void getDeviceInfo(DeviceInfo& info) {
   info.modeString = info.isInMscMode ? Mode::MSC : Mode::FTP;
   info.displayStatus = info.isDisplayOn ? "on" : "off";
   info.displayOrientation = tft.getRotation();
-  info.ipAddress = WiFi.localIP().toString();
-  info.macAddress = WiFi.macAddress();
+  strncpy(info.ipAddress, WiFi.localIP().toString().c_str(), sizeof(info.ipAddress));
+  info.ipAddress[sizeof(info.ipAddress) - 1] = '\0';
+  strncpy(info.macAddress, WiFi.macAddress().c_str(), sizeof(info.macAddress));
+  info.macAddress[sizeof(info.macAddress) - 1] = '\0';
   info.mqttState = mqttClient.state();
   info.mqttConnected = mqttClient.connected();
 
@@ -951,7 +953,7 @@ bool enterFtpMode() {
   DeviceInfo info;
   getDeviceInfo(info);
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-  drawFtpModeScreen(info.ipAddress.c_str(), info.macAddress.c_str(), info.fileCount, info.totalSize / (1024 * 1024), info.freeSize / (1024.0 * 1024.0));
+  drawFtpModeScreen(info.ipAddress, info.macAddress, info.fileCount, info.totalSize / (1024 * 1024), info.freeSize / (1024.0 * 1024.0));
 #endif
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
@@ -966,7 +968,8 @@ void handleStatus() {
   DeviceInfo info;
   getDeviceInfo(info);
 
-  DynamicJsonDocument jsonResponse(1024);
+  const int JSON_STATUS_SIZE = JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(2);
+  DynamicJsonDocument jsonResponse(JSON_STATUS_SIZE);
   jsonResponse["mode"] = info.modeString;
   JsonObject display = jsonResponse.createNestedObject("display");
   display["status"] = info.displayStatus;
@@ -1182,7 +1185,7 @@ void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, un
     DeviceInfo info;
     getDeviceInfo(info);
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-    drawFtpModeScreen(info.ipAddress.c_str(), info.macAddress.c_str(), info.fileCount, info.totalSize / (1024 * 1024), info.freeSize / (1024.0 * 1024.0));
+    drawFtpModeScreen(info.ipAddress, info.macAddress, info.fileCount, info.totalSize / (1024 * 1024), info.freeSize / (1024.0 * 1024.0));
 #endif
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
     publishMqttStatus();
@@ -1263,7 +1266,8 @@ void publishMqttStatus() {
   DeviceInfo info;
   getDeviceInfo(info);
 
-  DynamicJsonDocument jsonResponse(1024);
+  const int JSON_STATUS_SIZE = JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(2);
+  DynamicJsonDocument jsonResponse(JSON_STATUS_SIZE);
   jsonResponse["mode"] = info.modeString;
   JsonObject display = jsonResponse.createNestedObject("display");
   display["status"] = info.displayStatus;
@@ -1346,8 +1350,8 @@ void updateAndDrawMscScreen() {
 
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   drawUsbMscModeScreen(
-    info.ipAddress.c_str(),
-    info.macAddress.c_str(),
+    info.ipAddress,
+    info.macAddress,
     info.fileCount,
     info.totalSize / (1024 * 1024),
     info.freeSize / (1024.0 * 1024.0)
