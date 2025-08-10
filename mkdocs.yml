@@ -20,7 +20,6 @@ nav:
   - Getting Started: getting-started.md
   - Usage: usage.md
   - Home Assistant: home-assistant.md
-  - Releases: releases.md
   - Contributing: contributing.md
 
 extra_css:
