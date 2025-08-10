@@ -20,7 +20,7 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
 
 - **FTP Server Mode:**
     1. Press the onboard button (single click) to switch from MSC to FTP mode or use the web API.
-    2. Use an FTP client to connect to the device's IP address (visible on the LCD display) using the `FTP_USER` and `FTP_PASSWORD` you set in `include/secrets.h`.
+    2. Use an FTP client to connect to the device's IP address (visible on the LCD display).
 
 - **Reset Wi-Fi Settings:**
     1. Press and hold the onboard button for at least 3 seconds or use the web API.
@@ -43,8 +43,8 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
     - Use any standard FTP client (e.g., [FileZilla][8], [WinSCP][9], or the command-line `ftp`).
     - **Host:** The IP address of your device (shown on the LCD).
     - **Port:** `21` (the default FTP port).
-    - **Username:** The `FTP_USER` you configured in `include/secrets.h`.
-    - **Password:** The `FTP_PASSWORD` you configured in `include/secrets.h`.
+    - **Username:** The username you configured in the WiFiManager setup page.
+    - **Password:** The password you configured in the WiFiManager setup page.
   
 - **Upload File:**
 
@@ -60,7 +60,7 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
             ftp <HOST>
             ```
 
-    3. **Enter Your Credentials:** The server will prompt you for your username and password from`include/secrets.h`. Enter them as requested. For security reasons, the password you type may not be displayed on the screen.
+    3. **Enter Your Credentials:** The server will prompt you for your username and password.
 
     4. **List Remote Files (Optional):** You can list the files on the device by using the `ls` command:
 
@@ -116,10 +116,7 @@ The device can connect to an MQTT broker to integrate with home automation platf
     ```
 
 - **Set MQTT Settings:**
-
-    1.  Open `include/secrets.h`.
-    2.  Configure your MQTT broker's IP address, port, and credentials.
-    3.  Rebuild and upload the firmware.
+    Configure your MQTT broker's IP address, port, and credentials in the WiFiManager setup page. See [Getting Started](getting-started.md#satellite-wi-fi-and-mqtt-setup) for more details.
     
 - **Topics:**
     - **Status Topic:** `frame-fi/status` (publishes `USB MSC` or `Application (FTP Server)`)

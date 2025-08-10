@@ -6,6 +6,8 @@ tags:
 
 Before building, you need to configure your credentials and format your SD card.
 
+## :gear: Configuration
+
 ### :floppy_disk: Formatting the microSD Card
 
 The microSD card must be formatted as **FAT32**.
@@ -47,12 +49,31 @@ The microSD card must be formatted as **FAT32**.
 !!! note
     This project uses [`WiFiManager`][1] to handle Wi-Fi connections via a captive portal, so you don't need to hardcode your network credentials. The `WIFI_SSID` and `WIFI_PASSWORD` fields in `secrets.h` are placeholders for a potential future feature and are not currently used.
 
-### :satellite: Wi-Fi Access Point
+### :satellite: Wi-Fi and MQTT Setup
 
 When you first boot the device, it will create a Wi-Fi Access Point (AP) that you can connect to from your computer or phone to configure its Wi-Fi connection.
 
+!!! tip
+
+    Configure FTP and MQTT settings first in the `Setup` page before configuring Wi-Fi to avoid terminating WiFiManager.
+
+![param](./assets/images/main.png)
+
 -   **SSID:** By default, the AP name is `FrameFi-<MAC>`, where `<MAC>` is the last 6 characters of the device's MAC address. This is configured by leaving `WIFI_AP_SSID` commented out in `secrets.h`. To set a custom SSID, uncomment `WIFI_AP_SSID` and provide your own name.
 -   **Password:** By default, the AP is open and does not require a password. To set a password, uncomment `WIFI_AP_PASSWORD` in `secrets.h` and provide a password.
+
+![param](./assets/images/wifi.png)
+
+In the WiFiManager setup page, you can also configure the following:
+
+- **FTP Credentials:** Set the username and password for the FTP server. The values in `secrets.h` are used as the default values on the portal.
+- **MQTT Settings:** Configure the MQTT broker, port, username, and password. The values in `secrets.h` are used as the default values on the portal.
+
+!!! tip
+
+    Hit the back button twice to get back to the main page after saving FTP and MQTT settings.
+    
+![param](./assets/images/param.png)
 
 ### :lock: Secrets Management
 

@@ -15,17 +15,7 @@ This page provides an example of how to integrate FrameFi with [Home Assistant][
 
 ## :gear: Configuration
 
-To enable MQTT, you must first configure the following variables in `include/secrets.h`.
-
-!!! abstract "include/secrets.h"
-    ```cpp
-    // --- MQTT ---
-    #define MQTT_CLIENT_ID "FrameFi" // Must be unique on the MQTT network
-    #define MQTT_HOST "192.168.1.100"
-    #define MQTT_PORT 1883
-    #define MQTT_USER "user"
-    #define MQTT_PASSWORD "password"
-    ```
+To enable MQTT, you must first configure it in the WiFiManager setup page. See [Getting Started](getting-started.md#satellite-wi-fi-and-mqtt-setup) for more details.
 
 Next, add the following configuration to your `configuration.yaml` file in Home Assistant.
 
