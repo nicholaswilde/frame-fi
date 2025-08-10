@@ -168,18 +168,10 @@ static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufs
 static bool onStartStop(uint8_t power_condition, bool start, bool load_eject);
 static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 void drawHeader(const char* title, uint16_t bannerColor);
-void drawStorageInfo(int files, float totalSizeMB, float freeSizeMB);
-void drawStorageInfoPortrait(int files, int totalSizeMB, float freeSizeMB);
-void drawStorageInfoLandscape(int files, int totalSizeMB, float freeSizeMB);
+void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB);
 void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
-void drawApModeScreenPortrait(const char* ap_ssid, const char* ap_ip);
-void drawApModeScreenLandscape(const char* ap_ssid, const char* ap_ip);
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
-void drawFtpModeScreenPortrait(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
-void drawFtpModeScreenLandscape(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
 void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
-void drawUsbMscModeScreenPortrait(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
-void drawUsbMscModeScreenLandscape(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
 void drawBootScreen();
 void drawResetWiFiSettingsScreen();
 int countFiles(File dir);
@@ -677,8 +669,8 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
   if (event_base == ARDUINO_USB_EVENTS) {
     arduino_usb_event_data_t *data = (arduino_usb_event_data_t *)event_data;
     switch (event_id) {
-    case ARDUINO_USB_STARTED_EVENT: HWSerial.println("USB PLUGGED"); break;
-    case ARDUINO_USB_STOPPED_EVENT: HWSerial.println("USB UNPLUGGED"); break;
+    case ARDUINO_USB_STARTED_EVENT: HWSerial.println("USB PLUGGED"); break; 
+    case ARDUINO_USB_STOPPED_EVENT: HWSerial.println("USB UNPLUGGED"); break; 
     case ARDUINO_USB_SUSPEND_EVENT: HWSerial.printf("USB SUSPENDED: remote_wakeup_en: %u\n", data->suspend.remote_wakeup_en); break;
     case ARDUINO_USB_RESUME_EVENT: HWSerial.println("USB RESUMED"); break;
     default: break;
@@ -1376,131 +1368,104 @@ void drawHeader(const char* title, uint16_t bannerColor) {
 }
 
 /**
- * @brief Draws the right column with storage statistics.
+ * @brief Draws the storage statistics, adapting to the current orientation.
  */
 void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB) {
   uint8_t rotation = tft.getRotation();
-  if (rotation == 1 || rotation == 3) { // Landscape
-    drawStorageInfoLandscape(files, totalSizeMB, freeSizeMB);
+  bool isLandscape = (rotation == 1 || rotation == 3);
+
+  // --- Calculate usage ---
+  float usedSizeMB = totalSizeMB - freeSizeMB;
+  float usedPercentage = (totalSizeMB > 0) ? (usedSizeMB / totalSizeMB) * 100 : 0;
+  float totalSizeGB = totalSizeMB / 1024.0;
+  float usedSizeGB = usedSizeMB / 1024.0;
+
+  if (isLandscape) {
+    int y_pos = 53;
+    int x_pos = 5;
+
+    // --- Draw storage text info ---
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("Size:  ");
+    tft.setTextColor(CATPPUCCIN_PEACH);
+    tft.print(totalSizeGB, 2);
+    tft.print("GB");
+
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print(" Files: ");
+    tft.setTextColor(CATPPUCCIN_PEACH);
+    tft.print(files);
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("Used:  ");
+    tft.setTextColor(CATPPUCCIN_PEACH);
+    tft.print(usedSizeGB, 2);
+    tft.print("GB (");
+    tft.print((int)usedPercentage);
+    tft.print("%)");
+    y_pos += 12;
+
+    // --- Draw capacity bar ---
+    int bar_x = x_pos;
+    int bar_height = 3;
+    int bar_y = tft.height() - bar_height;
+    int bar_width = TFT_HEIGHT - (2 * x_pos); // Bar width spans the screen with padding
+    int filled_width = (bar_width * usedPercentage) / 100;
+
+    tft.drawRect(bar_x, bar_y, bar_width, bar_height, CATPPUCCIN_BASE);
+    tft.fillRect(bar_x, bar_y, filled_width, bar_height, CATPPUCCIN_GREEN);
   } else { // Portrait
-    drawStorageInfoPortrait(files, totalSizeMB, freeSizeMB);
+    int y_pos = 90;
+    int x_pos = 5;
+
+    // --- Draw storage text info ---
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("Files:");
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_PEACH);
+    tft.print(files);
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("Size:");
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_PEACH);
+    tft.print(totalSizeGB, 2);
+    tft.print("GB");
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("Used:");
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_PEACH);
+    tft.print(usedSizeGB, 2);
+    tft.print("GB (");
+    tft.print((int)usedPercentage);
+    tft.print("%)");
+    y_pos += 12;
+
+    // --- Draw capacity bar ---
+    int bar_x = 0;
+    int bar_y = 12;
+    int bar_width = x_pos - 2;
+    int bar_height = tft.height() - 12;
+    int filled_height = (bar_height * usedPercentage) / 100;
+
+    tft.drawRect(bar_x, bar_y, bar_width, bar_height, CATPPUCCIN_BASE);
+    tft.fillRect(bar_x, y_pos - filled_height, bar_width, filled_height, CATPPUCCIN_GREEN);
   }
-}
-
-/**
- * @brief Draws the storage statistics in landscape mode.
- */
-void drawStorageInfoLandscape(int files, int totalSizeMB, float freeSizeMB) {
-  int y_pos = 53;
-  int x_pos = 5;
-
-  // --- Calculate usage ---
-  float usedSizeMB = totalSizeMB - freeSizeMB;
-  float usedPercentage = (totalSizeMB > 0) ? (usedSizeMB / totalSizeMB) * 100 : 0;
-
-  // --- Convert to GB for display ---
-  float totalSizeGB = totalSizeMB / 1024.0;
-  float usedSizeGB = usedSizeMB / 1024.0;
-
-  // --- Draw storage text info ---
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Size:  ");
-  tft.setTextColor(CATPPUCCIN_PEACH);
-  tft.print(totalSizeGB, 2);
-  tft.print("GB");
-
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print(" Files: ");
-  tft.setTextColor(CATPPUCCIN_PEACH);
-  tft.print(files);
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Used:  ");
-  tft.setTextColor(CATPPUCCIN_PEACH);
-  tft.print(usedSizeGB, 2);
-  tft.print("GB (");
-  tft.print((int)usedPercentage);
-  tft.print("%)");
-  y_pos += 12;
-
-  // --- Draw capacity bar ---
-  int bar_x = x_pos;
-  int bar_height = 3;
-  int bar_y = tft.height() - bar_height;
-  int bar_width = TFT_HEIGHT - (2 * x_pos); // Bar width spans the screen with padding
-  int filled_width = (bar_width * usedPercentage) / 100;
-
-  // --- Draw the bar background (empty part) ---
-  tft.drawRect(bar_x, bar_y, bar_width, bar_height, CATPPUCCIN_BASE);
-  // --- Draw the filled part of the bar ---
-  tft.fillRect(bar_x, bar_y, filled_width, bar_height, CATPPUCCIN_GREEN);
-}
-
-/**
- * @brief Draws the storage statistics in portrait mode.
- */
-void drawStorageInfoPortrait(int files, int totalSizeMB, float freeSizeMB) {
-  int y_pos = 90;
-  int x_pos = 5;
-
-  // --- Calculate usage ---
-  float usedSizeMB = totalSizeMB - freeSizeMB;
-  float usedPercentage = (totalSizeMB > 0) ? (usedSizeMB / totalSizeMB) * 100 : 0;
-
-  // --- Convert to GB for display ---
-  float totalSizeGB = totalSizeMB / 1024.0;
-  float usedSizeGB = usedSizeMB / 1024.0;
-
-  // --- Draw storage text info ---
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Files:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_PEACH);
-  tft.print(files);
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Size:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_PEACH);
-  tft.print(totalSizeGB, 2);
-  tft.print("GB");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Used:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_PEACH);
-  tft.print(usedSizeGB, 2);
-  tft.print("GB (");
-  tft.print((int)usedPercentage);
-  tft.print("%)");
-  y_pos += 12;
-
-  // --- Draw capacity bar ---
-  // int bar_x = x_pos;
-  int bar_x = 0;
-  int bar_y = 12;
-  int bar_width = x_pos-2;
-  int bar_height = tft.height() - 12; // Bar width spans the screen with padding
-  int filled_height = (bar_height * usedPercentage) / 100;
-
-  // --- Draw the bar background (empty part) ---
-  tft.drawRect(bar_x, bar_y, bar_width, bar_height, CATPPUCCIN_BASE);
-  // --- Draw the filled part of the bar ---
-  tft.fillRect(bar_x, y_pos - filled_height, bar_width, filled_height, CATPPUCCIN_GREEN);
 }
 
 /**
@@ -1552,274 +1517,200 @@ void drawResetWiFiSettingsScreen() {
 }
 
 /**
- * @brief Displays the AP mode screen.
+ * @brief Displays the AP mode screen, adapting to the current orientation.
  */
 void drawApModeScreen(const char* ap_ssid, const char* ap_ip) {
+  tft.fillScreen(CATPPUCCIN_BASE);
+  drawHeader("FrameFi Setup", CATPPUCCIN_YELLOW);
+
   uint8_t rotation = tft.getRotation();
-  if (rotation == 1 || rotation == 3) { // Landscape
-    drawApModeScreenLandscape(ap_ssid, ap_ip);
+  bool isLandscape = (rotation == 1 || rotation == 3);
+
+  int y_pos = 17;
+  int x_pos = 5;
+
+  // --- Draw Network Info ---
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  if (isLandscape) {
+    tft.print("Mode:  ");
+    tft.setTextColor(CATPPUCCIN_GREEN);
+    tft.print("AP");
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("AP IP: ");
+    tft.setTextColor(CATPPUCCIN_YELLOW);
+    tft.print(ap_ip);
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("SSID:  ");
+    y_pos += 12;
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_YELLOW);
+    tft.print(ap_ssid);
   } else { // Portrait
-    drawApModeScreenPortrait(ap_ssid, ap_ip);
+    tft.print("Mode:");
+    y_pos += 12;
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_GREEN);
+    tft.print("AP");
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("AP IP:");
+    y_pos += 12;
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_YELLOW);
+    tft.print(ap_ip);
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("SSID:");
+    y_pos += 12;
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_YELLOW);
+    tft.print(ap_ssid);
   }
 }
 
 /**
- * @brief Displays the AP mode screen in landscape mode.
- */
-void drawApModeScreenLandscape(const char* ap_ssid, const char* ap_ip) {
-  tft.fillScreen(CATPPUCCIN_BASE);
-  drawHeader("FrameFi Setup", CATPPUCCIN_YELLOW);
-
-  // --- Left Column: Network Info ---
-  int y_pos = 17;
-  int x_pos = 5;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Mode:  ");
-  tft.setTextColor(CATPPUCCIN_GREEN); // Use green for active mode
-  tft.print("AP");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("AP IP: ");
-  tft.setTextColor(CATPPUCCIN_YELLOW); // Use green for active mode
-  tft.print(ap_ip);
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("SSID:  ");
-  y_pos += 12;
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_YELLOW); // Use green for active mode
-  tft.print(ap_ssid);
-}
-
-/**
- * @brief Displays the AP mode screen in portrait mode.
- */
-void drawApModeScreenPortrait(const char* ap_ssid, const char* ap_ip) {
-  tft.fillScreen(CATPPUCCIN_BASE);
-  drawHeader("FrameFi Setup", CATPPUCCIN_YELLOW);
-
-  // --- Network Info ---
-  int y_pos = 17;
-  int x_pos = 5;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Mode:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_GREEN); // Use green for active mode
-  tft.print("AP");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("AP IP:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_YELLOW); // Use green for active mode
-  tft.print(ap_ip);
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("SSID:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_YELLOW); // Use green for active mode
-  tft.print(ap_ssid);
-}
-
-/**
- * @brief Displays the FTP mode screen.
+ * @brief Displays the FTP mode screen, adapting to the current orientation.
  */
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
+  tft.fillScreen(CATPPUCCIN_BASE);
+  drawHeader("FrameFi", CATPPUCCIN_GREEN);
+
   uint8_t rotation = tft.getRotation();
-  if (rotation == 1 || rotation == 3) { // Landscape
-    drawFtpModeScreenLandscape(ip, mac, files, totalSizeMB, freeSizeMB);
+  bool isLandscape = (rotation == 1 || rotation == 3);
+
+  int y_pos = 17;
+  int x_pos = 5;
+
+  // --- Draw Network Info ---
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  if (isLandscape) {
+    tft.print("Mode:  ");
+    tft.setTextColor(CATPPUCCIN_GREEN);
+    tft.print("FTP");
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("IP:    ");
+    tft.setTextColor(CATPPUCCIN_YELLOW);
+    tft.print(ip);
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("MAC:   ");
+    tft.setTextColor(CATPPUCCIN_YELLOW);
+    tft.print(mac);
   } else { // Portrait
-    drawFtpModeScreenPortrait(ip, mac, files, totalSizeMB, freeSizeMB);
+    tft.print("Mode:");
+    y_pos += 12;
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_GREEN);
+    tft.print("FTP");
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("IP:");
+    y_pos += 12;
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_YELLOW);
+    String ipStr = String(ip);
+    ipStr.replace(".", "");
+    tft.print(ipStr);
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("MAC:");
+    y_pos += 12;
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_YELLOW);
+    String macStr = String(mac);
+    macStr.replace(":", "");
+    tft.print(macStr);
   }
-}
 
-/**
- * @brief Displays the FTP mode screen in landscape mode.
- */
-void drawFtpModeScreenLandscape(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
-  tft.fillScreen(CATPPUCCIN_BASE);
-  drawHeader("FrameFi", CATPPUCCIN_GREEN);
-
-  // --- Left Column: Network Info ---
-  int y_pos = 17;
-  int x_pos = 5;
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Mode:  ");
-  tft.setTextColor(CATPPUCCIN_GREEN); // Use green for active mode
-  tft.print("FTP");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("IP:    ");
-  tft.setTextColor(CATPPUCCIN_YELLOW);
-  tft.print(ip);
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("MAC:   ");
-  tft.setTextColor(CATPPUCCIN_YELLOW);
-  tft.print(mac);
-
-  // --- Right Column: Storage Info ---
+  // --- Draw Storage Info ---
   drawStorageInfo(files, totalSizeMB, freeSizeMB);
 }
 
 /**
- * @brief Displays the FTP mode screen in portrait mode.
- */
-void drawFtpModeScreenPortrait(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
-  tft.fillScreen(CATPPUCCIN_BASE);
-  drawHeader("FrameFi", CATPPUCCIN_GREEN);
-
-  // --- Network Info ---
-  int y_pos = 17;
-  int x_pos = 5;
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Mode:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_GREEN); // Use green for active mode
-  tft.print("FTP");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("IP:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_YELLOW);
-  String ipStr = String(ip);
-  ipStr.replace(".", "");
-  tft.print(ipStr);
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("MAC:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_YELLOW);
-  String macStr = String(mac);
-  macStr.replace(":", "");
-  tft.print(macStr);
-
-  // --- Storage Info ---
-  drawStorageInfo(files, totalSizeMB, freeSizeMB);
-}
-
-/**
- * @brief Displays the USB MSC mode screen.
+ * @brief Displays the USB MSC mode screen, adapting to the current orientation.
  */
 void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
+  tft.fillScreen(CATPPUCCIN_BASE);
+  drawHeader("FrameFi", CATPPUCCIN_MAUVE);
+
   uint8_t rotation = tft.getRotation();
-  if (rotation == 1 || rotation == 3) { // Landscape
-    drawUsbMscModeScreenLandscape(ip, mac, files, totalSizeMB, freeSizeMB);
+  bool isLandscape = (rotation == 1 || rotation == 3);
+
+  int y_pos = 17;
+  int x_pos = 5;
+
+  // --- Draw Network Info ---
+  tft.setCursor(x_pos, y_pos);
+  tft.setTextColor(CATPPUCCIN_MAUVE);
+  if (isLandscape) {
+    tft.print("Mode:  ");
+    tft.setTextColor(CATPPUCCIN_GREEN);
+    tft.print("USB MSC");
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("IP:    ");
+    tft.setTextColor(CATPPUCCIN_YELLOW);
+    tft.print(ip);
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("MAC:   ");
+    tft.setTextColor(CATPPUCCIN_YELLOW);
+    tft.print(mac);
   } else { // Portrait
-    drawUsbMscModeScreenPortrait(ip, mac, files, totalSizeMB, freeSizeMB);
+    tft.print("Mode:");
+    y_pos += 12;
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_GREEN);
+    tft.print("USB MSC");
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("IP:");
+    y_pos += 12;
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_YELLOW);
+    String ipStr = String(ip);
+    ipStr.replace(".", "");
+    tft.print(ipStr);
+    y_pos += 12;
+
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_MAUVE);
+    tft.print("MAC:");
+    y_pos += 12;
+    tft.setCursor(x_pos, y_pos);
+    tft.setTextColor(CATPPUCCIN_YELLOW);
+    String macStr = String(mac);
+    macStr.replace(":", "");
+    tft.print(macStr);
   }
-}
 
-/**
- * @brief Displays the USB MSC mode screen in landscape mode.
- */
-void drawUsbMscModeScreenLandscape(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
-  tft.fillScreen(CATPPUCCIN_BASE);
-  drawHeader("FrameFi", CATPPUCCIN_MAUVE);
-
-  // --- Left Column: Network Info ---
-  int y_pos = 17;
-  int x_pos = 5;
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Mode:  ");
-  tft.setTextColor(CATPPUCCIN_GREEN);
-  tft.print("USB MSC");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("IP:    ");
-  tft.setTextColor(CATPPUCCIN_YELLOW);
-  tft.print(ip);
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("MAC:   ");
-  tft.setTextColor(CATPPUCCIN_YELLOW);
-  tft.print(mac);
-
-  // --- Right Column: Storage Info ---
-  drawStorageInfo(files, totalSizeMB, freeSizeMB);
-}
-
-/**
- * @brief Displays the USB MSC mode screen in portrait mode.
- */
-void drawUsbMscModeScreenPortrait(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
-  tft.fillScreen(CATPPUCCIN_BASE);
-  drawHeader("FrameFi", CATPPUCCIN_MAUVE);
-
-  // --- Network Info ---
-  int y_pos = 17;
-  int x_pos = 5;
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("Mode:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_GREEN);
-  tft.print("USB MSC");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("IP:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_YELLOW);
-  String ipStr = String(ip);
-  ipStr.replace(".", "");
-  tft.print(ipStr);
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  tft.print("MAC:");
-  y_pos += 12;
-
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_YELLOW);
-  String macStr = String(mac);
-  macStr.replace(":", "");
-  tft.print(macStr);
-
-  // --- Storage Info ---
+  // --- Draw Storage Info ---
   drawStorageInfo(files, totalSizeMB, freeSizeMB);
 }
