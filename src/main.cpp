@@ -61,6 +61,21 @@ struct DeviceInfo {
   bool mqttConnected;
 };
 
+// --- FTP Configuration ---
+struct FtpConfig {
+  char user[32];
+  char pass[32];
+};
+
+// --- MQTT Configuration ---
+struct MqttConfig {
+  char host[64];
+  char port[6];
+  char user[32];
+  char pass[32];
+  char client_id[32];
+};
+
 // --- Function to populate device info ---
 void getDeviceInfo(DeviceInfo& info);
 
@@ -87,47 +102,9 @@ sdmmc_card_t *card;
 #define MQTT_CONFIG_FILE "/mqtt_config.json"
 bool shouldSaveConfig = false;
 
-#if defined(MQTT_HOST)
-  char mqtt_host[32] = MQTT_HOST;
-#else
-  char mqtt_host[32] = "192.168.1.100";
-#endif
-
-#if defined(MQTT_PORT)
-  char mqtt_port[6] = MQTT_PORT;
-#else
-  char mqtt_port[6] = "1883";
-#endif
-
-#if defined(MQTT_USER)
-  char mqtt_user[32] = MQTT_USER;
-#else
-  char mqtt_user[32] = "";
-#endif
-
-#if defined(MQTT_PASSWORD)
-  char mqtt_pass[32] = MQTT_PASSWORD;
-#else
-  char mqtt_pass[32] = "";
-#endif
-
-#if defined(MQTT_CLIENT_ID)
-  char mqtt_client_id[32] = MQTT_CLIENT_ID;
-#else
-  char mqtt_client_id[32] = "FrameFi";
-#endif
-
-#if defined(FTP_USER)
-  char ftp_user[32] = FTP_USER;
-#else
-  char ftp_user[32] = "user";
-#endif
-
-#if defined(FTP_PASSWORD)
-  char ftp_pass[32] = FTP_PASSWORD;
-#else
-  char ftp_pass[32] = "password";
-#endif
+// --- FTP & MQTT Credentials ---
+FtpConfig ftpConfig;
+MqttConfig mqttConfig;
 
 // --- A flag to track the current mode ---
 bool isInMscMode = true;
@@ -205,6 +182,44 @@ void loadConfig();
  * @brief Initializes the device and all its components.
  */
 void setup(){
+  // --- Initialize FTP and MQTT configurations with default values ---
+#if defined(FTP_USER)
+  strcpy(ftpConfig.user, FTP_USER);
+#else
+  strcpy(ftpConfig.user, "user");
+#endif
+#if defined(FTP_PASSWORD)
+  strcpy(ftpConfig.pass, FTP_PASSWORD);
+#else
+  strcpy(ftpConfig.pass, "password");
+#endif
+
+#if defined(MQTT_HOST)
+  strcpy(mqttConfig.host, MQTT_HOST);
+#else
+  strcpy(mqttConfig.host, "192.168.1.100");
+#endif
+#if defined(MQTT_PORT)
+  strcpy(mqttConfig.port, MQTT_PORT);
+#else
+  strcpy(mqttConfig.port, "1883");
+#endif
+#if defined(MQTT_USER)
+  strcpy(mqttConfig.user, MQTT_USER);
+#else
+  strcpy(mqttConfig.user, "");
+#endif
+#if defined(MQTT_PASSWORD)
+  strcpy(mqttConfig.pass, MQTT_PASSWORD);
+#else
+  strcpy(mqttConfig.pass, "");
+#endif
+#if defined(MQTT_CLIENT_ID)
+  strcpy(mqttConfig.client_id, MQTT_CLIENT_ID);
+#else
+  strcpy(mqttConfig.client_id, "FrameFi");
+#endif
+
   setupSerial();
 
   // --- Initialize the LED pin as an output ---
@@ -344,17 +359,17 @@ void loadConfig() {
       if (!error) {
         Serial.println("No error loading json config");   
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
-        strcpy(mqtt_host, doc["mqtt_host"]);
+        strcpy(mqttConfig.host, doc["mqtt_host"]);
         int myInt = doc["mqtt_port"];
         char buffer[6];
         sprintf(buffer, "%d", myInt);
-        strcpy(mqtt_port, buffer);
-        strcpy(mqtt_user, doc["mqtt_user"]);
-        strcpy(mqtt_pass, doc["mqtt_pass"]);
-        strcpy(mqtt_client_id, doc["mqtt_client_id"]);
+        strcpy(mqttConfig.port, buffer);
+        strcpy(mqttConfig.user, doc["mqtt_user"]);
+        strcpy(mqttConfig.pass, doc["mqtt_pass"]);
+        strcpy(mqttConfig.client_id, doc["mqtt_client_id"]);
 #endif
-        strcpy(ftp_user, doc["ftp_user"]);
-        strcpy(ftp_pass, doc["ftp_pass"]);
+        strcpy(ftpConfig.user, doc["ftp_user"]);
+        strcpy(ftpConfig.pass, doc["ftp_pass"]);
       } else {
         HWSerial.println("Failed to load json config");
       }
@@ -371,13 +386,13 @@ void loadConfig() {
 void saveConfig() {
   HWSerial.println("Saving config");
   DynamicJsonDocument doc(1024);
-  doc["mqtt_host"] = mqtt_host;
-  doc["mqtt_port"] = mqtt_port;
-  doc["mqtt_user"] = mqtt_user;
-  doc["mqtt_pass"] = mqtt_pass;
-  doc["mqtt_client_id"] = mqtt_client_id;
-  doc["ftp_user"] = ftp_user;
-  doc["ftp_pass"] = ftp_pass;
+  doc["mqtt_host"] = mqttConfig.host;
+  doc["mqtt_port"] = mqttConfig.port;
+  doc["mqtt_user"] = mqttConfig.user;
+  doc["mqtt_pass"] = mqttConfig.pass;
+  doc["mqtt_client_id"] = mqttConfig.client_id;
+  doc["ftp_user"] = ftpConfig.user;
+  doc["ftp_pass"] = ftpConfig.pass;
   File configFile = LittleFS.open(MQTT_CONFIG_FILE, "w");
   if (!configFile) {
     Serial.println("Failed to open config file for writing");
@@ -623,8 +638,8 @@ void connectToWiFi() {
 
   wm.setParamsPage(true);
 
-  WiFiManagerParameter custom_ftp_user("ftp_user", "FTP User", ftp_user, 32);
-  WiFiManagerParameter custom_ftp_pass("p", "FTP Password", ftp_pass, 32, "type='password'");
+  WiFiManagerParameter custom_ftp_user("ftp_user", "FTP User", ftpConfig.user, 32);
+  WiFiManagerParameter custom_ftp_pass("p", "FTP Password", ftpConfig.pass, 32, "type=\'password\'");
   const char _customHtml_checkbox[] = "type=\'checkbox\' onclick=\'f()\'";
   WiFiManagerParameter custom_checkbox("showpass", "Show Password", "T", 2, _customHtml_checkbox, WFM_LABEL_AFTER);
   
@@ -637,11 +652,11 @@ void connectToWiFi() {
   const char *bufferStr = "<br/><hr></br>";
     
   // Add custom parameters for MQTT
-  WiFiManagerParameter custom_mqtt_client_id("mqtt_client_id", "MQTT Client ID", mqtt_client_id, 32);
-  WiFiManagerParameter custom_mqtt_host("mqtt_host", "MQTT Host", mqtt_host, 64);
-  WiFiManagerParameter custom_mqtt_port("mqtt_port", "MQTT Port", mqtt_port, 6);
-  WiFiManagerParameter custom_mqtt_user("mqtt_user", "MQTT User", mqtt_user, 32);
-  WiFiManagerParameter custom_mqtt_pass("mqtt_pass", "MQTT Password", mqtt_pass, 32, "type='password'");
+  WiFiManagerParameter custom_mqtt_client_id("mqtt_client_id", "MQTT Client ID", mqttConfig.client_id, 32);
+  WiFiManagerParameter custom_mqtt_host("mqtt_host", "MQTT Host", mqttConfig.host, 64);
+  WiFiManagerParameter custom_mqtt_port("mqtt_port", "MQTT Port", mqttConfig.port, 6);
+  WiFiManagerParameter custom_mqtt_user("mqtt_user", "MQTT User", mqttConfig.user, 32);
+  WiFiManagerParameter custom_mqtt_pass("mqtt_pass", "MQTT Password", mqttConfig.pass, 32, "type=\'password\'");
   const char _customHtml_checkbox2[] = "type=\'checkbox\' onclick=\'f()\' disabled"; 
   WiFiManagerParameter custom_checkbox2("showpass2", "Show Password", "T", 2, _customHtml_checkbox2, WFM_LABEL_AFTER);
 
@@ -693,15 +708,15 @@ void connectToWiFi() {
   }
   
   // Read updated parameters
-  strcpy(ftp_user, custom_ftp_user.getValue());
-  strcpy(ftp_pass, custom_ftp_pass.getValue());
+  strcpy(ftpConfig.user, custom_ftp_user.getValue());
+  strcpy(ftpConfig.pass, custom_ftp_pass.getValue());
 
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
-  strcpy(mqtt_host, custom_mqtt_host.getValue());
-  strcpy(mqtt_port, custom_mqtt_port.getValue());
-  strcpy(mqtt_user, custom_mqtt_user.getValue());
-  strcpy(mqtt_pass, custom_mqtt_pass.getValue());
-  strcpy(mqtt_client_id, custom_mqtt_client_id.getValue());
+  strcpy(mqttConfig.host, custom_mqtt_host.getValue());
+  strcpy(mqttConfig.port, custom_mqtt_port.getValue());
+  strcpy(mqttConfig.user, custom_mqtt_user.getValue());
+  strcpy(mqttConfig.pass, custom_mqtt_pass.getValue());
+  strcpy(mqttConfig.client_id, custom_mqtt_client_id.getValue());
 #endif
 }
 
@@ -834,7 +849,7 @@ bool enterFtpMode() {
   HWSerial.println("SD Card mounted with SD_MMC.");
 
   // --- Start FTP Server ---
-  ftpServer.begin(ftp_user, ftp_pass);
+  ftpServer.begin(ftpConfig.user, ftpConfig.pass);
   ftpServer.setTransferCallback(ftpTransferCallback);
   HWSerial.println("FTP Server started.");
 
@@ -1140,7 +1155,7 @@ int countFiles(File dir) {
  */
 void setupMqtt() {
   // Save the custom parameters to FS
-  mqttClient.setServer(mqtt_host, String(mqtt_port).toInt());
+  mqttClient.setServer(mqttConfig.host, String(mqttConfig.port).toInt());
   mqttClient.setCallback(callback);
   HWSerial.println("MQTT client setup complete.");
 }
@@ -1212,7 +1227,7 @@ void reconnect() {
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   HWSerial.print("Attempting MQTT connection...");
   // Attempt to connect
-  if (mqttClient.connect(mqtt_client_id, mqtt_user, mqtt_pass)) {
+  if (mqttClient.connect(mqttConfig.client_id, mqttConfig.user, mqttConfig.pass)) {
     HWSerial.println("connected");
     // Subscribe
     mqttClient.subscribe(MQTT_DISPLAY_SET_TOPIC);

@@ -19,31 +19,23 @@ Documentation can be found [here][2].
 
 ## :stopwatch: TL;DR
 
-- **Secrets:** Create `include/secrets.h` and update variables.
-
-```shell
-cp includes/secrets.h.tmpl includes/secrets.h
-```
-
 - **Computer:** Plug in the LILYGO T-Dongle S3 to a computer USB port while holding the button to put it into boot mode.
 
-- **Upload Sketch:** Upload the sketch to the dongle.
+- **Flash:** Execute the `flash.sh` script remotely from GitHub.
 
 ```shell
-task upload
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/nicholaswilde/frame-fi/main/scripts/flash.sh)" _ /dev/ttyUSB0
 ```
 
-or
+> [!WARNING]
+> Running a script directly from the internet with `bash -c "$(curl...)"` is a potential security risk. Always review the script's source code before executing it to ensure it is safe. You can view the script [here](https://github.com/nicholaswilde/frame-fi/blob/main/scripts/flash.sh).
 
-```shell
-pio run --target upload
-```
 - **Reboot the Device:** Unplug the dongle from your computer and plug it back in to reboot it.
 
-- **Wi-Fi Credentials:** Connect to `AutoConnectAP-FrameFi` access point and enter Wi-Fi credentials.
+- **Wi-Fi Credentials:** Connect to `FrameFi-<MAC>` access point and enter FTP, MQTT (optional, and Wi-Fi credentials.
 
->[!TIP]
->If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
+> [!TIP]
+> If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
 
 - **Digital Picture Frame:** Plug in dongle to digital picture frame.
 
@@ -57,7 +49,7 @@ curl -X POST http://<DEVICE_IP>/mode/ftp
 curl -X POST http://<DEVICE_IP>/mode/msc
 ```
 
-- **FTP Access:** Connect to the device with an FTP client using the IP on the display and credentials from `include/secrets.h` to upload files.
+- **FTP Access:** Connect to the device with an FTP client using the IP on the display and credentials set in `WiFiManager` to upload files.
 
 Log into the device via FTP.
 
@@ -77,7 +69,7 @@ put my-picture.png
 lftp -c "
 set ftp:ssl-allow no;
 open -u '<FTP_USER>','<FTP_PASSWORD>' '<FTP_HOST>';
-mirror -R --delete --verbose --parallel=1 '<REMOTE_DIR>' '<LOCAL_DIR>';
+mirror -R --delete --verbose --only-missing --no-perms --parallel=1 '<REMOTE_DIR>' '<LOCAL_DIR>';
 "
 ```
 

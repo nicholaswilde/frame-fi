@@ -181,13 +181,14 @@ The device hosts a simple web server that allows you to check status and switch 
         "orientation": 1
       },
       "sd_card": {
-        "used_space": 1234567890,
-        "total_space": 9876543210,
+        "total_size": 9876543210,
+        "used_size": 1234567890,
+        "free_size": 8641975320,
         "file_count": 42
       },
       "mqtt": {
         "state": 0,
-        "connected": 1
+        "connected": true
       }
     }
     ```
@@ -649,7 +650,7 @@ If you don't want to use the `sync.sh` script, you can manually sync a directory
     lftp -c "
     set ftp:ssl-allow no;
     open -u '<FTP_USER>','<FTP_PASSWORD>' '<FTP_HOST>';
-    mirror -R --delete --verbose --parallel=1 '<LOCAL_DIR>' '<REMOTE_DIR>';
+    mirror -R --delete --verbose --only-missing --no-perms --parallel=1 '<LOCAL_DIR>' '<REMOTE_DIR>';
     "
     ```
 

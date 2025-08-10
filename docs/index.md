@@ -13,39 +13,28 @@ tags:
 FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any digital picture frame. It enables you to remotely manage your photo library via FTP or access the SD card directly in USB Mass Storage mode.
 
 !!! warning "Development Version"
+
     This project is currently in a `v0.X.X` development stage. Features and configurations are subject to change, and breaking changes may be introduced at any time.
 
 ## :rocket: TL;DR
 
-- **Secrets:** Create `include/secrets.h` and update variables.
+- **Computer:** Plug in the LILYGO T-Dongle S3 to a computer USB port while holding the button to put it into boot mode.
+
+- **Flash:** Execute the `flash.sh` script remotely from GitHub.
 
 !!! code ""
 
     ```shell
-    cp includes/secrets.h.tmpl includes/secrets.h
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/nicholaswilde/frame-fi/main/scripts/flash.sh)" _ /dev/ttyUSB0
     ```
 
-- **Computer:** Plug in the LILYGO T-Dongle S3 to a computer USB port while holding the button to put it into boot mode.
+!!! warning "Security Risk"
 
-- **Upload Sketch:** Upload the sketch to the dongle.
-
-!!! code ""
-
-    === "Task"
-
-        ```shell
-        task upload
-        ```
-
-    === "PlatformIO"
-
-        ```shell
-        pio run --target upload
-        ```
+    Running a script directly from the internet with `bash -c "$(curl...)"` is a potential security risk. Always review the script's source code before executing it to ensure it is safe. You can view the script [here](https://github.com/nicholaswilde/frame-fi/blob/main/scripts/flash.sh).
 
 - **Reboot the Device:** Unplug the dongle from your computer and plug it back in to reboot it.
 
-- **Wi-Fi Credentials:** Connect to `FrameFi-<MAC>` access point and enter Wi-Fi credentials.
+- **Wi-Fi Credentials:** Connect to `FrameFi-<MAC>` access point and enter FTP, MQTT (optional), and Wi-Fi credentials.
 
 !!! tip
 
@@ -69,7 +58,7 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
         curl -X POST http://<DEVICE_IP>/mode/msc
         ```
 
-- **FTP Access:** Connect to the device with an FTP client using the IP on the display and credentials from `include/secrets.h` to upload files.
+- **FTP Access:** Connect to the device with an FTP client using the IP on the display and credentials set in `WiFiManager` to upload files.
 
 !!! code "Log into the device via FTP"
 
@@ -91,7 +80,7 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
     lftp -c "
     set ftp:ssl-allow no;
     open -u '<FTP_USER>','<FTP_PASSWORD>' '<FTP_HOST>';
-    mirror -R --delete --verbose --parallel=1 '<REMOTE_DIR>' '<LOCAL_DIR>';
+    mirror -R --delete --verbose --only-missing --no-perms --parallel=1 '<REMOTE_DIR>' '<LOCAL_DIR>';
     "
     ```
 
@@ -105,19 +94,27 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 
 ## :sparkles: Features
 
-- **Dual-Mode Operation:** Seamlessly switch between a USB Mass Storage (MSC) device and an FTP server.
-- **Web Interface & API:** A built-in web server provides an API to check the device's status and switch between modes.
-- **Wireless File Management:** In FTP mode, you can connect to the device over your Wi-Fi network to add, remove, and manage files on the microSD card.
-!!! warning
-    FTP is an insecure protocol. Only use this feature on a trusted network.
-- **USB Mass Storage Mode:** In MSC mode, the device mounts the microSD card as a standard USB thumb drive, allowing for high-speed file transfers directly from your computer.
-- **Fast Data Transfer:** Utilizes the `SD_MMC` interface for the microSD card, offering significantly faster read/write speeds compared to the standard SPI interface.
-- **Dynamic Wi-Fi Configuration:** Uses `WiFiManager` to create a captive portal for easy Wi-Fi setup without hardcoding credentials.
-- **Home Assistant Integration:** Publishes status and accepts commands via MQTT for seamless integration with home automation systems.
-- **Easy Wi-Fi Reset:** Hold the button for 3 seconds to clear saved Wi-Fi credentials and re-enter setup mode.
-- **Boot-up Screen:** Displays a welcome screen with the current firmware version on startup.
-- **LED Status Indicators:** A built-in LED provides at-a-glance status updates for different modes.
-- **LCD Display:** Displays relevant information on the LCD display depending on the mode, including a bar graph showing SD card usage. It also utilizes catppuccin color schemes.
+- **:material-sync: Dual-Mode Operation:**
+    - **FTP Server Mode:** Wirelessly manage files on the SD card over your Wi-Fi network.
+    !!! warning
+        FTP is an insecure protocol. Only use this feature on a trusted network.
+    - **USB Mass Storage (MSC) Mode:** Connect directly to a computer for high-speed file transfers, treating the device like a standard USB drive.
+- **:material-lan-connect: Connectivity & Remote Management:**
+    - **Dynamic Wi-Fi Setup:** An initial captive portal (`WiFiManager`) allows for easy configuration of Wi-Fi, FTP, and MQTT credentials without hardcoding.
+    - **REST API:** A built-in web server provides endpoints to check device status, switch modes, control the display, and restart the device.
+    - **MQTT Integration:** Publish device status and control the display via MQTT, enabling seamless integration with Home Assistant or other automation platforms.
+- **:material-palette: User Interface & Experience:**
+    - **Onboard LCD Display:** A vibrant color display shows the current mode, network information (IP, MAC), and SD card usage with a visual bar graph. Styled with the [Catppuccin][3] color theme.
+    - **Simple Physical Controls:**
+        - A single button press toggles between FTP and MSC modes.
+        - A long press (3 seconds) resets Wi-Fi and device configuration.
+    - **LED Status Indicator:** An RGB LED provides at-a-glance feedback on the device's operational state (e.g., booting, connecting, FTP transfer).
+- **:material-flash: Performance & Storage:**
+    - **High-Speed SD Card Access:** Utilizes the 4-bit `SD_MMC` interface for significantly faster read/write performance compared to standard SPI.
+    - **Persistent Configuration:** Device settings are saved to the internal flash storage (`LittleFS`), surviving reboots and power cycles.
+- **:material-code-tags: Developer Friendly:**
+    - **OTA Firmware Updates:** Flash new firmware remotely using a simple script.
+    - **Serial Monitor Debugging:** Provides detailed operational logs over USB serial.
 
 ## :white_check_mark: To Do
 
@@ -140,3 +137,4 @@ This project was started in 2025 by [Nicholas Wilde][2].
 
 [1]: <https://lilygo.cc/products/t-dongle-s3>
 [2]: <https://github.com/nicholaswilde>
+[3]: <https://github.com/catppuccin/catppuccin>
