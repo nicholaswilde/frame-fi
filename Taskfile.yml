@@ -7,6 +7,10 @@ vars:
   PORT: 8000
 
 tasks:
+  flash:
+    desc: Run the flash.sh script
+    cmds:
+      - ./scripts/flash.sh
   export:
     desc: Export the task list to task-list.txt
     cmds:
