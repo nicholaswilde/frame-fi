@@ -80,8 +80,10 @@ struct MqttConfig {
 void getDeviceInfo(DeviceInfo& info);
 
 // --- Mode Descriptions ---
-const char* MODE_MSC_DESC = "USB MSC";
-const char* MODE_FTP_DESC = "Application (FTP Server)";
+namespace Mode {
+  const char* MSC = "USB MSC";
+  const char* FTP = "Application (FTP Server)";
+}
  
 // --- Create objects ---
 WebServer server(80);
@@ -116,9 +118,11 @@ volatile unsigned long last_msc_write_time = 0;
 const unsigned long MSC_REFRESH_DEBOUNCE_MS = 2000; // 2 seconds
 
 // --- MQTT Topics ---
-#define MQTT_STATE_TOPIC "frame-fi/state"
-#define MQTT_DISPLAY_STATUS_TOPIC "frame-fi/display/status"
-#define MQTT_DISPLAY_SET_TOPIC "frame-fi/display/set"
+namespace MqttTopics {
+  const char* STATE = "frame-fi/state";
+  const char* DISPLAY_STATUS = "frame-fi/display/status";
+  const char* DISPLAY_SET = "frame-fi/display/set";
+}
 
 // --- Timers ---
 unsigned long lastMqttPublish = 0;
@@ -128,6 +132,19 @@ unsigned long lastReconnectAttempt = 0;
 const long reconnectInterval = 5000; // Interval to wait between retries (5 seconds)
 
 // --- Function prototypes ---
+void initializeConfigs();
+void setupLed();
+void setupButton();
+void setupDisplay();
+void displayBootScreen();
+void setupFilesystems();
+void setupWebServer();
+void startInitialMode();
+void handleButton();
+void handleWebServer();
+void handleMqtt();
+void handleFtp();
+void handleMsc();
 void connectToWiFi();
 void setupApiRoutes();
 void setupSerial();
@@ -181,7 +198,36 @@ void loadConfig();
 /**
  * @brief Initializes the device and all its components.
  */
-void setup(){
+void setup() {
+  initializeConfigs();
+  setupSerial();
+  setupLed();
+  setupButton();
+  setupDisplay();
+  displayBootScreen();
+  setupFilesystems();
+
+  // --- Connect to WiFi and configure services ---
+  connectToWiFi();
+
+  if (shouldSaveConfig) {
+    saveConfig();
+  }
+
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  setupMqtt();
+#endif
+
+  setupWebServer();
+  
+  // --- Start in initial mode ---
+  startInitialMode();
+}
+
+/**
+ * @brief Initializes FTP and MQTT configurations with default values.
+ */
+void initializeConfigs() {
   // --- Initialize FTP and MQTT configurations with default values ---
 #if defined(FTP_USER)
   strcpy(ftpConfig.user, FTP_USER);
@@ -219,9 +265,12 @@ void setup(){
 #else
   strcpy(mqttConfig.client_id, "FrameFi");
 #endif
+}
 
-  setupSerial();
-
+/**
+ * @brief Initializes the LED.
+ */
+void setupLed() {
   // --- Initialize the LED pin as an output ---
   FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, NUM_LEDS);
 #if defined(LED_BRIGHTNESS)
@@ -233,12 +282,22 @@ void setup(){
   // --- Turn the LED on ---
   leds[0] = CRGB::Yellow;
   FastLED.show();
-    
+}
+
+/**
+ * @brief Initializes the button.
+ */
+void setupButton() {
   // --- Initialize Button ---
   button.attachClick(toggleMode);
   button.setPressMs(3000); // 3 seconds
   button.attachLongPressStart(resetWifiSettings);
+}
 
+/**
+ * @brief Initializes the TFT display.
+ */
+void setupDisplay() {
   // --- Initialize TFT Display ---
   pinMode(TFT_LEDA, OUTPUT);
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
@@ -253,13 +312,23 @@ void setup(){
 #else
   digitalWrite(TFT_LEDA, HIGH);
 #endif
-  
+}
+
+/**
+ * @brief Displays the boot screen.
+ */
+void displayBootScreen() {
   // --- Show boot screen ---
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   drawBootScreen();
   delay(2000); // Keep boot screen visible for 2 seconds
 #endif
+}
 
+/**
+ * @brief Initializes the filesystems.
+ */
+void setupFilesystems() {
   // Initialize LittleFS
   if (!LittleFS.begin(true)) {
     HWSerial.println("LittleFS mount failed");
@@ -268,23 +337,22 @@ void setup(){
 
   // Load existing configuration
   loadConfig();
+}
 
-  // --- Connect to WiFi ---
-  connectToWiFi();
-
-  if (shouldSaveConfig) {
-    saveConfig();
-  }
-
-#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
-  setupMqtt();
-#endif
-
+/**
+ * @brief Sets up and starts the web server.
+ */
+void setupWebServer() {
   // --- Setup and start Web Server ---
   setupApiRoutes();
   server.begin();
   HWSerial.println("HTTP server started.");
-  
+}
+
+/**
+ * @brief Starts the device in the initial mode (MSC).
+ */
+void startInitialMode() {
   // --- Start in MSC mode ---
   sdInit();
   HWSerial.println("SD Card initialized for MSC.");
@@ -308,23 +376,45 @@ void setup(){
   }
 }
 
+
 /**
  * @brief Main loop that runs repeatedly.
  */
-void loop(){
-  button.tick();
-  server.handleClient();
+void loop() {
+  handleButton();
+  handleWebServer();
+  handleMqtt();
+  handleFtp();
+  handleMsc();
+}
 
+/**
+ * @brief Handles button events.
+ */
+void handleButton() {
+  button.tick();
+}
+
+/**
+ * @brief Handles web server client requests.
+ */
+void handleWebServer() {
+  server.handleClient();
+}
+
+/**
+ * @brief Handles MQTT connection and message publishing.
+ */
+void handleMqtt() {
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   if (!mqttClient.connected()) {
     long now = millis();
-    // 2. Check if the reconnection interval has passed
     if (now - lastReconnectAttempt > reconnectInterval) {
       lastReconnectAttempt = now;
       reconnect();
     }
   } else {
-    mqttClient.loop();  
+    mqttClient.loop();
   }
 
   unsigned long currentMillis = millis();
@@ -333,12 +423,21 @@ void loop(){
     publishMqttStatus();
   }
 #endif
+}
 
+/**
+ * @brief Handles FTP server requests.
+ */
+void handleFtp() {
   if (!isInMscMode) {
-    ftpServer.handleFTP(); // Continuously process FTP requests  
+    ftpServer.handleFTP();
   }
+}
 
-  // --- Check if the MSC screen needs to be refreshed ---
+/**
+ * @brief Handles MSC screen refresh logic.
+ */
+void handleMsc() {
   if (isInMscMode && msc_disk_dirty && (millis() - last_msc_write_time > MSC_REFRESH_DEBOUNCE_MS)) {
     msc_disk_dirty = false; // Reset flag
     updateAndDrawMscScreen();
@@ -412,7 +511,7 @@ void saveConfigCallback() {
 void getDeviceInfo(DeviceInfo& info) {
   info.isInMscMode = ::isInMscMode; // Use global isInMscMode
   info.isDisplayOn = ::isDisplayOn; // Use global isDisplayOn
-  info.modeString = info.isInMscMode ? MODE_MSC_DESC : MODE_FTP_DESC;
+  info.modeString = info.isInMscMode ? Mode::MSC : Mode::FTP;
   info.displayStatus = info.isDisplayOn ? "on" : "off";
   info.displayOrientation = tft.getRotation();
   info.ipAddress = WiFi.localIP().toString();
@@ -1188,8 +1287,8 @@ void publishMqttStatus() {
 
   const char* displayStatusMqtt = info.isDisplayOn ? "ON" : "OFF";
 
-  mqttClient.publish(MQTT_STATE_TOPIC, output.c_str(), true); // Retain message
-  mqttClient.publish(MQTT_DISPLAY_STATUS_TOPIC, displayStatusMqtt, true); // Retain message
+  mqttClient.publish(MqttTopics::STATE, output.c_str(), true); // Retain message
+  mqttClient.publish(MqttTopics::DISPLAY_STATUS, displayStatusMqtt, true); // Retain message
   HWSerial.println("Published MQTT status.");
 #endif
 }
@@ -1210,7 +1309,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
   message[length] = '\0';
   HWSerial.println(message);
 
-  if (strcmp(topic, MQTT_DISPLAY_SET_TOPIC) == 0) {
+  if (strcmp(topic, MqttTopics::DISPLAY_SET) == 0) {
     if (strcmp(message, "ON") == 0) {
       handleDisplayOn();
     } else if (strcmp(message, "OFF") == 0) {
@@ -1230,7 +1329,7 @@ void reconnect() {
   if (mqttClient.connect(mqttConfig.client_id, mqttConfig.user, mqttConfig.pass)) {
     HWSerial.println("connected");
     // Subscribe
-    mqttClient.subscribe(MQTT_DISPLAY_SET_TOPIC);
+    mqttClient.subscribe(MqttTopics::DISPLAY_SET);
     // Publish initial status
     publishMqttStatus();
   } else {
