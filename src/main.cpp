@@ -731,9 +731,12 @@ void connectToWiFi() {
 
   wm.setParamsPage(true);
 
+  const char* headhtml = "<script>function f2(id){var x = document.getElementById(id);x.type ==='password'?x.type='text':x.type='password';}</script>";
+  wm.setCustomHeadElement(headhtml);
+    
   WiFiManagerParameter custom_ftp_user("ftp_user", "FTP User", ftpConfig.user, 32);
-  WiFiManagerParameter custom_ftp_pass("p", "FTP Password", ftpConfig.pass, 32, "type=\'password\'");
-  const char _customHtml_checkbox[] = "type=\'checkbox\' onclick=\'f()\'";
+  WiFiManagerParameter custom_ftp_pass("ftp_pass", "FTP Password", ftpConfig.pass, 32, "type=\'password\'");
+  const char _customHtml_checkbox[] = "type=\'checkbox\' onclick=\"f2(\'ftp_pass\')\"";
   WiFiManagerParameter custom_checkbox("showpass", "Show Password", "T", 2, _customHtml_checkbox, WFM_LABEL_AFTER);
   
   wm.addParameter(&custom_ftp_user);
@@ -750,7 +753,7 @@ void connectToWiFi() {
   WiFiManagerParameter custom_mqtt_port("mqtt_port", "MQTT Port", mqttConfig.port, 6);
   WiFiManagerParameter custom_mqtt_user("mqtt_user", "MQTT User", mqttConfig.user, 32);
   WiFiManagerParameter custom_mqtt_pass("mqtt_pass", "MQTT Password", mqttConfig.pass, 32, "type=\'password\'");
-  const char _customHtml_checkbox2[] = "type=\'checkbox\' onclick=\'f()\' disabled"; 
+  const char _customHtml_checkbox2[] = "type=\'checkbox\' onclick=\"f2(\'mqtt_pass\')\""; 
   WiFiManagerParameter custom_checkbox2("showpass2", "Show Password", "T", 2, _customHtml_checkbox2, WFM_LABEL_AFTER);
 
   WiFiManagerParameter custom_mqtt_sep(bufferStr);
