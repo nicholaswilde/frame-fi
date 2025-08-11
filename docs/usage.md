@@ -439,6 +439,12 @@ You can typically install these using your system's package manager. For `esptoo
 
     !!! code ""
 
+        === "Task  (Default Port)"
+
+            ```
+            task flash
+            ```
+
         === "Local Execution (Default Port)"
 
             By default, the script uses `/dev/ttyACM0` as the serial port.
