@@ -62,6 +62,10 @@ When you first boot the device, it will create a Wi-Fi Access Point (AP) that yo
 -   **SSID:** By default, the AP name is `FrameFi-<MAC>`, where `<MAC>` is the last 6 characters of the device's MAC address. This is configured by leaving `WIFI_AP_SSID` commented out in `secrets.h`. To set a custom SSID, uncomment `WIFI_AP_SSID` and provide your own name.
 -   **Password:** By default, the AP is open and does not require a password. To set a password, uncomment `WIFI_AP_PASSWORD` in `secrets.h` and provide a password.
 
+In the WiFiManager Configure WiFi page, you can also configure the following:
+
+- **Wi-Fi Credentials:** Set the `SSID` and `password` for the Wi-Fi network the device is to connect to. 
+
 ![param](./assets/images/wifi.png)
 
 In the WiFiManager setup page, you can also configure the following:
