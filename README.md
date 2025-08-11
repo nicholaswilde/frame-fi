@@ -51,13 +51,9 @@ curl -X POST http://<DEVICE_IP>/mode/msc
 
 - **FTP Access:** Connect to the device with an FTP client using the IP on the display and credentials set in `WiFiManager` to upload files.
 
-Log into the device via FTP.
-
 ```shell
 ftp <HOST>
 ```
-
-Upload pictures to the device.
 
 ```shell
 put my-picture.png
