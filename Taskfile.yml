@@ -7,6 +7,14 @@ vars:
   PORT: 8000
 
 tasks:
+  gpro:
+    desc: Run gemini with 2.5 pro model
+    cmds:
+      - gemini -m gemini-2.5-pro
+  gflash:
+    desc: Run gemini with 2.5 flash model
+    cmds:
+      - gemini -m gemini-2.5-flash
   flash:
     desc: Run the flash.sh script
     cmds:
@@ -32,11 +40,15 @@ tasks:
     desc: Ping the device
     cmds:
       - ping {{.IP}}
-  msc:
+  smsc:
     desc: Switch to MSC mode
     cmds:
       - curl -X POST http://{{.IP}}/mode/msc
   ftp:
+    desc: Start FTP with device
+    cmds:
+      - ftp {{.IP}}
+  sftp:
     desc: Switch to FTP mode
     cmds:
       - curl -X POST http://{{.IP}}/mode/ftp
