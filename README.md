@@ -32,7 +32,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/nicholaswilde/frame-fi/m
 
 - **Reboot the Device:** Unplug the dongle from your computer and plug it back in to reboot it.
 
-- **Wi-Fi Credentials:** Connect to `FrameFi-<MAC>` access point and enter FTP, MQTT (optional, and Wi-Fi credentials.
+- **Wi-Fi Credentials:** Connect to `FrameFi-<MAC>` access point and enter FTP, MQTT (optional), and Wi-Fi credentials.
 
 > [!TIP]
 > If the captive portal does not open automatically, navigate to http://192.168.4.1 in your web browser to configure Wi-Fi.
