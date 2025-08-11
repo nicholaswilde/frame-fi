@@ -67,6 +67,12 @@ struct FtpConfig {
   char pass[32];
 };
 
+// --- WebServer Configuration ---
+struct WebServerConfig {
+  char user[32];
+  char pass[32];
+};
+
 // --- MQTT Configuration ---
 struct MqttConfig {
   char host[64];
@@ -106,6 +112,7 @@ bool shouldSaveConfig = false;
 
 // --- FTP & MQTT Credentials ---
 FtpConfig ftpConfig;
+WebServerConfig webServerConfig;
 MqttConfig mqttConfig;
 
 // --- A flag to track the current mode ---
@@ -232,13 +239,26 @@ void initializeConfigs() {
   strcpy(ftpConfig.pass, "password");
 #endif
 
+#if defined(WEB_SERVER_USER)
+  strcpy(webServerConfig.user, WEB_SERVER_USER);
+#else
+  strcpy(webServerConfig.user, "admin");
+#endif
+#if defined(WEB_SERVER_PASSWORD)
+  strcpy(webServerConfig.pass, WEB_SERVER_PASSWORD);
+#else
+  strcpy(webServerConfig.pass, "password");
+#endif
+
 #if defined(MQTT_HOST)
   strcpy(mqttConfig.host, MQTT_HOST);
 #else
   strcpy(mqttConfig.host, "192.168.1.100");
 #endif
 #if defined(MQTT_PORT)
-  strcpy(mqttConfig.port, MQTT_PORT);
+  char buffer[6];
+  sprintf(buffer, "%d", MQTT_PORT);
+  strcpy(mqttConfig.port, buffer);
 #else
   strcpy(mqttConfig.port, "1883");
 #endif
@@ -461,6 +481,10 @@ void loadConfig() {
 #endif
         strcpy(ftpConfig.user, doc["ftp_user"]);
         strcpy(ftpConfig.pass, doc["ftp_pass"]);
+        if (doc.containsKey("web_user")) {
+          strcpy(webServerConfig.user, doc["web_user"]);
+          strcpy(webServerConfig.pass, doc["web_pass"]);
+        }
       } else {
         HWSerial.println("Failed to load json config");
       }
@@ -484,6 +508,8 @@ void saveConfig() {
   doc["mqtt_client_id"] = mqttConfig.client_id;
   doc["ftp_user"] = ftpConfig.user;
   doc["ftp_pass"] = ftpConfig.pass;
+  doc["web_user"] = webServerConfig.user;
+  doc["web_pass"] = webServerConfig.pass;
   File configFile = LittleFS.open(MQTT_CONFIG_FILE, "w");
   if (!configFile) {
     Serial.println("Failed to open config file for writing");
@@ -743,17 +769,30 @@ void connectToWiFi() {
   wm.addParameter(&custom_ftp_pass);
   wm.addParameter(&custom_checkbox);
 
-#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  WiFiManagerParameter custom_web_user("web_user", "Web User", webServerConfig.user, 32);
+  WiFiManagerParameter custom_web_pass("web_pass", "Web Password", webServerConfig.pass, 32, "type='password'");
+  const char _customHtml_checkbox3[] = "type='checkbox' onclick=\"f2('web_pass')\"";
+  WiFiManagerParameter custom_checkbox3("showpass3", "Show Password", "T", 2, _customHtml_checkbox3, WFM_LABEL_AFTER);
 
   const char *bufferStr = "<br/><hr></br>";
+  WiFiManagerParameter custom_web_sep(bufferStr);
+
+  wm.addParameter(&custom_web_sep);
+  wm.addParameter(&custom_web_user);
+  wm.addParameter(&custom_web_pass);
+  wm.addParameter(&custom_checkbox3);
+
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+
+  const char *bufferStr2 = "<br/><hr></br>";
     
   // Add custom parameters for MQTT
   WiFiManagerParameter custom_mqtt_client_id("mqtt_client_id", "MQTT Client ID", mqttConfig.client_id, 32);
   WiFiManagerParameter custom_mqtt_host("mqtt_host", "MQTT Host", mqttConfig.host, 64);
   WiFiManagerParameter custom_mqtt_port("mqtt_port", "MQTT Port", mqttConfig.port, 6);
   WiFiManagerParameter custom_mqtt_user("mqtt_user", "MQTT User", mqttConfig.user, 32);
-  WiFiManagerParameter custom_mqtt_pass("mqtt_pass", "MQTT Password", mqttConfig.pass, 32, "type=\'password\'");
-  const char _customHtml_checkbox2[] = "type=\'checkbox\' onclick=\"f2(\'mqtt_pass\')\""; 
+  WiFiManagerParameter custom_mqtt_pass("mqtt_pass", "MQTT Password", mqttConfig.pass, 32, "type='password'");
+  const char _customHtml_checkbox2[] = "type='checkbox' onclick=\"f2('mqtt_pass')\""; 
   WiFiManagerParameter custom_checkbox2("showpass2", "Show Password", "T", 2, _customHtml_checkbox2, WFM_LABEL_AFTER);
 
   WiFiManagerParameter custom_mqtt_sep(bufferStr);
@@ -806,6 +845,8 @@ void connectToWiFi() {
   // Read updated parameters
   strcpy(ftpConfig.user, custom_ftp_user.getValue());
   strcpy(ftpConfig.pass, custom_ftp_pass.getValue());
+  strcpy(webServerConfig.user, custom_web_user.getValue());
+  strcpy(webServerConfig.pass, custom_web_pass.getValue());
 
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   strcpy(mqttConfig.host, custom_mqtt_host.getValue());
@@ -968,6 +1009,9 @@ bool enterFtpMode() {
  * @brief Handles requests to the root URL ("/"). Sends a JSON status object.
  */
 void handleStatus() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
   DeviceInfo info;
   getDeviceInfo(info);
 
@@ -995,6 +1039,9 @@ void handleStatus() {
  * @brief Handles the POST request to switch to MSC mode.
  */
 void handleSwitchToMsc() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
   if (isInMscMode) {
     DynamicJsonDocument jsonResponse(256);
     jsonResponse["status"] = "no_change";
@@ -1026,6 +1073,9 @@ void handleSwitchToMsc() {
  * @brief Handles the POST request to switch back to Application (FTP) mode.
  */
 void handleSwitchToFtp() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
   if (isInMscMode) {
     if (enterFtpMode()) {
       DynamicJsonDocument jsonResponse(256);
@@ -1057,6 +1107,9 @@ void handleSwitchToFtp() {
  * @brief Handles the POST request to restart the device.
  */
 void handleRestart() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
   jsonResponse["message"] = "Restarting device...";
@@ -1071,6 +1124,9 @@ void handleRestart() {
  * @brief Handles the POST request to turn the display on.
  */
 void handleDisplayOn() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   digitalWrite(TFT_LEDA, LOW);
   isDisplayOn = true;
@@ -1097,6 +1153,9 @@ void handleDisplayOn() {
  * @brief Handles the POST request to turn the display off.
  */
 void handleDisplayOff() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   digitalWrite(TFT_LEDA, HIGH);
   isDisplayOn = false;
@@ -1123,6 +1182,9 @@ void handleDisplayOff() {
  * @brief Handles the POST request to toggle the display.
  */
 void handleDisplayToggle() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   isDisplayOn = !isDisplayOn;
   DynamicJsonDocument jsonResponse(256);
@@ -1154,6 +1216,9 @@ void handleDisplayToggle() {
  * @brief Handles the POST request to reset WiFi settings.
  */
 void handleWifiReset() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
   jsonResponse["message"] = "Resetting WiFi and restarting...";

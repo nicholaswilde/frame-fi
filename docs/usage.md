@@ -163,13 +163,39 @@ You can adjust the brightness of the status LED by modifying the `platformio.ini
 
 The device hosts a simple web server that allows you to check status and switch modes.
 
+!!! warning "Insecure Protocol"
+
+    HTTP is an inherently insecure protocol that transmits data, including credentials, in plain text. Only use this feature on a trusted, private network.
+
+### :key: Web Server Credentials
+
+The web server can be protected by basic authentication. You can set the username and password in the WiFiManager setup page.
+
+- **Connect with `curl`:**
+    - Use the `-u` or `--user` flag to provide credentials.
+    - If you omit the password, `curl` will prompt for it securely.
+
+!!! tip
+
+    To make the web server unauthenticated, make the `user` and `password` blank in the WiFiManager setup page.
+
+### Web Server Commands
+
 **`GET /`**: Returns the current mode, display status, and SD card information.
 
 !!! code ""
 
-    ```sh
-    curl -X GET http://<DEVICE_IP>/
-    ```
+    === "Unauth"
+
+        ```sh
+        curl -X GET http://<DEVICE_IP>/
+        ```
+
+    === "HTTP Basic Auth"
+    
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X GET http://<DEVICE_IP>/
+        ```
 
 !!! success "Example Response"
 
@@ -207,9 +233,17 @@ The device hosts a simple web server that allows you to check status and switch 
 
 !!! code ""
 
-    ```sh
-    curl -X POST http://<DEVICE_IP>/mode/msc
-    ```
+    === "Unauth"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/mode/msc
+        ```
+    
+    === "HTTP Basic Auth"
+    
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/mode/msc
+        ```
 
 !!! success "Example Responses"
 
@@ -232,13 +266,22 @@ The device hosts a simple web server that allows you to check status and switch 
 
 !!! code ""
 
-    ```sh
-    curl -X POST http://<DEVICE_IP>/mode/ftp
-    ```
+    === "Unauth"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/mode/ftp
+        ```
+        
+    === "HTTP Basic Auth"
+        
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/mode/ftp
+        ```
 
 !!! success "Example Responses"
 
     === "Success (200 OK)"
+
         ```json
         {"status":"success","message":"Switched to Application (FTP) mode."}
         ```
@@ -259,13 +302,22 @@ The device hosts a simple web server that allows you to check status and switch 
 
 !!! code ""
 
-    ```sh
-    curl -X POST http://<DEVICE_IP>/device/restart
-    ```
+    === "Unauth"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/device/restart
+        ```
+    
+    === "HTTP Basic Auth"
+    
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/device/restart
+        ```
 
 !!! success "Example Response:"
 
     === "Success (200 OK)"
+
         ```json
         {"status":"success","message":"Restarting device..."}
         ```
@@ -274,17 +326,28 @@ The device hosts a simple web server that allows you to check status and switch 
 
 !!! code ""
 
-    ```sh
-    curl -X POST http://<DEVICE_IP>/display/toggle
-    ```
+    === "Unauth"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/display/toggle
+        ```
+    
+    === "HTTP Basic Auth"
+    
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/display/toggle
+        ```
 
 !!! success "Example Responses"
 
     === "Success (200 OK)"
+    
         ```json
         {"status":"success","message":"Display toggled on."}
         ```
+
     === "Success (200 OK)"
+
         ```json
         {"status":"success","message":"Display toggled off."}
         ```
@@ -293,13 +356,22 @@ The device hosts a simple web server that allows you to check status and switch 
 
 !!! code ""
 
-    ```sh
-    curl -X POST http://<DEVICE_IP>/display/on
-    ```
+    === "Unauth"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/display/on
+        ```
+    
+    === "HTTP Basic Auth"
+    
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/display/on
+        ```
 
 !!! success "Example Response"
 
     === "Success (200 OK)"
+    
         ```json
         {"status":"success","message":"Display turned on."}
         ```
@@ -308,13 +380,22 @@ The device hosts a simple web server that allows you to check status and switch 
 
 !!! code ""
 
-    ```sh
-    curl -X POST http://<DEVICE_IP>/display/off
-    ```
+    === "Unauth"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/display/off
+        ```
+    
+    === "HTTP Basic Auth"
+        
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/display/off
+        ```
 
 !!! success "Example Response"
 
     === "Success (200 OK)"
+    
         ```json
         {"status":"success","message":"Display turned off."}
         ```
@@ -323,18 +404,28 @@ The device hosts a simple web server that allows you to check status and switch 
 
 !!! code ""
 
-    ```sh
-    curl -X POST http://<DEVICE_IP>/wifi/reset
-    ```
+    === "Unauth"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/wifi/reset
+        ```
+    
+    === "HTTP Basic Auth"
+    
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/wifi/reset
+        ```
 
 !!! success "Example Response"
 
     === "Success (200 OK)"
+    
         ```json
         {"status":"success","message":"Resetting Wi-Fi and restarting..."}
         ```
 
 !!! warning "Device Unreachable After Reset"
+
     After resetting the Wi-Fi settings, the device will restart and will no longer be connected to your Wi-Fi network. It will become unreachable at its previous IP address. You must reconnect to its Access Point (AP) to configure the new Wi-Fi credentials. See the [Modes of Operation](#detective-modes-of-operation) section for details on connecting to the AP.
 
 ## :hammer_and_wrench: Building
@@ -346,11 +437,13 @@ This project uses a `Taskfile.yml` for common development tasks. After installin
 !!! code ""
 
     === "Task"
+    
         ```shell
         task build
         ```
 
     === "PlatformIO"
+
         ```shell
         pio run
         ```
@@ -366,6 +459,7 @@ This project uses a `Taskfile.yml` for common development tasks. After installin
         ```
   
     === "PlatformIO"
+    
         ```shell
         pio run --target upload
         ```
