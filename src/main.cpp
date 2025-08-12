@@ -242,12 +242,12 @@ void initializeConfigs() {
 #if defined(WEB_SERVER_USER)
   strcpy(webServerConfig.user, WEB_SERVER_USER);
 #else
-  strcpy(webServerConfig.user, "admin");
+  strcpy(webServerConfig.user, "");
 #endif
 #if defined(WEB_SERVER_PASSWORD)
   strcpy(webServerConfig.pass, WEB_SERVER_PASSWORD);
 #else
-  strcpy(webServerConfig.pass, "password");
+  strcpy(webServerConfig.pass, "");
 #endif
 
 #if defined(MQTT_HOST)
