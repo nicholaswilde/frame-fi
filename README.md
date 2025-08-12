@@ -56,7 +56,15 @@ curl -X POST http://<DEVICE_IP>/mode/ftp
 ```
 
 ```sh
+curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/mode/ftp
+```
+
+```sh
 curl -X POST http://<DEVICE_IP>/mode/msc
+```
+
+```sh
+curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/mode/msc
 ```
 
 - **FTP Access:** Connect to the device with an FTP client using the IP on the display and credentials set in `WiFiManager` to upload files.

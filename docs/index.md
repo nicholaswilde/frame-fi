@@ -60,18 +60,32 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 
 - **Mode Switching:** A button or API call switches between FTP and USB Mass Storage modes.
 
-!!! code ""
+!!! code "FTP Mode"
 
-    === "FTP Mode"
+    === "Unauthenticated"
 
         ```sh
         curl -X POST http://<DEVICE_IP>/mode/ftp
         ```
 
-    === "USB MSC Mode"
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/mode/ftp
+        ```
+
+!!! code "USB MSC Mode"
+
+    === "Unauthenticated"
 
         ```sh
         curl -X POST http://<DEVICE_IP>/mode/msc
+        ```
+
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/mode/msc
         ```
 
 - **FTP Access:** Connect to the device with an FTP client using the IP on the display and credentials set in `WiFiManager` to upload files.
