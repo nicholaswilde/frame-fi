@@ -736,13 +736,21 @@ This command syncs a specific local directory to the device, overriding any sett
 
 !!! code "./scripts directory"
 
-    ```shell
-    FTP_HOST="192.168.1.100" \
-    WEB_SERVER_USER="admin" \
-    WEB_SERVER_PASSWORD="password" \
-    LOCAL_DIR="path/to/your/pictures" \
-    ./sync.sh
-    ```
+    === "Task"
+
+        ```bash
+        task sync
+        ```
+        
+    === "Bash"
+    
+        ```shell
+        FTP_HOST="192.168.1.100" \
+        WEB_SERVER_USER="admin" \
+        WEB_SERVER_PASSWORD="password" \
+        LOCAL_DIR="path/to/your/pictures" \
+        ./sync.sh
+        ```
 
 
 ### :wrench: Manual Syncing
