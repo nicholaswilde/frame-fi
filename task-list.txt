@@ -1,23 +1,29 @@
 task: Available tasks for this project:
-* build:                 Build the project
-* clean:                 Clean build files
-* decrypt:               Decrypt secrets
-* encrypt:               Encrypt secrets
-* export:                Export the task list to task-list.txt
-* ftp:                   Switch to FTP mode
-* fullclean:             Perform a full clean of build files
-* get:                   curl -X GET
-* init:                  Init the project
-* list-devices:          List connected serial devices
-* monitor:               Monitor the serial output
-* msc:                   Switch to MSC mode
-* ping:                  Ping the device
-* prune:                 Prune the system
-* reset:                 Reset the Dongle by flashing the default fimrware.
-* restart:               Restart the device
-* serve:                 Start development server on http://0.0.0.0:8000 using Docker and mkdocs-material
-* sync:                  Runs the sync script.
-* update-packages:       Update project dependencies
-* upload:                Upload the firmware
-* uploadm:               Upload the firmware and monitor
-* verbose-build:         Build with verbose output
+* build:                 Build the firmware using PlatformIO.
+* clean:                 Clean the build files.
+* decrypt:               Decrypt secret and environment files using sops.
+* default:               List all available tasks.
+* encrypt:               Encrypt secret and environment files using sops.
+* export:                Export the list of available tasks to task-list.txt.
+* flash:                 Flash the latest firmware to the device using the flash.sh script.
+* ftp:                   Connect to the device using an interactive FTP client.
+* fullclean:             Perform a deep clean of all build and dependency files.
+* get:                   Get device status via API call (unauthenticated).
+* geta:                  Get device status via API call (authenticated).
+* gflash:                Run Gemini with the gemini-2.5-flash model.
+* gpro:                  Run Gemini with the gemini-2.5-pro model.
+* init:                  Initialize the project by creating secret and environment files from templates.
+* list-devices:          List all connected serial devices.
+* monitor:               Monitor the device's serial output.
+* ping:                  Ping the device to check network connectivity.
+* prune:                 Prune unused PlatformIO files to save space.
+* reset:                 Reset the dongle by flashing it with the default factory firmware.
+* restart:               Restart the device via API call.
+* serve:                 Serve the documentation locally using Docker.
+* sftp:                  Switch the device to FTP mode via API call.
+* smsc:                  Switch the device to USB Mass Storage (MSC) mode via API call.
+* sync:                  Synchronize local files to the device via FTP using the sync.sh script.
+* update-packages:       Update all project dependencies to their latest versions.
+* upload:                Upload the compiled firmware to the device.
+* uploadm:               Upload the firmware and immediately start monitoring the serial output.
+* verbose-build:         Build the project with verbose output for debugging.
