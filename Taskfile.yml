@@ -1,71 +1,78 @@
 ---
 version: '3'
 
+dotenv: ["scripts/.env"]
+
 vars:
-  IP: "192.168.2.169"
+  FTP_HOST: '{{.FTP_HOST | default "192.168.2.169"}}'
+  WEB_SERVER_USER: '{{.WEB_SERVER_USER | default "admin"}}'
+  WEB_SERVER_PASSWORD: '{{.WEB_SERVER_PASSWORD | default "password"}}'
   IMAGE: nicholaswilde/mkdocs-material
   PORT: 8000
 
 tasks:
   gpro:
-    desc: Run gemini with 2.5 pro model
+    desc: Run Gemini with the gemini-2.5-pro model.
     cmds:
       - gemini -m gemini-2.5-pro
   gflash:
-    desc: Run gemini with 2.5 flash model
+    desc: Run Gemini with the gemini-2.5-flash model.
     cmds:
       - gemini -m gemini-2.5-flash
   flash:
-    desc: Run the flash.sh script
+    desc: Flash the latest firmware to the device using the flash.sh script.
     cmds:
       - ./scripts/flash.sh
   export:
-    desc: Export the task list to task-list.txt
+    desc: Export the list of available tasks to task-list.txt.
     cmds:
       - task -l > task-list.txt
   serve:
-    desc: >-
-      Start development server on http://0.0.0.0:{{ .PORT }} using
-      Docker and mkdocs-material
+    desc: Serve the documentation locally using Docker.
     cmds:
       - >-
         docker run --rm -it -p {{ .PORT }}:{{ .PORT}} -v ${PWD}:/docs
         --platform linux/amd64 {{ .IMAGE }} serve
         --dev-addr 0.0.0.0:{{ .PORT }} -f ./mkdocs.yml
   sync:
-    desc: 'Runs the sync script.'
+    desc: Synchronize local files to the device via FTP using the sync.sh script.
+    dir: scripts
     cmds:
-      - ./scripts/sync.sh
+      - bash sync.sh
   ping:
-    desc: Ping the device
+    desc: Ping the device to check network connectivity.
     cmds:
-      - ping {{.IP}}
+      - ping {{.FTP_HOST}}
   smsc:
-    desc: Switch to MSC mode
+    desc: Switch the device to USB Mass Storage (MSC) mode via API call.
     cmds:
-      - curl -X POST http://{{.IP}}/mode/msc
+      - curl -X POST http://{{.FTP_HOST}}/mode/msc
   ftp:
-    desc: Start FTP with device
+    desc: Connect to the device using an interactive FTP client.
     cmds:
-      - ftp {{.IP}}
+      - ftp {{.FTP_HOST}}
   sftp:
-    desc: Switch to FTP mode
+    desc: Switch the device to FTP mode via API call.
     cmds:
-      - curl -X POST http://{{.IP}}/mode/ftp
+      - curl -X POST http://{{.FTP_HOST}}/mode/ftp
   restart:
-    desc: Restart the device
+    desc: Restart the device via API call.
     cmds:
-      - curl -X POST http://{{.IP}}/restart
+      - curl -X POST http://{{.FTP_HOST}}/restart
   get:
-    desc: curl -X GET
+    desc: Get device status via API call (unauthenticated).
     cmds:
-      - curl -X GET http://{{.IP}}
+      - curl -X GET http://{{.FTP_HOST}}
+  geta:
+    desc: Get device status via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X GET http://{{.FTP_HOST}}/
   prune:
-    desc: Prune the system
+    desc: Prune unused PlatformIO files to save space.
     cmds:
       - pio system prune
   init:
-    desc: Init the project
+    desc: Initialize the project by creating secret and environment files from templates.
     preconditions:
       - test -f include/secrets.h.tmpl
       - test -f scripts/.env.tmpl
@@ -73,7 +80,7 @@ tasks:
       - cp include/secrets.h.tmpl include/secrets.h
       - cp scripts/.env.tmpl scripts/.env
   encrypt:
-    desc: Encrypt secrets
+    desc: Encrypt secret and environment files using sops.
     preconditions:
       - test -f include/secrets.h
       - test -f scripts/.env
@@ -81,7 +88,7 @@ tasks:
       - sops -e include/secrets.h > include/secrets.h.enc
       - sops -e --input-type dotenv --output-type dotenv scripts/.env > scripts/.env.enc
   decrypt:
-    desc: Decrypt secrets
+    desc: Decrypt secret and environment files using sops.
     preconditions:
       - test -f include/secrets.h.enc
       - test -f scripts/.env.enc
@@ -89,47 +96,48 @@ tasks:
       - sops -d include/secrets.h.enc > include/secrets.h
       - sops -d --input-type dotenv --output-type dotenv scripts/.env.enc > scripts/.env
   build:
-    desc: Build the project
+    desc: Build the firmware using PlatformIO.
     cmds:
       - pio run
   clean:
-    desc: Clean build files
+    desc: Clean the build files.
     cmds:
       - pio run --target clean
   fullclean:
-    desc: Perform a full clean of build files
+    desc: Perform a deep clean of all build and dependency files.
     cmds:
       - pio run --target fullclean
   upload:
-    desc: Upload the firmware
+    desc: Upload the compiled firmware to the device.
     cmds:
       - pio run --target upload
   uploadm:
-    desc: Upload the firmware and monitor
+    desc: Upload the firmware and immediately start monitoring the serial output.
     cmds:
       - pio run -t upload -t monitor
   monitor:
-    desc: Monitor the serial output
+    desc: Monitor the device's serial output.
     cmds:
       - pio device monitor
   list-devices:
-    desc: List connected serial devices
+    desc: List all connected serial devices.
     cmds:
       - pio device list
   update-packages:
-    desc: Update project dependencies
+    desc: Update all project dependencies to their latest versions.
     cmds:
       - pio pkg update
   verbose-build:
-    desc: Build with verbose output
+    desc: Build the project with verbose output for debugging.
     cmds:
       - pio run --verbose
   reset:
-    desc: Reset the Dongle by flashing the default fimrware.
+    desc: Reset the dongle by flashing it with the default factory firmware.
     cmds:
       - task: flash
         dir: ./reference/firmware
   default:
+    desc: List all available tasks.
     cmds:
       - task -l
     silent: true

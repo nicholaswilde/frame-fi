@@ -36,6 +36,8 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 : "${FTP_HOST:?FTP_HOST is not set. Please set the device IP address.}"
 : "${FTP_USER:="user"}"
 : "${FTP_PASSWORD:="password"}"
+: "${WEB_SERVER_USER:=""}"
+: "${WEB_SERVER_PASSWORD:=""}"
 : "${LOCAL_DIR:="data"}" # Default local directory to sync
 : "${REMOTE_DIR:="/"}"   # Default remote directory on the device
 
@@ -114,7 +116,19 @@ function check_device_online(){
 function check_device_mode(){
   log "INFO" "Checking device mode..."
   local mode_url="http://$FTP_HOST/"
-  local response=$(curl -s "$mode_url")
+  local curl_args=("-s")
+
+  if [ -n "$WEB_SERVER_USER" ]; then
+    log "INFO" "Using authenticated API request."
+    curl_args+=("-u" "$WEB_SERVER_USER:$WEB_SERVER_PASSWORD")
+  else
+    log "INFO" "Using unauthenticated API request."
+  fi
+
+  curl_args+=("$mode_url")
+
+  local response
+  response=$(curl "${curl_args[@]}")
 
   if [ $? -ne 0 ]; then
     log "ERRO" "Failed to connect to device API at $mode_url. Is the web server running?"
