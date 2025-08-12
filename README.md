@@ -39,6 +39,16 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/nicholaswilde/frame-fi/m
 
 - **Digital Picture Frame:** Plug in dongle to digital picture frame.
 
+- **Check Status:** Check the status of the device.
+
+```sh
+curl -X GET http://<DEVICE_IP>/
+```
+
+```sh
+curl -u <USERNAME>:<PASSWORD> -X GET http://<DEVICE_IP>/
+```
+
 - **Mode Switching:** A button or API call switches between FTP and USB Mass Storage modes.
 
 ```sh

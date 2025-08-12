@@ -42,6 +42,22 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 
 - **Digital Picture Frame:** Plug in dongle to digital picture frame.
 
+- **Check Status:** Check the status of the device.
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X GET http://<DEVICE_IP>/
+        ```
+
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X GET http://<DEVICE_IP>/
+        ```
+
 - **Mode Switching:** A button or API call switches between FTP and USB Mass Storage modes.
 
 !!! code ""

@@ -43,8 +43,8 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
     - Use any standard FTP client (e.g., [FileZilla][8], [WinSCP][9], or the command-line `ftp`).
     - **Host:** The IP address of your device (shown on the LCD).
     - **Port:** `21` (the default FTP port).
-    - **Username:** The username you configured in the WiFiManager setup page.
-    - **Password:** The password you configured in the WiFiManager setup page.
+    - **Username:** The username you configured in the WiFiManager setup page (default: `user`).
+    - **Password:** The password you configured in the WiFiManager setup page (default: `password`).
   
 - **Upload File:**
 
@@ -185,13 +185,13 @@ The web server can be protected by basic authentication. You can set the usernam
 
 !!! code ""
 
-    === "Unauth"
+    === "Unauthenticated"
 
         ```sh
         curl -X GET http://<DEVICE_IP>/
         ```
 
-    === "HTTP Basic Auth"
+    === "Authenticated"
     
         ```sh
         curl -u <USERNAME>:<PASSWORD> -X GET http://<DEVICE_IP>/
@@ -233,13 +233,13 @@ The web server can be protected by basic authentication. You can set the usernam
 
 !!! code ""
 
-    === "Unauth"
+    === "Unauthenticated"
 
         ```sh
         curl -X POST http://<DEVICE_IP>/mode/msc
         ```
     
-    === "HTTP Basic Auth"
+    === "Authenticated"
     
         ```sh
         curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/mode/msc
@@ -266,13 +266,13 @@ The web server can be protected by basic authentication. You can set the usernam
 
 !!! code ""
 
-    === "Unauth"
+    === "Unauthenticated"
 
         ```sh
         curl -X POST http://<DEVICE_IP>/mode/ftp
         ```
         
-    === "HTTP Basic Auth"
+    === "Authenticated"
         
         ```sh
         curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/mode/ftp
@@ -302,13 +302,13 @@ The web server can be protected by basic authentication. You can set the usernam
 
 !!! code ""
 
-    === "Unauth"
+    === "Unauthenticated"
 
         ```sh
         curl -X POST http://<DEVICE_IP>/device/restart
         ```
     
-    === "HTTP Basic Auth"
+    === "Authenticated"
     
         ```sh
         curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/device/restart
@@ -326,13 +326,13 @@ The web server can be protected by basic authentication. You can set the usernam
 
 !!! code ""
 
-    === "Unauth"
+    === "Unauthenticated"
 
         ```sh
         curl -X POST http://<DEVICE_IP>/display/toggle
         ```
     
-    === "HTTP Basic Auth"
+    === "Authenticated"
     
         ```sh
         curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/display/toggle
@@ -356,13 +356,13 @@ The web server can be protected by basic authentication. You can set the usernam
 
 !!! code ""
 
-    === "Unauth"
+    === "Unauthenticated"
 
         ```sh
         curl -X POST http://<DEVICE_IP>/display/on
         ```
     
-    === "HTTP Basic Auth"
+    === "Authenticated"
     
         ```sh
         curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/display/on
@@ -380,13 +380,13 @@ The web server can be protected by basic authentication. You can set the usernam
 
 !!! code ""
 
-    === "Unauth"
+    === "Unauthenticated"
 
         ```sh
         curl -X POST http://<DEVICE_IP>/display/off
         ```
     
-    === "HTTP Basic Auth"
+    === "Authenticated"
         
         ```sh
         curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/display/off
@@ -404,13 +404,13 @@ The web server can be protected by basic authentication. You can set the usernam
 
 !!! code ""
 
-    === "Unauth"
+    === "Unauthenticated"
 
         ```sh
         curl -X POST http://<DEVICE_IP>/wifi/reset
         ```
     
-    === "HTTP Basic Auth"
+    === "Authenticated"
     
         ```sh
         curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/wifi/reset
@@ -707,7 +707,7 @@ There are two ways to configure the script:
     cp scripts/.env.tmpl scripts/.env
     ```
 
-- Edit `scripts/.env` with your device's IP address and other settings.
+- Edit `scripts/.env` with your device's IP address, FTP credentials, and web server credentials (if authentication is enabled).
 
 !!! abstract "scripts/.env"
 
@@ -732,13 +732,18 @@ There are two ways to configure the script:
 
 **Example with Command-Line Arguments:**
 
-This command syncs a specific local directory to the device, overriding any settings in `.env`.
+This command syncs a specific local directory to the device, overriding any settings in `.env`. If the web server is authenticated, you must also pass the credentials.
 
 !!! code "./scripts directory"
 
     ```shell
-    FTP_HOST="192.168.1.100" LOCAL_DIR="path/to/your/pictures" ./sync.sh
+    FTP_HOST="192.168.1.100" \
+    WEB_SERVER_USER="admin" \
+    WEB_SERVER_PASSWORD="password" \
+    LOCAL_DIR="path/to/your/pictures" \
+    ./sync.sh
     ```
+
 
 ### :wrench: Manual Syncing
 
