@@ -724,33 +724,34 @@ There are two ways to configure the script:
 1. Make sure the device is in **FTP Server Mode**.
 2. Run the script from the scripts directory:
 
-!!! code "./scripts directory"
-
-    ```shell
-    ./sync.sh
-    ```
-
-**Example with Command-Line Arguments:**
-
-This command syncs a specific local directory to the device, overriding any settings in `.env`. If the web server is authenticated, you must also pass the credentials.
-
-!!! code "./scripts directory"
+!!! code ""
 
     === "Task"
 
         ```bash
         task sync
         ```
-        
+
     === "Bash"
     
         ```shell
-        FTP_HOST="192.168.1.100" \
-        WEB_SERVER_USER="admin" \
-        WEB_SERVER_PASSWORD="password" \
-        LOCAL_DIR="path/to/your/pictures" \
+        cd scripts
         ./sync.sh
         ```
+
+**Example with Command-Line Arguments:**
+
+This command syncs a specific local directory to the device, overriding any settings in `.env`. If the web server is authenticated, you must also pass the credentials.
+
+!!! code "./scripts directory"
+    
+    ```shell
+    FTP_HOST="192.168.1.100" \
+    WEB_SERVER_USER="admin" \
+    WEB_SERVER_PASSWORD="password" \
+    LOCAL_DIR="path/to/your/pictures" \
+    ./sync.sh
+    ```
 
 
 ### :wrench: Manual Syncing
