@@ -961,6 +961,10 @@ bool enterFtpMode() {
 
   HWSerial.println("\n--- Entering Application (FTP) Mode ---");
 
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
+  drawInfoScreen("FrameFi", "Entering FTP Mode...", "", CATPPUCCIN_PEACH);
+#endif
+
   // --- Turn the LED on ---
   leds[0] = CRGB::Orange;
   FastLED.show();
@@ -1003,6 +1007,7 @@ bool enterFtpMode() {
 #endif
   return true;
 }
+
 
 /**
  * @brief Handles requests to the root URL ("/"). Sends a JSON status object.
@@ -1591,8 +1596,10 @@ void drawApModeScreen(const char* ap_ssid, const char* ap_ip) {
     tft.setCursor(x_pos, y_pos);
     tft.setTextColor(CATPPUCCIN_MAUVE);
     tft.print("SSID:  ");
-    y_pos += 12;
-    tft.setCursor(x_pos, y_pos);
+    if (tft.textWidth(ap_ssid) > tft.width() - tft.getCursorX()) {
+      y_pos += 12;
+      tft.setCursor(x_pos, y_pos);
+    }
     tft.setTextColor(CATPPUCCIN_YELLOW);
     tft.print(ap_ssid);
   } else { // Portrait
