@@ -56,7 +56,7 @@ jobs:
         run: cp include/secrets.h.tmpl include/secrets.h
 
       - name: Uncomment secrets
-        run: sed -i 's|// #|#|' include/secrets.h
+        run: "sed -i 's|// #|#|' include/secrets.h"
 
       - name: Build PlatformIO Project
         run: pio run --environment ${{ matrix.env }}
