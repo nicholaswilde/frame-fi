@@ -24,7 +24,6 @@ jobs:
           - usb-msc
           - webserver
           - button
-          - tft
           - wifimanager
 
     steps:
