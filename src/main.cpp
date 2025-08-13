@@ -59,6 +59,7 @@ struct DeviceInfo {
   // MQTT
   int mqttState;
   bool mqttConnected;
+  bool isMqttEnabled;
 };
 
 // --- FTP Configuration ---
@@ -118,6 +119,11 @@ MqttConfig mqttConfig;
 // --- A flag to track the current mode ---
 bool isInMscMode = true;
 bool isDisplayOn = true; // A flag to track the display status
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+bool isMqttEnabled = true; // A flag to track the MQTT status
+#else
+bool isMqttEnabled = false;
+#endif
 
 // --- MSC screen refresh tracking ---
 volatile bool msc_disk_dirty = false;
@@ -165,6 +171,9 @@ void handleDisplayToggle();
 void handleDisplayOn();
 void handleDisplayOff();
 void handleWifiReset();
+void handleMqttEnable();
+void handleMqttDisable();
+void handleMqttToggle();
 void toggleMode();
 void resetWifiSettings();
 void mscInit();
@@ -418,6 +427,12 @@ void handleWebServer() {
  */
 void handleMqtt() {
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  if (!isMqttEnabled) {
+    if (mqttClient.connected()) {
+      mqttClient.disconnect();
+    }
+    return;
+  }
   if (!mqttClient.connected()) {
     long now = millis();
     if (now - lastReconnectAttempt > reconnectInterval) {
@@ -469,6 +484,9 @@ void loadConfig() {
       if (!error) {
         Serial.println("No error loading json config");   
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+        if (doc.containsKey("mqtt_enabled")) {
+          isMqttEnabled = doc["mqtt_enabled"];
+        }
         strcpy(mqttConfig.host, doc["mqtt_host"]);
         int myInt = doc["mqtt_port"];
         char buffer[6];
@@ -500,6 +518,9 @@ void loadConfig() {
 void saveConfig() {
   HWSerial.println("Saving config");
   DynamicJsonDocument doc(1024);
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  doc["mqtt_enabled"] = isMqttEnabled;
+#endif
   doc["mqtt_host"] = mqttConfig.host;
   doc["mqtt_port"] = mqttConfig.port;
   doc["mqtt_user"] = mqttConfig.user;
@@ -537,6 +558,7 @@ void getDeviceInfo(DeviceInfo& info) {
   info.macAddress[sizeof(info.macAddress) - 1] = '\0';
   info.mqttState = mqttClient.state();
   info.mqttConnected = mqttClient.connected();
+  info.isMqttEnabled = ::isMqttEnabled;
 
   if (info.isInMscMode) {
     if(card) {
@@ -907,6 +929,9 @@ void setupApiRoutes() {
   server.on("/display/on", HTTP_POST, handleDisplayOn);
   server.on("/display/off", HTTP_POST, handleDisplayOff);
   server.on("/wifi/reset", HTTP_POST, handleWifiReset);
+  server.on("/mqtt/enable", HTTP_POST, handleMqttEnable);
+  server.on("/mqtt/disable", HTTP_POST, handleMqttDisable);
+  server.on("/mqtt/toggle", HTTP_POST, handleMqttToggle);
 }
 
 /**
@@ -1019,7 +1044,7 @@ void handleStatus() {
   DeviceInfo info;
   getDeviceInfo(info);
 
-  const int JSON_STATUS_SIZE = JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(2);
+  const int JSON_STATUS_SIZE = JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(3);
   DynamicJsonDocument jsonResponse(JSON_STATUS_SIZE);
   jsonResponse["mode"] = info.modeString;
   JsonObject display = jsonResponse.createNestedObject("display");
@@ -1031,6 +1056,7 @@ void handleStatus() {
   sd_card["free_size"] = info.freeSize;
   sd_card["file_count"] = info.fileCount;
   JsonObject mqtt = jsonResponse.createNestedObject("mqtt");
+  mqtt["enabled"] = info.isMqttEnabled;
   mqtt["state"] = info.mqttState;
   mqtt["connected"] = info.mqttConnected;
 
@@ -1233,6 +1259,85 @@ void handleWifiReset() {
   resetWifiSettings();
 }
 
+/**
+ * @brief Handles the POST request to enable MQTT.
+ */
+void handleMqttEnable() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  isMqttEnabled = true;
+  saveConfig();
+  reconnect(); // Attempt to connect immediately
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "success";
+  jsonResponse["message"] = "MQTT enabled.";
+  String output;
+  serializeJson(jsonResponse, output);
+  server.send(200, "application/json", output);
+  publishMqttStatus();
+#else
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "no_change";
+  jsonResponse["message"] = "MQTT is disabled in firmware.";
+  String output;
+  serializeJson(jsonResponse, output);
+  server.send(200, "application/json", output);
+#endif
+}
+
+/**
+ * @brief Handles the POST request to disable MQTT.
+ */
+void handleMqttDisable() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  isMqttEnabled = false;
+  saveConfig();
+  mqttClient.disconnect();
+  HWSerial.println("MQTT disconnected.");
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "success";
+  jsonResponse["message"] = "MQTT disabled.";
+  String output;
+  serializeJson(jsonResponse, output);
+  server.send(200, "application/json", output);
+#else
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "no_change";
+  jsonResponse["message"] = "MQTT is disabled in firmware.";
+  String output;
+  serializeJson(jsonResponse, output);
+  server.send(200, "application/json", output);
+#endif
+}
+
+/**
+ * @brief Handles the POST request to toggle MQTT.
+ */
+void handleMqttToggle() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  if (isMqttEnabled) {
+    handleMqttDisable();
+  } else {
+    handleMqttEnable();
+  }
+#else
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "no_change";
+  jsonResponse["message"] = "MQTT is disabled in firmware.";
+  String output;
+  serializeJson(jsonResponse, output);
+  server.send(200, "application/json", output);
+#endif
+}
+
 // --- FTP Server ---
 
 
@@ -1392,6 +1497,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
  */
 void reconnect() {
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  if (!isMqttEnabled) return;
   HWSerial.print("Attempting MQTT connection...");
   // Attempt to connect
   if (mqttClient.connect(mqttConfig.client_id, mqttConfig.user, mqttConfig.pass)) {

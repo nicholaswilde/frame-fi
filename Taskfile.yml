@@ -67,6 +67,30 @@ tasks:
     desc: Get device status via API call (authenticated).
     cmds:
       - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X GET http://{{.FTP_HOST}}/
+  mqtt-enable:
+    desc: Enable the MQTT client via API call (unauthenticated).
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/mqtt/enable
+  mqtt-enable-a:
+    desc: Enable the MQTT client via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/mqtt/enable
+  mqtt-disable:
+    desc: Disable the MQTT client via API call (unauthenticated).
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/mqtt/disable
+  mqtt-disable-a:
+    desc: Disable the MQTT client via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/mqtt/disable
+  mqtt-toggle:
+    desc: Toggle the MQTT client via API call (unauthenticated).
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/mqtt/toggle
+  mqtt-toggle-a:
+    desc: Toggle the MQTT client via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/mqtt/toggle
   prune:
     desc: Prune unused PlatformIO files to save space.
     cmds:

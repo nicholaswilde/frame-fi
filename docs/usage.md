@@ -94,16 +94,22 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
 
 The device can connect to an MQTT broker to integrate with home automation platforms like Home Assistant. For a detailed guide, see the [Home Assistant Integration](home-assistant.md) page.
 
-- **Enable MQTT:**
+- **Enable/Disable MQTT:**
+    You can enable or disable the MQTT client at runtime using the [Web API](#web-api) or by physically recompiling the firmware with the appropriate build flags.
 
-    1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
-    2.  **Find `MQTT_ENABLED`**: Locate the `build_flags` section and find the `-D MQTT_ENABLED` line.
-    3.  **Change the Value**:
+    - **Via Web API (Recommended):**
+        - Send a `POST` request to `/mqtt/enable` or `/mqtt/disable`.
+        - This setting is saved to the device's configuration and will persist across reboots.
 
-    | Value | Description            |
-    |:-----:|------------------------|
-    | `1`   | Enable MQTT (Default)  |
-    | `0`   | Disable MQTT           |
+    - **Via Firmware Build Flags:**
+        1.  **Open `platformio.ini`**: Open the `platformio.ini` file in the root of the project.
+        2.  **Find `MQTT_ENABLED`**: Locate the `build_flags` section and find the `-D MQTT_ENABLED` line.
+        3.  **Change the Value**:
+
+        | Value | Description            |
+        |:-----:|------------------------|
+        | `1`   | Enable MQTT (Default)  |
+        | `0`   | Disable MQTT           |
 
 !!! abstract "platformio.ini"
 
@@ -213,6 +219,7 @@ The web server can be protected by basic authentication. You can set the usernam
         "file_count": 42
       },
       "mqtt": {
+        "enabled": true,
         "state": 0,
         "connected": true
       }
@@ -427,6 +434,84 @@ The web server can be protected by basic authentication. You can set the usernam
 !!! warning "Device Unreachable After Reset"
 
     After resetting the Wi-Fi settings, the device will restart and will no longer be connected to your Wi-Fi network. It will become unreachable at its previous IP address. You must reconnect to its Access Point (AP) to configure the new Wi-Fi credentials. See the [Modes of Operation](#detective-modes-of-operation) section for details on connecting to the AP.
+
+**`POST /mqtt/enable`**: Enables the MQTT client.
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/mqtt/enable
+        ```
+
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/mqtt/enable
+        ```
+
+!!! success "Example Response"
+
+    === "Success (200 OK)"
+
+        ```json
+        {"status":"success","message":"MQTT enabled."}
+        ```
+
+**`POST /mqtt/disable`**: Disables the MQTT client.
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/mqtt/disable
+        ```
+
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/mqtt/disable
+        ```
+
+!!! success "Example Response"
+
+    === "Success (200 OK)"
+
+        ```json
+        {"status":"success","message":"MQTT disabled."}
+        ```
+
+**`POST /mqtt/toggle`**: Toggles the MQTT client on and off.
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/mqtt/toggle
+        ```
+
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/mqtt/toggle
+        ```
+
+!!! success "Example Responses"
+
+    === "Success (200 OK)"
+
+        ```json
+        {"status":"success","message":"MQTT enabled."}
+        ```
+
+    === "Success (200 OK)"
+
+        ```json
+        {"status":"success","message":"MQTT disabled."}
+        ```
 
 ## :hammer_and_wrench: Building
 
