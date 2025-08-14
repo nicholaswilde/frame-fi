@@ -1405,20 +1405,44 @@ void handleLedStatus() {
 }
 
 /**
- * @brief Handles the GET request to return the LED color and state.
+ * @brief Handles the POST request to set the LED brightness.
  */
 void handleLedBrightness() {
   if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
     return;
   }
-  DynamicJsonDocument jsonResponse(256);
-  jsonResponse["status"] = "success";
-  FastLED.setBrightness(ledBrightness);
-  FastLED.show();
-  jsonResponse["message"] = "LED brightness set.";
-  String output;
-  serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+
+  if (server.hasArg("plain")) {
+    String brightnessStr = server.arg("plain");
+    int newBrightness = brightnessStr.toInt();
+
+    // Check for conversion errors and valid range
+    if ((newBrightness == 0 && brightnessStr != "0") || newBrightness < 0 || newBrightness > 255) {
+      DynamicJsonDocument jsonResponse(256);
+      jsonResponse["status"] = "error";
+      jsonResponse["message"] = "Invalid brightness value. Body must be a plain text integer between 0 and 255.";
+      String output;
+      serializeJson(jsonResponse, output);
+      server.send(400, "application/json", output);
+    } else {
+      ledBrightness = newBrightness;
+      FastLED.setBrightness(ledBrightness);
+      FastLED.show();
+      DynamicJsonDocument jsonResponse(256);
+      jsonResponse["status"] = "success";
+      jsonResponse["message"] = "LED brightness set to " + String(ledBrightness) + ".";
+      String output;
+      serializeJson(jsonResponse, output);
+      server.send(200, "application/json", output);
+    }
+  } else {
+    DynamicJsonDocument jsonResponse(256);
+    jsonResponse["status"] = "error";
+    jsonResponse["message"] = "Missing request body. Please provide a plain text integer value.";
+    String output;
+    serializeJson(jsonResponse, output);
+    server.send(400, "application/json", output);
+  }
 }
 
 /**
