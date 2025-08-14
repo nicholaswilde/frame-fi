@@ -222,6 +222,10 @@ The web server can be protected by basic authentication. You can set the usernam
         "enabled": true,
         "state": 0,
         "connected": true
+      },
+      "led": {
+        "color": "green",
+        "state": "on"
       }
     }
     ```
@@ -511,6 +515,106 @@ The web server can be protected by basic authentication. You can set the usernam
 
         ```json
         {"status":"success","message":"MQTT disabled."}
+        ```
+
+**`GET /led/status`**: Returns the current LED color and state.
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X GET http://<DEVICE_IP>/led/status
+        ```
+
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X GET http://<DEVICE_IP>/led/status
+        ```
+
+!!! success "Example Response"
+
+    ```json
+    {
+      "status": "success",
+      "color": "green",
+      "state": "on"
+    }
+    ```
+
+**`POST /led/on`**: Turns the LED on.
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/led/on
+        ```
+
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/led/on
+        ```
+
+!!! success "Example Response"
+
+    ```json
+    {"status":"success","message":"LED turned on."}
+    ```
+
+**`POST /led/off`**: Turns the LED off.
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/led/off
+        ```
+
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/led/off
+        ```
+
+!!! success "Example Response"
+
+    ```json
+    {"status":"success","message":"LED turned off."}
+    ```
+
+**`POST /led/toggle`**: Toggles the LED on and off.
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X POST http://<DEVICE_IP>/led/toggle
+        ```
+
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X POST http://<DEVICE_IP>/led/toggle
+        ```
+
+!!! success "Example Responses"
+
+    === "Success (200 OK)"
+
+        ```json
+        {"status":"success","message":"LED toggled on."}
+        ```
+
+    === "Success (200 OK)"
+
+        ```json
+        {"status":"success","message":"LED toggled off."}
         ```
 
 ## :hammer_and_wrench: Building

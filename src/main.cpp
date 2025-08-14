@@ -1041,7 +1041,7 @@ void handleStatus() {
   DeviceInfo info;
   getDeviceInfo(info);
 
-  const int JSON_STATUS_SIZE = JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(2);
+  const int JSON_STATUS_SIZE = JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(2);
   DynamicJsonDocument jsonResponse(JSON_STATUS_SIZE);
   jsonResponse["mode"] = info.modeString;
   JsonObject display = jsonResponse.createNestedObject("display");
