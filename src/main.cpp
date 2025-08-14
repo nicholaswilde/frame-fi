@@ -60,7 +60,7 @@ struct DeviceInfo {
   int mqttState;
   bool mqttConnected;
   bool isMqttEnabled;
-  char ledColor[10];
+  const char* ledColor;
 };
 
 // --- FTP Configuration ---
@@ -551,8 +551,7 @@ void getDeviceInfo(DeviceInfo& info) {
   info.mqttState = mqttClient.state();
   info.mqttConnected = mqttClient.connected();
   info.isMqttEnabled = ::isMqttEnabled;
-  strncpy(info.ledColor, getLedColorString(leds[0]), sizeof(info.ledColor));
-  info.ledColor[sizeof(info.ledColor) - 1] = '\0';
+  info.ledColor = getLedColorString(leds[0]);
 
   if (info.isInMscMode) {
     if(card) {
