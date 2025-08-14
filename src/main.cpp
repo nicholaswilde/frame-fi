@@ -35,7 +35,7 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>     // https://github.com/bblanchon/ArduinoJson
 #include "TFT_eSPI.h" // https://github.com/Bodmer/TFT_eSPI
-#include <LittleFS.h>
+#include <Preferences.h> // https://github.com/vshymanskyy/Preferences
 
 // --- Data Structure for Device Information ---
 struct DeviceInfo {
@@ -107,8 +107,6 @@ PubSubClient mqttClient(espClient);
 #define MOUNT_POINT "/sdcard"
 sdmmc_card_t *card;
 
-// --- MQTT Configuration ---
-#define MQTT_CONFIG_FILE "/mqtt_config.json"
 bool shouldSaveConfig = false;
 
 // --- FTP & MQTT Credentials ---
@@ -212,7 +210,7 @@ void setup() {
   setupButton();
   setupDisplay();
   displayBootScreen();
-  setupFilesystems();
+  loadConfig();
 
   // --- Connect to WiFi and configure services ---
   connectToWiFi();
@@ -346,20 +344,6 @@ void displayBootScreen() {
 }
 
 /**
- * @brief Initializes the filesystems.
- */
-void setupFilesystems() {
-  // Initialize LittleFS
-  if (!LittleFS.begin(true)) {
-    HWSerial.println("LittleFS mount failed");
-    return;
-  }
-
-  // Load existing configuration
-  loadConfig();
-}
-
-/**
  * @brief Sets up and starts the web server.
  */
 void setupWebServer() {
@@ -474,70 +458,60 @@ void handleMsc() {
  * Loads the configuration from a file.
  */
 void loadConfig() {
-  if (LittleFS.exists(MQTT_CONFIG_FILE)) {
-    HWSerial.println("Loading config");
-    File configFile = LittleFS.open(MQTT_CONFIG_FILE, "r");
-    if (configFile) {
-      HWSerial.println("configFile is not error");
-      DynamicJsonDocument doc(1024);
-      DeserializationError error = deserializeJson(doc, configFile);
-      if (!error) {
-        Serial.println("No error loading json config");   
+  Preferences prefs;
+  prefs.begin("frame-fi", true); // Read-only
+
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
-        if (doc.containsKey("mqtt_enabled")) {
-          isMqttEnabled = doc["mqtt_enabled"];
-        }
-        strcpy(mqttConfig.host, doc["mqtt_host"]);
-        int myInt = doc["mqtt_port"];
-        char buffer[6];
-        sprintf(buffer, "%d", myInt);
-        strcpy(mqttConfig.port, buffer);
-        strcpy(mqttConfig.user, doc["mqtt_user"]);
-        strcpy(mqttConfig.pass, doc["mqtt_pass"]);
-        strcpy(mqttConfig.client_id, doc["mqtt_client_id"]);
+  isMqttEnabled = prefs.getBool("mqtt_enabled", isMqttEnabled);
+  String mqttHost = prefs.getString("mqtt_host", mqttConfig.host);
+  strcpy(mqttConfig.host, mqttHost.c_str());
+  String mqttPort = prefs.getString("mqtt_port", mqttConfig.port);
+  strcpy(mqttConfig.port, mqttPort.c_str());
+  String mqttUser = prefs.getString("mqtt_user", mqttConfig.user);
+  strcpy(mqttConfig.user, mqttUser.c_str());
+  String mqttPass = prefs.getString("mqtt_pass", mqttConfig.pass);
+  strcpy(mqttConfig.pass, mqttPass.c_str());
+  String mqttClientId = prefs.getString("mqtt_client_id", mqttConfig.client_id);
+  strcpy(mqttConfig.client_id, mqttClientId.c_str());
 #endif
-        strcpy(ftpConfig.user, doc["ftp_user"]);
-        strcpy(ftpConfig.pass, doc["ftp_pass"]);
-        if (doc.containsKey("web_user")) {
-          strcpy(webServerConfig.user, doc["web_user"]);
-          strcpy(webServerConfig.pass, doc["web_pass"]);
-        }
-      } else {
-        HWSerial.println("Failed to load json config");
-      }
-      configFile.close();
-    }
-  } else {
-    HWSerial.println("Config file not found, using defaults.");
-  }
+
+  String ftpUser = prefs.getString("ftp_user", ftpConfig.user);
+  strcpy(ftpConfig.user, ftpUser.c_str());
+  String ftpPass = prefs.getString("ftp_pass", ftpConfig.pass);
+  strcpy(ftpConfig.pass, ftpPass.c_str());
+
+  String webUser = prefs.getString("web_user", webServerConfig.user);
+  strcpy(webServerConfig.user, webUser.c_str());
+  String webPass = prefs.getString("web_pass", webServerConfig.pass);
+  strcpy(webServerConfig.pass, webPass.c_str());
+
+  prefs.end();
+  HWSerial.println("Configuration loaded from prefs.");
 }
 
 /**
  * Saves the configuration to a file.
  */
 void saveConfig() {
-  HWSerial.println("Saving config");
-  DynamicJsonDocument doc(1024);
-#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
-  doc["mqtt_enabled"] = isMqttEnabled;
-#endif
-  doc["mqtt_host"] = mqttConfig.host;
-  doc["mqtt_port"] = mqttConfig.port;
-  doc["mqtt_user"] = mqttConfig.user;
-  doc["mqtt_pass"] = mqttConfig.pass;
-  doc["mqtt_client_id"] = mqttConfig.client_id;
-  doc["ftp_user"] = ftpConfig.user;
-  doc["ftp_pass"] = ftpConfig.pass;
-  doc["web_user"] = webServerConfig.user;
-  doc["web_pass"] = webServerConfig.pass;
-  File configFile = LittleFS.open(MQTT_CONFIG_FILE, "w");
-  if (!configFile) {
-    Serial.println("Failed to open config file for writing");
-    return;
-  }
+  Preferences prefs;
+  prefs.begin("frame-fi", false); // Read-write
 
-  serializeJson(doc, configFile);
-  configFile.close();
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  prefs.putBool("mqtt_enabled", isMqttEnabled);
+  prefs.putString("mqtt_host", mqttConfig.host);
+  prefs.putString("mqtt_port", mqttConfig.port);
+  prefs.putString("mqtt_user", mqttConfig.user);
+  prefs.putString("mqtt_pass", mqttConfig.pass);
+  prefs.putString("mqtt_client_id", mqttConfig.client_id);
+#endif
+
+  prefs.putString("ftp_user", ftpConfig.user);
+  prefs.putString("ftp_pass", ftpConfig.pass);
+  prefs.putString("web_user", webServerConfig.user);
+  prefs.putString("web_pass", webServerConfig.pass);
+
+  prefs.end();
+  HWSerial.println("Configuration saved to prefs.");
 }
 
 void saveConfigCallback() {
@@ -775,7 +749,7 @@ void connectToWiFi() {
 
   // Set config save notify callback
   wm.setSaveConfigCallback(saveConfigCallback);
-
+    
   wm.setParamsPage(true);
 
   const char* headhtml = "<script>function f2(id){var x = document.getElementById(id);x.type ==='password'?x.type='text':x.type='password';}</script>";
@@ -890,12 +864,12 @@ void resetWifiSettings() {
   HWSerial.println("Button held for 3 seconds. Resetting WiFi settings...");
   WiFiManager wm;
   wm.resetSettings();
-
-  // Erase the configuration file
-  if (LittleFS.exists(MQTT_CONFIG_FILE)) {
-    LittleFS.remove(MQTT_CONFIG_FILE);
-    HWSerial.println("Configuration file has been deleted.");
-  }
+  
+  // --- Preferences ---
+  Preferences prefs;
+  prefs.begin("frame-fi", false); // Read-write
+  prefs.clear();
+  
   HWSerial.println("WiFi settings reset. Restarting...");
   ESP.restart();
 }
@@ -1064,6 +1038,8 @@ void handleStatus() {
   serializeJson(jsonResponse, output);
   server.send(200, "application/json", output);
 }
+
+
 
 /**
  * @brief Handles the POST request to switch to MSC mode.
