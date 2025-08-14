@@ -60,7 +60,10 @@ struct DeviceInfo {
   int mqttState;
   bool mqttConnected;
   bool isMqttEnabled;
+
+  // LED
   const char* ledColor;
+  int ledBrightness;
 };
 
 // --- FTP Configuration ---
@@ -109,6 +112,8 @@ PubSubClient mqttClient(espClient);
 sdmmc_card_t *card;
 
 bool shouldSaveConfig = false;
+
+int ledBrightness;
 
 // --- FTP & MQTT Credentials ---
 FtpConfig ftpConfig;
@@ -176,6 +181,7 @@ void handleMqttToggle();
 void handleLedStatus();
 void handleLedOn();
 void handleLedOff();
+void handleLedBrightness();
 void handleLedToggle();
 void toggleMode();
 void resetWifiSettings();
@@ -298,11 +304,11 @@ void setupLed() {
   // --- Initialize the LED pin as an output ---
   FastLED.addLeds<APA102, LED_DI_PIN, LED_CI_PIN, BGR>(leds, NUM_LEDS);
 #if defined(LED_BRIGHTNESS)
-  FastLED.setBrightness(LED_BRIGHTNESS);
+  ledBrightness = LED_BRIGHTNESS;
 #else
-  FastLED.setBrightness(13); // 5% of 255
+  ledBrightness = 13;  // 5% of 255
 #endif
-
+  FastLED.setBrightness(ledBrightness);
   // --- Turn the LED on ---
   leds[0] = CRGB::Yellow;
   FastLED.show();
@@ -552,6 +558,7 @@ void getDeviceInfo(DeviceInfo& info) {
   info.mqttConnected = mqttClient.connected();
   info.isMqttEnabled = ::isMqttEnabled;
   info.ledColor = getLedColorString(leds[0]);
+  info.ledBrightness = ledBrightness;
 
   if (info.isInMscMode) {
     if(card) {
@@ -929,6 +936,7 @@ void setupApiRoutes() {
   server.on("/led/toggle", HTTP_POST, handleLedToggle);
   server.on("/led/on", HTTP_POST, handleLedOn);
   server.on("/led/off", HTTP_POST, handleLedOff);
+  server.on("/led/brightness", HTTP_POST, handleLedBrightness);
 }
 
 /**
@@ -1059,6 +1067,7 @@ void handleStatus() {
   JsonObject led = jsonResponse.createNestedObject("led");
   led["color"] = info.ledColor;
   led["state"] = (leds[0] == CRGB::Black) ? "off" : "on";
+  led["brightness"] = info.ledBrightness;
 
   String output;
   serializeJson(jsonResponse, output);
@@ -1382,6 +1391,22 @@ void handleLedOff() {
  * @brief Handles the GET request to return the LED color and state.
  */
 void handleLedStatus() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "success";
+  jsonResponse["color"] = getLedColorString(leds[0]);
+  jsonResponse["state"] = (leds[0] == CRGB::Black) ? "off" : "on";
+  String output;
+  serializeJson(jsonResponse, output);
+  server.send(200, "application/json", output);
+}
+
+/**
+ * @brief Handles the GET request to return the LED color and state.
+ */
+void handleLedBrightness() {
   if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
     return;
   }
