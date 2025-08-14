@@ -1398,6 +1398,7 @@ void handleLedStatus() {
   jsonResponse["status"] = "success";
   jsonResponse["color"] = getLedColorString(leds[0]);
   jsonResponse["state"] = (leds[0] == CRGB::Black) ? "off" : "on";
+  jsonResponse["brightness"] = ledBrightness;
   String output;
   serializeJson(jsonResponse, output);
   server.send(200, "application/json", output);
@@ -1412,8 +1413,9 @@ void handleLedBrightness() {
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
-  jsonResponse["color"] = getLedColorString(leds[0]);
-  jsonResponse["state"] = (leds[0] == CRGB::Black) ? "off" : "on";
+  FastLED.setBrightness(ledBrightness);
+  FastLED.show();
+  jsonResponse["message"] = "LED brightness set.";
   String output;
   serializeJson(jsonResponse, output);
   server.send(200, "application/json", output);
