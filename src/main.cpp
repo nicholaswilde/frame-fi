@@ -1042,7 +1042,7 @@ void handleStatus() {
   DeviceInfo info;
   getDeviceInfo(info);
 
-  const int JSON_STATUS_SIZE = JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(3);
+  const int JSON_STATUS_SIZE = JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(2);
   DynamicJsonDocument jsonResponse(JSON_STATUS_SIZE);
   jsonResponse["mode"] = info.modeString;
   JsonObject display = jsonResponse.createNestedObject("display");
@@ -1057,6 +1057,9 @@ void handleStatus() {
   mqtt["enabled"] = info.isMqttEnabled;
   mqtt["state"] = info.mqttState;
   mqtt["connected"] = info.mqttConnected;
+  JsonObject led = jsonResponse.createNestedObject("led");
+  led["color"] = info.ledColor;
+  led["state"] = (leds[0] == CRGB::Black) ? "off" : "on";
 
   String output;
   serializeJson(jsonResponse, output);
