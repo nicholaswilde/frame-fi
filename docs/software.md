@@ -41,6 +41,7 @@ overview of these dependencies.
   and ESP32 devices.
 - [SimpleFTPServer][11]: A library for creating an FTP server on an ESP32.
 - [bodmer/TFT_eSPI][12]: A library for driving TFT displays.
+- [Preferences][18]: A library for non-volatile storage on ESP32 devices.
 
 ## :scroll: Languages and Frameworks
 
@@ -74,4 +75,5 @@ overview of these dependencies.
 [15]: https://www.gnu.org/software/bash/
 [16]: https://www.mkdocs.org/
 [17]: https://github.com/features/actions
+[18]: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/nvs_flash.html
 ---
