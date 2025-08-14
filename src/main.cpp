@@ -174,6 +174,8 @@ void handleMqttEnable();
 void handleMqttDisable();
 void handleMqttToggle();
 void handleLedStatus();
+void handleLedOn();
+void handleLedOff();
 void handleLedToggle();
 void toggleMode();
 void resetWifiSettings();
@@ -926,6 +928,8 @@ void setupApiRoutes() {
   server.on("/mqtt/toggle", HTTP_POST, handleMqttToggle);
   server.on("/led/status", HTTP_GET, handleLedStatus);
   server.on("/led/toggle", HTTP_POST, handleLedToggle);
+  server.on("/led/on", HTTP_POST, handleLedOn);
+  server.on("/led/off", HTTP_POST, handleLedOff);
 }
 
 /**
@@ -1332,6 +1336,44 @@ void handleMqttToggle() {
   serializeJson(jsonResponse, output);
   server.send(200, "application/json", output);
 #endif
+}
+
+/**
+ * @brief Handles the POST request to turn the LED on.
+ */
+void handleLedOn() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "success";
+  if (isInMscMode) {
+    leds[0] = CRGB::Green;
+  } else {
+    leds[0] = CRGB::Orange;
+  }
+  FastLED.show();
+  jsonResponse["message"] = "LED turned on.";
+  String output;
+  serializeJson(jsonResponse, output);
+  server.send(200, "application/json", output);
+}
+
+/**
+ * @brief Handles the POST request to turn the LED off.
+ */
+void handleLedOff() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "success";
+  leds[0] = CRGB::Black;
+  FastLED.show();
+  jsonResponse["message"] = "LED turned off.";
+  String output;
+  serializeJson(jsonResponse, output);
+  server.send(200, "application/json", output);
 }
 
 /**
