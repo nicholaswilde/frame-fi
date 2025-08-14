@@ -60,6 +60,7 @@ struct DeviceInfo {
   int mqttState;
   bool mqttConnected;
   bool isMqttEnabled;
+  char ledColor[10];
 };
 
 // --- FTP Configuration ---
@@ -172,6 +173,8 @@ void handleWifiReset();
 void handleMqttEnable();
 void handleMqttDisable();
 void handleMqttToggle();
+void handleLedStatus();
+void handleLedToggle();
 void toggleMode();
 void resetWifiSettings();
 void mscInit();
@@ -197,6 +200,7 @@ void reconnect();
 void saveConfigCallback();
 void saveConfig();
 void loadConfig();
+const char* getLedColorString(CRGB color);
 
 // --- Main Logic ---
 
@@ -519,6 +523,18 @@ void saveConfigCallback() {
   shouldSaveConfig = true;
 }
 
+/**
+ * @brief Returns a string representation of the LED color.
+ */
+const char* getLedColorString(CRGB color) {
+  if (color == CRGB::Black) return "off";
+  if (color == CRGB::Yellow) return "yellow";
+  if (color == CRGB::Blue) return "blue";
+  if (color == CRGB::Green) return "green";
+  if (color == CRGB::Orange) return "orange";
+  return "unknown";
+}
+
 // --- Get Device Info ---
 void getDeviceInfo(DeviceInfo& info) {
   info.isInMscMode = ::isInMscMode; // Use global isInMscMode
@@ -533,6 +549,8 @@ void getDeviceInfo(DeviceInfo& info) {
   info.mqttState = mqttClient.state();
   info.mqttConnected = mqttClient.connected();
   info.isMqttEnabled = ::isMqttEnabled;
+  strncpy(info.ledColor, getLedColorString(leds[0]), sizeof(info.ledColor));
+  info.ledColor[sizeof(info.ledColor) - 1] = '\0';
 
   if (info.isInMscMode) {
     if(card) {
@@ -906,6 +924,8 @@ void setupApiRoutes() {
   server.on("/mqtt/enable", HTTP_POST, handleMqttEnable);
   server.on("/mqtt/disable", HTTP_POST, handleMqttDisable);
   server.on("/mqtt/toggle", HTTP_POST, handleMqttToggle);
+  server.on("/led/status", HTTP_GET, handleLedStatus);
+  server.on("/led/toggle", HTTP_POST, handleLedToggle);
 }
 
 /**
@@ -1312,6 +1332,50 @@ void handleMqttToggle() {
   serializeJson(jsonResponse, output);
   server.send(200, "application/json", output);
 #endif
+}
+
+/**
+ * @brief Handles the GET request to return the LED color and state.
+ */
+void handleLedStatus() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "success";
+  jsonResponse["color"] = getLedColorString(leds[0]);
+  jsonResponse["state"] = (leds[0] == CRGB::Black) ? "off" : "on";
+  String output;
+  serializeJson(jsonResponse, output);
+  server.send(200, "application/json", output);
+}
+
+/**
+ * @brief Handles the POST request to toggle the LED on and off.
+ */
+void handleLedToggle() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return;
+  }
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "success";
+  if (leds[0] == CRGB::Black) {
+    // Turn LED on (to green if in MSC mode, orange if in FTP mode)
+    if (isInMscMode) {
+      leds[0] = CRGB::Green;
+    } else {
+      leds[0] = CRGB::Orange;
+    }
+    jsonResponse["message"] = "LED toggled on.";
+  } else {
+    // Turn LED off
+    leds[0] = CRGB::Black;
+    jsonResponse["message"] = "LED toggled off.";
+  }
+  FastLED.show();
+  String output;
+  serializeJson(jsonResponse, output);
+  server.send(200, "application/json", output);
 }
 
 // --- FTP Server ---
