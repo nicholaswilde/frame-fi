@@ -464,13 +464,13 @@ The web server can be protected by basic authentication. You can set the usernam
     === "Unauthenticated"
 
         ```sh
-        curl -X POST -d '128' http://<DEVICE_IP>/led/brightness
+        curl -X POST --H 'Content-Type: text/plain' d '128' http://<DEVICE_IP>/led/brightness
         ```
 
     === "Authenticated"
 
         ```sh
-        curl -u <USERNAME>:<PASSWORD> -X POST -d '128' http://<DEVICE_IP>/led/brightness
+        curl -u <USERNAME>:<PASSWORD> -X POST -H 'Content-Type: text/plain' -d '128' http://<DEVICE_IP>/led/brightness
         ```
 
 !!! success "Example Responses"
