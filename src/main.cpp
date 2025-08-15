@@ -497,6 +497,8 @@ void loadConfig() {
   String webPass = prefs.getString("web_pass", webServerConfig.pass);
   strcpy(webServerConfig.pass, webPass.c_str());
 
+  ledBrightness = prefs.getInt("led_brightness", ledBrightness);
+
   prefs.end();
   HWSerial.println("Configuration loaded from prefs.");
 }
@@ -521,6 +523,8 @@ void saveConfig() {
   prefs.putString("ftp_pass", ftpConfig.pass);
   prefs.putString("web_user", webServerConfig.user);
   prefs.putString("web_pass", webServerConfig.pass);
+
+  prefs.putInt("led_brightness", ledBrightness);
 
   prefs.end();
   HWSerial.println("Configuration saved to prefs.");
@@ -1049,7 +1053,7 @@ void handleStatus() {
   DeviceInfo info;
   getDeviceInfo(info);
 
-  const int JSON_STATUS_SIZE = JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(2);
+  const int JSON_STATUS_SIZE = JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(3);
   DynamicJsonDocument jsonResponse(JSON_STATUS_SIZE);
   jsonResponse["mode"] = info.modeString;
   JsonObject display = jsonResponse.createNestedObject("display");
@@ -1428,6 +1432,7 @@ void handleLedBrightness() {
       ledBrightness = newBrightness;
       FastLED.setBrightness(ledBrightness);
       FastLED.show();
+      saveConfig();
       DynamicJsonDocument jsonResponse(256);
       jsonResponse["status"] = "success";
       jsonResponse["message"] = "LED brightness set to " + String(ledBrightness) + ".";

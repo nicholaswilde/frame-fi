@@ -10,16 +10,25 @@ task: Available tasks for this project:
 * fullclean:             Perform a deep clean of all build and dependency files.
 * get:                   Get device status via API call (unauthenticated).
 * geta:                  Get device status via API call (authenticated).
+* getap:                 Get device status via API call and prettify it (authenticated).
+* getp:                  Get device status via API call and prettyify it (unauthenticated).
 * gflash:                Run Gemini with the gemini-2.5-flash model.
 * gpro:                  Run Gemini with the gemini-2.5-pro model.
 * init:                  Initialize the project by creating secret and environment files from templates.
 * list-devices:          List all connected serial devices.
 * monitor:               Monitor the device's serial output.
+* mqtt-disable:          Disable the MQTT client via API call (unauthenticated).
+* mqtt-disable-a:        Disable the MQTT client via API call (authenticated).
+* mqtt-enable:           Enable the MQTT client via API call (unauthenticated).
+* mqtt-enable-a:         Enable the MQTT client via API call (authenticated).
+* mqtt-toggle:           Toggle the MQTT client via API call (unauthenticated).
+* mqtt-toggle-a:         Toggle the MQTT client via API call (authenticated).
 * ping:                  Ping the device to check network connectivity.
 * prune:                 Prune unused PlatformIO files to save space.
 * reset:                 Reset the dongle by flashing it with the default factory firmware.
 * restart:               Restart the device via API call.
 * serve:                 Serve the documentation locally using Docker.
+* set-brightness:        Set brightness level
 * sftp:                  Switch the device to FTP mode via API call.
 * smsc:                  Switch the device to USB Mass Storage (MSC) mode via API call.
 * sync:                  Synchronize local files to the device via FTP using the sync.sh script.

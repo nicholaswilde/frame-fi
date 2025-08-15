@@ -18,7 +18,16 @@ nav:
   - Hardware: hardware.md
   - Software: software.md
   - Getting Started: getting-started.md
-  - Usage: usage.md
+  - Usage:
+    - Overview: usage.md
+    - Modes of Operation: modes-of-operation.md
+    - FTP Access: ftp-access.md
+    - LED Status Indicators: led-status-indicators.md
+    - API: api.md
+    - Display: display.md
+    - Building: building.md
+    - Flashing the Firmware: flashing-firmware.md
+    - Synchronizing Files: synchronizing-files.md
   - Home Assistant: home-assistant.md
   - Contributing: contributing.md
 

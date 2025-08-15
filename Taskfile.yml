@@ -11,6 +11,10 @@ vars:
   PORT: 8000
 
 tasks:
+  set-brightness:
+    desc: Set brightness level
+    cmds:
+      - "curl -X POST -H 'Content-Type: text/plain' -d '50' http://{{ .FTP_HOST }}/led/brightness"
   gpro:
     desc: Run Gemini with the gemini-2.5-pro model.
     cmds:
@@ -63,10 +67,24 @@ tasks:
     desc: Get device status via API call (unauthenticated).
     cmds:
       - curl -X GET http://{{.FTP_HOST}}
+  getp:
+    desc: Get device status via API call and prettyify it (unauthenticated).
+    preconditions:
+      - sh: 'command -v jq'
+        msg: 'jq is not installed. Please install it to run this task.'
+    cmds:
+      - curl -s -X GET http://{{.FTP_HOST}} | jq '.'
   geta:
     desc: Get device status via API call (authenticated).
     cmds:
       - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X GET http://{{.FTP_HOST}}/
+  getap:
+      desc: Get device status via API call and prettify it (authenticated).
+      preconditions:
+        - sh: 'command -v jq'
+          msg: 'jq is not installed. Please install it to run this task.'
+      cmds:
+        - curl -s -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X GET http://{{.FTP_HOST}}/ | jq '.'
   mqtt-enable:
     desc: Enable the MQTT client via API call (unauthenticated).
     cmds:
