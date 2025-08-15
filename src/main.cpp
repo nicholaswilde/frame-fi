@@ -558,7 +558,7 @@ void getDeviceInfo(DeviceInfo& info) {
   info.mqttConnected = mqttClient.connected();
   info.isMqttEnabled = ::isMqttEnabled;
   info.ledColor = getLedColorString(leds[0]);
-  info.ledBrightness = ledBrightness;
+  info.ledBrightness = ::ledBrightness;
 
   if (info.isInMscMode) {
     if(card) {
