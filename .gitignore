@@ -27,3 +27,6 @@ scripts/data/
 node_modules/
 package-lock.json
 package.json
+
+opencode.json
+test.sh

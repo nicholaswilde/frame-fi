@@ -159,7 +159,6 @@ If you don't want to build the project from source, you can flash a pre-compiled
               0x10000 firmware.bin
         ```
 
-
 | Address | Bin File         |
 |:-------:|------------------|
 | 0x0000  | `bootloader.bin` |
@@ -173,12 +172,29 @@ If you don't want to build the project from source, you can flash a pre-compiled
 !!! tip
     If you have PlatformIO installed, you can use the `pio run --target upload` command, which handles the flashing process automatically.
 
+- **Flash with Web Installer (Recommended for beginners):**
+    - Go to the [ESP Web Flasher][4] website.
+    - Put your T-Dongle-S3 into bootloader mode. You can usually do this by holding down the `BOOT` button (the one on the side), plugging it into your computer, and then releasing the button.
+    - Click the "Connect" button and select your device's serial port.
+    - Select the `.bin` files you downloaded from the [latest release][1] and enter their corresponding addresses:
+
+      | Address | Bin File         |
+      |:-------:|------------------|
+      | 0x0000  | `bootloader.bin` |
+      | 0xe000  | `boot_app0.bin`  |
+      | 0x8000  | `partitions.bin` |
+      | 0x10000 | `firmware.bin`   |
+
+    - Click "Install" to flash the firmware.
+
 ## :link: References
 
 - <[FrameFi Latest Release][1]>
 - <[FrameFi Releases][2]>
 - <[espressif/arduino-esp32][3]>
+- <[ESP Web Flasher][4]>
 
 [1]: <https://github.com/nicholaswilde/frame-fi/releases/latest>
 [2]: <https://github.com/nicholaswilde/frame-fi/releases>
 [3]: <https://github.com/espressif/arduino-esp32/tree/master/tools/partitions>
+[4]: <https://esp.huhn.me>

@@ -82,6 +82,14 @@ Specific endpoints may return additional details in the JSON response body to fu
     }
     ```
 
+!!! note "MQTT Icon"
+
+    On the device's display, a small circle icon indicates the MQTT connection status:
+
+    - :green_circle: **Green:** The MQTT client is connected to the broker.
+    - :red_circle: **Red:** The MQTT client is disconnected from the broker.
+    - **Missing:** The MQTT client is disabled.
+
 ??? abstract "MQTT State"
 
     | State | Description                   | State | Description                   |
@@ -615,6 +623,46 @@ Specific endpoints may return additional details in the JSON response body to fu
 
         ```json
         {"status":"error","message":"Invalid brightness value. Body must be a plain text integer between 0 and 255."}
+        ```
+
+**`PUT /upload`**: Uploads a file to the device's SD card. The request body should be the raw file content.
+
+!!! warning "Cannot Upload in MSC Mode"
+
+    File uploads are only supported when the device is in **FTP Server Mode**. Attempts to upload in USB Mass Storage (MSC) mode will result in an error.
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X PUT --data-binary @/path/to/your/image.jpg http://<DEVICE_IP>/upload?filename=image.jpg
+        ```
+
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X PUT --data-binary @/path/to/your/image.jpg http://<DEVICE_IP>/upload?filename=image.jpg
+        ```
+
+!!! success "Example Responses"
+
+    === "Success (200 OK)"
+
+        ```json
+        {"status":"success","message":"File uploaded successfully."}
+        ```
+
+    === "Error (400 Bad Request)"
+
+        ```json
+        {"status":"error","message":"Cannot upload in MSC mode."}
+        ```
+
+    === "Error (500 Internal Server Error)"
+
+        ```json
+        {"status":"error","message":"Failed to open file for writing."}
         ```
 
 ## :link: References

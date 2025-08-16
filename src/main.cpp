@@ -121,6 +121,10 @@ FtpConfig ftpConfig;
 WebServerConfig webServerConfig;
 MqttConfig mqttConfig;
 
+// --- Mode Switching Flags ---
+volatile bool pendingModeSwitch = false;
+volatile bool targetMscMode = false;
+
 // --- A flag to track the current mode ---
 bool isInMscMode = true;
 bool isDisplayOn = true; // A flag to track the display status
@@ -205,7 +209,9 @@ void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB);
 void drawInfoScreen(const char* title, const char* message, const char* version, uint16_t headerColor);
 void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
-void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
+void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB, bool mqttConnected);
+void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB, bool mqttConnected);
+void drawMqttStatusIcon(bool mqttConnected, int x, int y);
 int countFiles(File dir);
 int countFilesInPath(const char *path);
 void updateAndDrawMscScreen();
@@ -239,12 +245,13 @@ void setup() {
     saveConfig();
   }
 
-#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
-  setupMqtt();
-#endif
-
   setupWebServer();
   
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  setupMqtt();
+  reconnect(); // Attempt initial MQTT connection
+#endif
+
   // --- Start in initial mode ---
   startInitialMode();
 }
@@ -406,6 +413,16 @@ void startInitialMode() {
  */
 void loop() {
   handleButton();
+
+  // --- Handle pending mode switch from API calls ---
+  if (pendingModeSwitch) {
+    pendingModeSwitch = false; // Reset the flag immediately
+    if (targetMscMode) {
+      enterMscMode();
+    } else {
+      enterFtpMode();
+    }
+  }
 
   handleMqtt();
   handleFtp();
@@ -1047,7 +1064,7 @@ bool enterFtpMode() {
   DeviceInfo info;
   getDeviceInfo(info);
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-  drawFtpModeScreen(info.ipAddress, info.macAddress, info.fileCount, info.totalSize / (1024 * 1024), info.freeSize / (1024.0 * 1024.0));
+  drawFtpModeScreen(info.ipAddress, info.macAddress, info.fileCount, info.totalSize / (1024 * 1024), info.freeSize / (1024.0 * 1024.0), info.mqttConnected);
 #endif
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
@@ -1108,22 +1125,14 @@ void handleSwitchToMsc(AsyncWebServerRequest *request) {
     serializeJson(jsonResponse, output);
     request->send(200, "application/json", output);
   } else {
-    enterMscMode();
-    if (isInMscMode) {
-      DynamicJsonDocument jsonResponse(256);
-      jsonResponse["status"] = "success";
-      jsonResponse["message"] = "Switched to MSC mode.";
-      String output;
-      serializeJson(jsonResponse, output);
-      request->send(200, "application/json", output);
-    } else {
-      DynamicJsonDocument jsonResponse(256);
-      jsonResponse["status"] = "error";
-      jsonResponse["message"] = "Failed to switch to MSC mode.";
-      String output;
-      serializeJson(jsonResponse, output);
-      request->send(500, "application/json", output);
-    }
+    DynamicJsonDocument jsonResponse(256);
+    jsonResponse["status"] = "success";
+    jsonResponse["message"] = "Attempting to switch to MSC mode.";
+    String output;
+    serializeJson(jsonResponse, output);
+    request->send(200, "application/json", output);
+    pendingModeSwitch = true;
+    targetMscMode = true;
   }  
 }
  
@@ -1135,21 +1144,14 @@ void handleSwitchToFtp(AsyncWebServerRequest *request) {
     return request->requestAuthentication();
   }
   if (isInMscMode) {
-    if (enterFtpMode()) {
-      DynamicJsonDocument jsonResponse(256);
-      jsonResponse["status"] = "success";
-      jsonResponse["message"] = "Switched to Application (FTP) mode.";
-      String output;
-      serializeJson(jsonResponse, output);
-      request->send(200, "application/json", output);
-    } else {
-      DynamicJsonDocument jsonResponse(256);
-      jsonResponse["status"] = "error";
-      jsonResponse["message"] = "Failed to re-initialize SD card.";
-      String output;
-      serializeJson(jsonResponse, output);
-      request->send(500, "application/json", output);
-    }
+    DynamicJsonDocument jsonResponse(256);
+    jsonResponse["status"] = "success";
+    jsonResponse["message"] = "Attempting to switch to Application (FTP) mode.";
+    String output;
+    serializeJson(jsonResponse, output);
+    request->send(200, "application/json", output);
+    pendingModeSwitch = true;
+    targetMscMode = false;
   }
   else {
     DynamicJsonDocument jsonResponse(256);
@@ -1323,6 +1325,15 @@ void handleMqttEnable(AsyncWebServerRequest *request) {
   serializeJson(jsonResponse, output);
   request->send(200, "application/json", output);
   publishMqttStatus();
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
+  if (isInMscMode) {
+    updateAndDrawMscScreen();
+  } else {
+    DeviceInfo info;
+    getDeviceInfo(info);
+    drawFtpModeScreen(info.ipAddress, info.macAddress, info.fileCount, info.totalSize / (1024 * 1024), info.freeSize / (1024.0 * 1024.0), info.mqttConnected);
+  }
+#endif
 #else
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "no_change";
@@ -1351,6 +1362,15 @@ void handleMqttDisable(AsyncWebServerRequest *request) {
   String output;
   serializeJson(jsonResponse, output);
   request->send(200, "application/json", output);
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
+  if (isInMscMode) {
+    updateAndDrawMscScreen();
+  } else {
+    DeviceInfo info;
+    getDeviceInfo(info);
+    drawFtpModeScreen(info.ipAddress, info.macAddress, info.fileCount, info.totalSize / (1024 * 1024), info.freeSize / (1024.0 * 1024.0), info.mqttConnected);
+  }
+#endif
 #else
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "no_change";
@@ -1648,7 +1668,7 @@ void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, un
     DeviceInfo info;
     getDeviceInfo(info);
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-    drawFtpModeScreen(info.ipAddress, info.macAddress, info.fileCount, info.totalSize / (1024 * 1024), info.freeSize / (1024.0 * 1024.0));
+    drawFtpModeScreen(info.ipAddress, info.macAddress, info.fileCount, info.totalSize / (1024 * 1024), info.freeSize / (1024.0 * 1024.0), info.mqttConnected);
 #endif
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
     publishMqttStatus();
@@ -1818,7 +1838,8 @@ void updateAndDrawMscScreen() {
     info.macAddress,
     info.fileCount,
     info.totalSize / (1024 * 1024),
-    info.freeSize / (1024.0 * 1024.0)
+    info.freeSize / (1024.0 * 1024.0),
+    info.mqttConnected
   );
 #endif
   HWSerial.println("MSC screen refreshed.");
@@ -2022,9 +2043,17 @@ void drawApModeScreen(const char* ap_ssid, const char* ap_ip) {
 }
 
 /**
+ * @brief Draws the MQTT connection status icon.
+ */
+void drawMqttStatusIcon(bool mqttConnected, int x, int y) {
+  uint16_t color = mqttConnected ? CATPPUCCIN_GREEN : CATPPUCCIN_RED;
+  tft.fillCircle(x, y, 3, color); // Draw a small circle
+}
+
+/**
  * @brief Displays the FTP mode screen, adapting to the current orientation.
  */
-void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
+void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB, bool mqttConnected) {
   tft.fillScreen(CATPPUCCIN_BASE);
   drawHeader("FrameFi", CATPPUCCIN_GREEN);
 
@@ -2041,6 +2070,10 @@ void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSize
     tft.print("Mode:  ");
     tft.setTextColor(CATPPUCCIN_GREEN);
     tft.print("FTP");
+    // --- Draw MQTT status icon ---
+    if (isMqttEnabled) {
+      drawMqttStatusIcon(mqttConnected, tft.getCursorX() + 8, y_pos + 3);
+    }
     y_pos += 12;
 
     tft.setCursor(x_pos, y_pos);
@@ -2061,6 +2094,10 @@ void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSize
     tft.setCursor(x_pos, y_pos);
     tft.setTextColor(CATPPUCCIN_GREEN);
     tft.print("FTP");
+    // --- Draw MQTT status icon ---
+    if (isMqttEnabled) {
+      drawMqttStatusIcon(mqttConnected, tft.getCursorX() + 8, y_pos + 3);
+    }
     y_pos += 12;
 
     tft.setCursor(x_pos, y_pos);
@@ -2092,7 +2129,7 @@ void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSize
 /**
  * @brief Displays the USB MSC mode screen, adapting to the current orientation.
  */
-void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB) {
+void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB, bool mqttConnected) {
   tft.fillScreen(CATPPUCCIN_BASE);
   drawHeader("FrameFi", CATPPUCCIN_MAUVE);
 
@@ -2109,6 +2146,10 @@ void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalS
     tft.print("Mode:  ");
     tft.setTextColor(CATPPUCCIN_GREEN);
     tft.print("USB MSC");
+    // --- Draw MQTT status icon ---
+    if (isMqttEnabled) {
+      drawMqttStatusIcon(mqttConnected, tft.getCursorX() + 8, y_pos + 3);
+    }
     y_pos += 12;
 
     tft.setCursor(x_pos, y_pos);
@@ -2129,6 +2170,10 @@ void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalS
     tft.setCursor(x_pos, y_pos);
     tft.setTextColor(CATPPUCCIN_GREEN);
     tft.print("USB MSC");
+    // --- Draw MQTT status icon ---
+    if (isMqttEnabled) {
+      drawMqttStatusIcon(mqttConnected, tft.getCursorX() + 8, y_pos + 3);
+    }
     y_pos += 12;
 
     tft.setCursor(x_pos, y_pos);

@@ -62,6 +62,10 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
             put my-picture.png
             ```
 
+!!! tip "Using Web API"
+
+    You can also upload images using the [Web API](api.md#put-upload).
+
 !!! tip "Using lftp"
 
     For automated synchronization, the `scripts/sync.sh` script uses `lftp` to mirror a local directory to the device. See the [Synchronizing Files](synchronizing-files.md) section for more details.
