@@ -23,6 +23,19 @@ The web server can be protected by basic authentication. You can set the usernam
 
     To make the web server unauthenticated, make the `user` and `password` blank in the WiFiManager setup page.
 
+## Error Handling
+
+This API uses standard HTTP status codes to indicate the success or failure of a request. Common status codes include:
+
+*   **200 OK**: The request was successful.
+*   **400 Bad Request**: The request was malformed or invalid (e.g., incorrect parameters, invalid data format).
+*   **401 Unauthorized**: Authentication failed. Ensure you are providing valid credentials.
+*   **403 Forbidden**: You are authenticated but do not have permission to perform the requested action.
+*   **404 Not Found**: The requested resource or endpoint does not exist.
+*   **500 Internal Server Error**: An unexpected error occurred on the server.
+
+Specific endpoints may return additional details in the JSON response body to further clarify the error.
+
 ## Web Server Commands
 
 **`GET /`**: Returns the current mode, display status, and SD card information.
