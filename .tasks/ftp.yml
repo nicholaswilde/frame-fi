@@ -1,0 +1,36 @@
+---
+version: '3'
+
+tasks:
+  ls:
+    desc: List files and directories on the device's SD card via FTP.
+    cmds:
+      - ftp -n {{.FTP_HOST}} <<EOF
+        user {{.FTP_USER}} {{.FTP_PASSWORD}}
+        ls
+        quit
+        EOF
+  upload:
+    desc: Upload a specific file to the device via FTP.
+    cmds:
+      - ftp -n {{.FTP_HOST}} <<EOF
+        user {{.FTP_USER}} {{.FTP_PASSWORD}}
+        put {{.CLI_ARGS}}
+        quit
+        EOF
+  download:
+    desc: Download a specific file from the device via FTP.
+    cmds:
+      - ftp -n {{.FTP_HOST}} <<EOF
+        user {{.FTP_USER}} {{.FTP_PASSWORD}}
+        get {{.CLI_ARGS}}
+        quit
+        EOF
+  rm:
+    desc: Delete a file on the device via FTP.
+    cmds:
+      - ftp -n {{.FTP_HOST}} <<EOF
+        user {{.FTP_USER}} {{.FTP_PASSWORD}}
+        delete {{.CLI_ARGS}}
+        quit
+        EOF

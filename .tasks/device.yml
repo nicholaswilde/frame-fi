@@ -1,0 +1,20 @@
+---
+version: '3'
+
+tasks:
+  info:
+    desc: Get general device information via API (unauthenticated).
+    cmds:
+      - curl -X GET http://{{.FTP_HOST}}/info
+  info-a:
+    desc: Get general device information via API (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X GET http://{{.FTP_HOST}}/info
+  storage:
+    desc: Get SD card storage information via API (unauthenticated).
+    cmds:
+      - curl -X GET http://{{.FTP_HOST}}/storage
+  storage-a:
+    desc: Get SD card storage information via API (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X GET http://{{.FTP_HOST}}/storage

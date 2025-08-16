@@ -319,9 +319,8 @@ void setupLed() {
   ledBrightness = 13;  // 5% of 255
 #endif
   FastLED.setBrightness(ledBrightness);
-  // --- Turn the LED on ---
-  leds[0] = CRGB::Yellow;
-  FastLED.show();
+  // --- Turn the LED on based on initial mode ---
+  setLedState("on");
 }
 
 /**
@@ -988,8 +987,7 @@ void enterMscMode() {
   HWSerial.println("\n--- Entering MSC Mode ---");
 
   // --- Turn the LED on ---
-  leds[0] = CRGB::Green;
-  FastLED.show();
+  setLedState("on");
     
   // --- Stop FTP Server ---
   ftpServer.end();
@@ -1033,8 +1031,7 @@ bool enterFtpMode() {
 #endif
 
   // --- Turn the LED on ---
-  leds[0] = CRGB::Orange;
-  FastLED.show();
+  setLedState("on");
   
   // --- Stop USB MSC ---
   MSC.end();
@@ -1434,15 +1431,12 @@ void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, un
   if (ftpOperation == FTP_UPLOAD || ftpOperation == FTP_DOWNLOAD) {
     // --- Blink LED by turning it OFF briefly, then back ON ---
     // --- This leaves the LED in the ON state after the pulse ---
-    leds[0] = CRGB::Black;
-    FastLED.show();
+    setLedState("off");
     delay(50);
-    leds[0] = CRGB::Orange;
-    FastLED.show();
+    setLedState("on");
   } else if (ftpOperation == FTP_UPLOAD_STOP || ftpOperation == FTP_DOWNLOAD_STOP || ftpOperation == FTP_TRANSFER_ERROR) {
     // --- Ensure LED is solid orange after any transfer completion or error ---
-    leds[0] = CRGB::Orange;
-    FastLED.show();
+    setLedState("on");
 
     // --- Update storage info on the screen ---
     DeviceInfo info;

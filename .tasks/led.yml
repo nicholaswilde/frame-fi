@@ -1,0 +1,28 @@
+---
+version: '3'
+
+tasks:
+  on:
+    desc: Turn the LED on via API call (unauthenticated).
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/led/on
+  on-a:
+    desc: Turn the LED on via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/led/on
+  off:
+    desc: Turn the LED off via API call (unauthenticated).
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/led/off
+  off-a:
+    desc: Turn the LED off via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/led/off
+  toggle:
+    desc: Toggle the LED via API call (unauthenticated).
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/led/toggle
+  toggle-a:
+    desc: Toggle the LED via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/led/toggle

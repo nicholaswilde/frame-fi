@@ -1,0 +1,32 @@
+---
+version: '3'
+
+tasks:
+  set-brightness:
+    desc: Set brightness level
+    cmds:
+      - "curl -X POST -H 'Content-Type: text/plain' -d '50' http://{{ .FTP_HOST }}/led/brightness"
+  on:
+    desc: Turn the display on via API call (unauthenticated).
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/display/on
+  on-a:
+    desc: Turn the display on via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/display/on
+  off:
+    desc: Turn the display off via API call (unauthenticated).
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/display/off
+  off-a:
+    desc: Turn the display off via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/display/off
+  toggle:
+    desc: Toggle the display via API call (unauthenticated).
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/display/toggle
+  toggle-a:
+    desc: Toggle the display via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/display/toggle

@@ -1,0 +1,28 @@
+---
+version: '3'
+
+tasks:
+  enable:
+    desc: Enable the MQTT client via API call (unauthenticated).
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/mqtt/enable
+  enable-a:
+    desc: Enable the MQTT client via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/mqtt/enable
+  disable:
+    desc: Disable the MQTT client via API call (unauthenticated).
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/mqtt/disable
+  disable-a:
+    desc: Disable the MQTT client via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/mqtt/disable
+  toggle:
+    desc: Toggle the MQTT client via API call (unauthenticated).
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/mqtt/toggle
+  toggle-a:
+    desc: Toggle the MQTT client via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/mqtt/toggle

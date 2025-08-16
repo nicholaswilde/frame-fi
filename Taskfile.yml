@@ -1,20 +1,30 @@
 ---
 version: '3'
 
+includes:
+  led:
+    taskfile: ./.tasks/led.yml
+  mqtt:
+    taskfile: ./.tasks/mqtt.yml
+  display:
+    taskfile: ./.tasks/display.yml
+  ftp:
+    taskfile: ./.tasks/ftp.yml
+  device:
+    taskfile: ./.tasks/device.yml
+
 dotenv: ["scripts/.env"]
 
 vars:
   FTP_HOST: '{{.FTP_HOST | default "192.168.2.169"}}'
+  FTP_USER: '{{.FTP_USER | default "ftpuser"}}'
+  FTP_PASSWORD: '{{.FTP_PASSWORD | default "ftppass"}}'
   WEB_SERVER_USER: '{{.WEB_SERVER_USER | default "admin"}}'
   WEB_SERVER_PASSWORD: '{{.WEB_SERVER_PASSWORD | default "password"}}'
   IMAGE: nicholaswilde/mkdocs-material
   PORT: 8000
 
 tasks:
-  set-brightness:
-    desc: Set brightness level
-    cmds:
-      - "curl -X POST -H 'Content-Type: text/plain' -d '50' http://{{ .FTP_HOST }}/led/brightness"
   gpro:
     desc: Run Gemini with the gemini-2.5-pro model.
     cmds:
@@ -51,14 +61,10 @@ tasks:
     desc: Switch the device to USB Mass Storage (MSC) mode via API call.
     cmds:
       - curl -X POST http://{{.FTP_HOST}}/mode/msc
-  ftp:
-    desc: Connect to the device using an interactive FTP client.
+  smsc:
+    desc: Switch the device to USB Mass Storage (MSC) mode via API call.
     cmds:
-      - ftp {{.FTP_HOST}}
-  sftp:
-    desc: Switch the device to FTP mode via API call.
-    cmds:
-      - curl -X POST http://{{.FTP_HOST}}/mode/ftp
+      - curl -X POST http://{{.FTP_HOST}}/mode/msc
   restart:
     desc: Restart the device via API call.
     cmds:
@@ -85,30 +91,7 @@ tasks:
           msg: 'jq is not installed. Please install it to run this task.'
       cmds:
         - curl -s -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X GET http://{{.FTP_HOST}}/ | jq '.'
-  mqtt-enable:
-    desc: Enable the MQTT client via API call (unauthenticated).
-    cmds:
-      - curl -X POST http://{{.FTP_HOST}}/mqtt/enable
-  mqtt-enable-a:
-    desc: Enable the MQTT client via API call (authenticated).
-    cmds:
-      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/mqtt/enable
-  mqtt-disable:
-    desc: Disable the MQTT client via API call (unauthenticated).
-    cmds:
-      - curl -X POST http://{{.FTP_HOST}}/mqtt/disable
-  mqtt-disable-a:
-    desc: Disable the MQTT client via API call (authenticated).
-    cmds:
-      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/mqtt/disable
-  mqtt-toggle:
-    desc: Toggle the MQTT client via API call (unauthenticated).
-    cmds:
-      - curl -X POST http://{{.FTP_HOST}}/mqtt/toggle
-  mqtt-toggle-a:
-    desc: Toggle the MQTT client via API call (authenticated).
-    cmds:
-      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/mqtt/toggle
+  
   prune:
     desc: Prune unused PlatformIO files to save space.
     cmds:
