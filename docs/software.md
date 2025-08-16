@@ -10,16 +10,16 @@ overview of these dependencies.
 
 ## :wrench: Development Tools
 
-- [PlatformIO][1]: An open-source ecosystem for IoT development. It provides a
+- <[PlatformIO][1]>: An open-source ecosystem for IoT development. It provides a
   command-line interface (CLI) and a VSCode extension for a seamless
   development experience.
-- [Task][2]: A task runner and build tool that automates development and build
+- <[Task][2]>: A task runner and build tool that automates development and build
   tasks. See the project's `Taskfile.yml` for available commands.
-- [Docker][3]: Used to create a consistent and reproducible development
+- <[Docker][3]>: Used to create a consistent and reproducible development
   environment for the documentation server.
-- [Renovate][4]: A tool for automated dependency updates, ensuring that the
+- <[Renovate][4]>: A tool for automated dependency updates, ensuring that the
   project's dependencies are always up-to-date.
-- [SOPS][5]: A tool for managing secrets, allowing for the encryption and
+- <[SOPS][5]>: A tool for managing secrets, allowing for the encryption and
   decryption of sensitive information.
 
 ??? abstract "Task List"
@@ -30,6 +30,10 @@ overview of these dependencies.
 
 ## :books: Libraries
 
+- [me-no-dev/ESPAsyncWebServer][19]: An asynchronous web server library for
+  ESP8266 and ESP32.
+- [me-no-dev/AsyncTCP][20]: A library that provides an asynchronous TCP API for
+  ESP8266 and ESP32.
 - [bblanchon/ArduinoJson][6]: A C++ JSON library for Arduino and IoT (Internet
   of Things).
 - [knolleary/PubSubClient][7]: A client library for MQTT.
@@ -76,4 +80,6 @@ overview of these dependencies.
 [16]: https://www.mkdocs.org/
 [17]: https://github.com/features/actions
 [18]: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/nvs_flash.html
+[19]: https://github.com/me-no-dev/ESPAsyncWebServer
+[20]: https://github.com/me-no-dev/AsyncTCP
 ---

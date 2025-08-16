@@ -92,6 +92,28 @@ Specific endpoints may return additional details in the JSON response body to fu
     | `-1`  | MQTT_DISCONNECTED             |  `4`  | MQTT_CONNECT_BAD_CREDENTIALS  |
     |  `0`  | MQTT_CONNECTED                |  `5`  | MQTT_CONNECT_UNAUTHORIZED     |    
 
+**`GET /mode/msc`**: Returns the current mode (USB Mass Storage or FTP).
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X GET http://<DEVICE_IP>/mode/msc
+        ```
+
+    === "Authenticated"
+    
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X GET http://<DEVICE_IP>/mode/msc
+        ```
+
+!!! success "Example Response"
+
+    ```json
+    {"status":"success","mode":"USB MSC"}
+    ```
+
 **`POST /mode/msc`**: Switches the device to USB Mass Storage (MSC) mode.
 
 !!! code ""
@@ -124,6 +146,28 @@ Specific endpoints may return additional details in the JSON response body to fu
         ```json
         {"status":"error","message":"Failed to switch to MSC mode."}
         ```
+
+**`GET /mode/ftp`**: Returns the current mode (USB Mass Storage or FTP).
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X GET http://<DEVICE_IP>/mode/ftp
+        ```
+        
+    === "Authenticated"
+        
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X GET http://<DEVICE_IP>/mode/ftp
+        ```
+
+!!! success "Example Response"
+
+    ```json
+    {"status":"success","mode":"Application (FTP Server)"}
+    ```
 
 **`POST /mode/ftp`**: Switches the device to FTP mode.
 
@@ -184,6 +228,28 @@ Specific endpoints may return additional details in the JSON response body to fu
         ```json
         {"status":"success","message":"Restarting device..."}
         ```
+
+**`GET /display/status`**: Returns the current display status.
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X GET http://<DEVICE_IP>/display/status
+        ```
+    
+    === "Authenticated"
+    
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X GET http://<DEVICE_IP>/display/status
+        ```
+
+!!! success "Example Response"
+
+    ```json
+    {"status":"success","display_status":"on"}
+    ```
 
 **`POST /display/toggle`**: Toggles the display on and off.
 
@@ -290,6 +356,33 @@ Specific endpoints may return additional details in the JSON response body to fu
 !!! warning "Device Unreachable After Reset"
 
     After resetting the Wi-Fi settings, the device will restart and will no longer be connected to your Wi-Fi network. It will become unreachable at its previous IP address. You must reconnect to its Access Point (AP) to configure the new Wi-Fi credentials. See the [Modes of Operation](modes-of-operation.md) section for details on connecting to the AP.
+
+**`GET /mqtt/status`**: Returns the current MQTT client status.
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X GET http://<DEVICE_IP>/mqtt/status
+        ```
+
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X GET http://<DEVICE_IP>/mqtt/status
+        ```
+
+!!! success "Example Response"
+
+    ```json
+    {
+      "status": "success",
+      "mqtt_enabled": true,
+      "mqtt_connected": true,
+      "mqtt_state": 0
+    }
+    ```
 
 **`POST /mqtt/enable`**: Enables the MQTT client.
 
@@ -436,9 +529,11 @@ Specific endpoints may return additional details in the JSON response body to fu
 
 !!! success "Example Response"
 
-    ```json
-    {"status":"success","message":"LED turned off."}
-    ```
+    === "Success (200 OK)"
+    
+        ```json
+        {"status":"success","message":"LED turned off."}
+        ```
 
 **`POST /led/toggle`**: Toggles the LED on and off.
 
@@ -470,6 +565,28 @@ Specific endpoints may return additional details in the JSON response body to fu
         {"status":"success","message":"LED toggled off."}
         ```
 
+**`GET /led/brightness`**: Returns the current LED brightness.
+
+!!! code ""
+
+    === "Unauthenticated"
+
+        ```sh
+        curl -X GET http://<DEVICE_IP>/led/brightness
+        ```
+
+    === "Authenticated"
+
+        ```sh
+        curl -u <USERNAME>:<PASSWORD> -X GET http://<DEVICE_IP>/led/brightness
+        ```
+
+!!! success "Example Response"
+
+    ```json
+    {"status":"success","brightness":128}
+    ```
+
 **`POST /led/brightness`**: Sets the LED brightness. The body of the request should be a plain text integer between 0 and 255.
 
 !!! code ""
@@ -499,3 +616,5 @@ Specific endpoints may return additional details in the JSON response body to fu
         ```json
         {"status":"error","message":"Invalid brightness value. Body must be a plain text integer between 0 and 255."}
         ```
+
+## :link: References

@@ -175,9 +175,9 @@ If you don't want to build the project from source, you can flash a pre-compiled
 
 ## :link: References
 
-- [FrameFi Latest Release][1]
-- [FrameFi Releases][2]
-- [espressif/arduino-esp32][3]
+- <[FrameFi Latest Release][1]>
+- <[FrameFi Releases][2]>
+- <[espressif/arduino-esp32][3]>
 
 [1]: <https://github.com/nicholaswilde/frame-fi/releases/latest>
 [2]: <https://github.com/nicholaswilde/frame-fi/releases>

@@ -9,7 +9,7 @@ First off, thank you for considering contributing to FrameFi. It's people like y
 
 ## :bug: Reporting Bugs
 
-If you find a bug, please open an issue on our [GitHub Issues page](https://github.com/nicholaswilde/frame-fi/issues).
+If you find a bug, please open an issue on our [GitHub Issues page][1].
 
 Please include the following in your bug report:
 
@@ -21,7 +21,7 @@ Please include the following in your bug report:
 
 ## :sparkles: Suggesting Enhancements
 
-If you have an idea for a new feature or an improvement to an existing one, please open an issue on our [GitHub Issues page](https://github.com/nicholaswilde/frame-fi/issues).
+If you have an idea for a new feature or an improvement to an existing one, please open an issue on our [GitHub Issues page][1].
 
 Please include the following in your enhancement suggestion:
 
@@ -42,22 +42,22 @@ We welcome pull requests. If you'd like to contribute code, please follow these 
 
 This project follows the [GEMINI C++ Style Guide](../GEMINI.md). Please ensure your code adheres to these standards.
 
-Key points:
+!!! tip "Key points"
 
-- Function names must be `lowerCamelCase`.
-- Every function must have a single-line documentation brief.
-- Implementation comments must use the `// --- comment text ---` style.
+    - Function names must be `lowerCamelCase`.
+    - Every function must have a single-line documentation brief.
+    - Implementation comments must use the `// --- comment text ---` style.
 
 ### :book: Documentation Style
 
 All documentation is written in Markdown and generated using MkDocs with the Material theme. Please follow the [Markdown Documentation Guidelines](./GEMINI.md).
 
-Key points:
+!!! tip "Key points"
 
-- Use clear and descriptive headings with emojis.
-- Use admonitions to highlight important information.
-- Specify the language for code blocks.
-- Add new pages to the `nav` section of `mkdocs.yml`.
+    - Use clear and descriptive headings with emojis.
+    - Use admonitions to highlight important information.
+    - Specify the language for code blocks.
+    - Add new pages to the `nav` section of `mkdocs.yml`.
 
 ### :label: Versioning
 
@@ -73,8 +73,11 @@ This automated versioning helps maintain a clear and consistent understanding of
 
 ## :balance_scale: License
 
-By contributing, you agree that your contributions will be licensed under the [Apache License 2.0](./LICENSE).
+By contributing, you agree that your contributions will be licensed under the [Apache License 2.0][2].
 
 ## :link: References
 
 - <https://github.com/nicholaswilde/frame-fi/blob/main/LICENSE>
+
+[1]: <https://github.com/nicholaswilde/frame-fi/issues>
+[2]: <./LICENSE>

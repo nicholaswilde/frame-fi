@@ -24,3 +24,5 @@ The device boots into **USB Mass Storage (MSC) mode** by default. You can switch
     1. Press and hold the onboard button for at least 3 seconds or use the web API.
     2. The device will clear its stored Wi-Fi credentials and restart.
     3. Follow the steps for the first-time Wi-Fi setup using the captive portal.
+
+## :link: References

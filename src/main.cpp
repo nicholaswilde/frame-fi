@@ -11,7 +11,9 @@
 
 #include "Arduino.h"
 #include <WiFi.h>
-#include <WebServer.h>
+#define _ESP_ASYNC_WEBSERVER_H_
+#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
+#include <ESPAsyncWebServer.h>
 #include <SimpleFTPServer.h>
 #include <SPI.h>
 #include <SD.h>
@@ -30,7 +32,6 @@
 
 // --- External libraries ---
 #include <OneButton.h> // https://github.com/ck Conrad/esp32-onebutton
-#include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <FastLED.h>   // https://github.com/FastLED/FastLED
 #include <PubSubClient.h>
 #include <ArduinoJson.h>     // https://github.com/bblanchon/ArduinoJson
@@ -97,7 +98,7 @@ namespace Mode {
 }
  
 // --- Create objects ---
-WebServer server(80);
+AsyncWebServer server(80);
 OneButton button(BTN_PIN, true); // true for active low
 FtpServer ftpServer;
 CRGB leds[NUM_LEDS];
@@ -158,7 +159,6 @@ void setupFilesystems();
 void setupWebServer();
 void startInitialMode();
 void handleButton();
-void handleWebServer();
 void handleMqtt();
 void handleFtp();
 void handleMsc();
@@ -167,22 +167,30 @@ void setupApiRoutes();
 void setupSerial();
 void enterMscMode();
 bool enterFtpMode();
-void handleStatus();
-void handleSwitchToMsc();
-void handleSwitchToFtp();
-void handleRestart();
-void handleDisplayToggle();
-void handleDisplayOn();
-void handleDisplayOff();
-void handleWifiReset();
-void handleMqttEnable();
-void handleMqttDisable();
-void handleMqttToggle();
-void handleLedStatus();
-void handleLedOn();
-void handleLedOff();
-void handleLedBrightness();
-void handleLedToggle();
+void handleStatus(AsyncWebServerRequest *request);
+void handleSwitchToMsc(AsyncWebServerRequest *request);
+void handleSwitchToFtp(AsyncWebServerRequest *request);
+void handleRestart(AsyncWebServerRequest *request);
+void handleDisplayToggle(AsyncWebServerRequest *request);
+void handleDisplayOn(AsyncWebServerRequest *request);
+void handleDisplayOff(AsyncWebServerRequest *request);
+void displayOn();
+void displayOff();
+void handleWifiReset(AsyncWebServerRequest *request);
+void handleMqttEnable(AsyncWebServerRequest *request);
+void handleMqttDisable(AsyncWebServerRequest *request);
+void handleMqttToggle(AsyncWebServerRequest *request);
+void handleLedStatus(AsyncWebServerRequest *request);
+void handleLedOn(AsyncWebServerRequest *request);
+void handleLedOff(AsyncWebServerRequest *request);
+void handleLedBrightness(AsyncWebServerRequest *request);
+void handleLedToggle(AsyncWebServerRequest *request);
+void handleUpload(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
+void handleSwitchToMscGet(AsyncWebServerRequest *request);
+void handleSwitchToFtpGet(AsyncWebServerRequest *request);
+void handleDisplayStatus(AsyncWebServerRequest *request);
+void handleMqttStatus(AsyncWebServerRequest *request);
+void handleLedBrightnessGet(AsyncWebServerRequest *request);
 void toggleMode();
 void resetWifiSettings();
 void mscInit();
@@ -398,7 +406,7 @@ void startInitialMode() {
  */
 void loop() {
   handleButton();
-  handleWebServer();
+
   handleMqtt();
   handleFtp();
   handleMsc();
@@ -411,12 +419,7 @@ void handleButton() {
   button.tick();
 }
 
-/**
- * @brief Handles web server client requests.
- */
-void handleWebServer() {
-  server.handleClient();
-}
+
 
 /**
  * @brief Handles MQTT connection and message publishing.
@@ -927,20 +930,30 @@ void toggleMode() {
 void setupApiRoutes() {
   server.on("/", HTTP_GET, handleStatus);
   server.on("/mode/msc", HTTP_POST, handleSwitchToMsc);
+  server.on("/mode/msc", HTTP_GET, handleSwitchToMscGet);
   server.on("/mode/ftp", HTTP_POST, handleSwitchToFtp);
+  server.on("/mode/ftp", HTTP_GET, handleSwitchToFtpGet);
   server.on("/device/restart", HTTP_POST, handleRestart);
   server.on("/display/toggle", HTTP_POST, handleDisplayToggle);
   server.on("/display/on", HTTP_POST, handleDisplayOn);
   server.on("/display/off", HTTP_POST, handleDisplayOff);
+  server.on("/display/status", HTTP_GET, handleDisplayStatus);
   server.on("/wifi/reset", HTTP_POST, handleWifiReset);
   server.on("/mqtt/enable", HTTP_POST, handleMqttEnable);
   server.on("/mqtt/disable", HTTP_POST, handleMqttDisable);
   server.on("/mqtt/toggle", HTTP_POST, handleMqttToggle);
+  server.on("/mqtt/status", HTTP_GET, handleMqttStatus);
   server.on("/led/status", HTTP_GET, handleLedStatus);
   server.on("/led/toggle", HTTP_POST, handleLedToggle);
   server.on("/led/on", HTTP_POST, handleLedOn);
   server.on("/led/off", HTTP_POST, handleLedOff);
   server.on("/led/brightness", HTTP_POST, handleLedBrightness);
+  server.on("/led/brightness", HTTP_GET, handleLedBrightnessGet);
+  server.on(
+    "/upload", HTTP_PUT, [](AsyncWebServerRequest *request) {
+      request->send(200);
+    },
+    handleUpload);
 }
 
 /**
@@ -1046,9 +1059,9 @@ bool enterFtpMode() {
 /**
  * @brief Handles requests to the root URL ("/"). Sends a JSON status object.
  */
-void handleStatus() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleStatus(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
   DeviceInfo info;
   getDeviceInfo(info);
@@ -1075,7 +1088,7 @@ void handleStatus() {
 
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 }
 
 
@@ -1083,9 +1096,9 @@ void handleStatus() {
 /**
  * @brief Handles the POST request to switch to MSC mode.
  */
-void handleSwitchToMsc() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleSwitchToMsc(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
   if (isInMscMode) {
     DynamicJsonDocument jsonResponse(256);
@@ -1093,7 +1106,7 @@ void handleSwitchToMsc() {
     jsonResponse["message"] = "Already in MSC mode.";
     String output;
     serializeJson(jsonResponse, output);
-    server.send(200, "application/json", output);
+    request->send(200, "application/json", output);
   } else {
     enterMscMode();
     if (isInMscMode) {
@@ -1102,14 +1115,14 @@ void handleSwitchToMsc() {
       jsonResponse["message"] = "Switched to MSC mode.";
       String output;
       serializeJson(jsonResponse, output);
-      server.send(200, "application/json", output);
+      request->send(200, "application/json", output);
     } else {
       DynamicJsonDocument jsonResponse(256);
       jsonResponse["status"] = "error";
       jsonResponse["message"] = "Failed to switch to MSC mode.";
       String output;
       serializeJson(jsonResponse, output);
-      server.send(500, "application/json", output);
+      request->send(500, "application/json", output);
     }
   }  
 }
@@ -1117,9 +1130,9 @@ void handleSwitchToMsc() {
 /**
  * @brief Handles the POST request to switch back to Application (FTP) mode.
  */
-void handleSwitchToFtp() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleSwitchToFtp(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
   if (isInMscMode) {
     if (enterFtpMode()) {
@@ -1128,14 +1141,14 @@ void handleSwitchToFtp() {
       jsonResponse["message"] = "Switched to Application (FTP) mode.";
       String output;
       serializeJson(jsonResponse, output);
-      server.send(200, "application/json", output);
+      request->send(200, "application/json", output);
     } else {
       DynamicJsonDocument jsonResponse(256);
       jsonResponse["status"] = "error";
       jsonResponse["message"] = "Failed to re-initialize SD card.";
       String output;
       serializeJson(jsonResponse, output);
-      server.send(500, "application/json", output);
+      request->send(500, "application/json", output);
     }
   }
   else {
@@ -1144,91 +1157,109 @@ void handleSwitchToFtp() {
     jsonResponse["message"] = "Already in Application (FTP) mode.";
     String output;
     serializeJson(jsonResponse, output);
-    server.send(200, "application/json", output);
+    request->send(200, "application/json", output);
   }
 }
 
 /**
  * @brief Handles the POST request to restart the device.
  */
-void handleRestart() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleRestart(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
   jsonResponse["message"] = "Restarting device...";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
   delay(100);
   ESP.restart();
 }
 
 /**
- * @brief Handles the POST request to turn the display on.
+ * @brief Turns the display on.
  */
-void handleDisplayOn() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
-  }
+void displayOn() {
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   digitalWrite(TFT_LEDA, LOW);
   isDisplayOn = true;
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  publishMqttStatus();
+#endif
+#endif
+}
+
+/**
+ * @brief Turns the display off.
+ */
+void displayOff() {
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
+  digitalWrite(TFT_LEDA, HIGH);
+  isDisplayOn = false;
+#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
+  publishMqttStatus();
+#endif
+#endif
+}
+
+/**
+ * @brief Handles the POST request to turn the display on.
+ */
+void handleDisplayOn(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
+  }
+  displayOn();
+#if defined(LCD_ENABLED) && LCD_ENABLED == 1
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
   jsonResponse["message"] = "Display turned on.";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
-#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
-  publishMqttStatus();
-#endif
+  request->send(200, "application/json", output);
 #else
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "no_change";
   jsonResponse["message"] = "Display is disabled in firmware.";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 #endif
 }
 
 /**
  * @brief Handles the POST request to turn the display off.
  */
-void handleDisplayOff() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleDisplayOff(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
+  displayOff();
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-  digitalWrite(TFT_LEDA, HIGH);
-  isDisplayOn = false;
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
   jsonResponse["message"] = "Display turned off.";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
-#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
-  publishMqttStatus();
-#endif
+  request->send(200, "application/json", output);
 #else
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "no_change";
   jsonResponse["message"] = "Display is disabled in firmware.";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 #endif
 }
 
 /**
  * @brief Handles the POST request to toggle the display.
  */
-void handleDisplayToggle() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleDisplayToggle(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   isDisplayOn = !isDisplayOn;
@@ -1243,7 +1274,7 @@ void handleDisplayToggle() {
   }
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
 #endif
@@ -1253,23 +1284,23 @@ void handleDisplayToggle() {
   jsonResponse["message"] = "Display is disabled in firmware.";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 #endif
 }
 
 /**
  * @brief Handles the POST request to reset WiFi settings.
  */
-void handleWifiReset() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleWifiReset(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
   jsonResponse["message"] = "Resetting WiFi and restarting...";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
   delay(200);
   resetWifiSettings();
 }
@@ -1277,9 +1308,9 @@ void handleWifiReset() {
 /**
  * @brief Handles the POST request to enable MQTT.
  */
-void handleMqttEnable() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleMqttEnable(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   isMqttEnabled = true;
@@ -1290,7 +1321,7 @@ void handleMqttEnable() {
   jsonResponse["message"] = "MQTT enabled.";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
   publishMqttStatus();
 #else
   DynamicJsonDocument jsonResponse(256);
@@ -1298,16 +1329,16 @@ void handleMqttEnable() {
   jsonResponse["message"] = "MQTT is disabled in firmware.";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 #endif
 }
 
 /**
  * @brief Handles the POST request to disable MQTT.
  */
-void handleMqttDisable() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleMqttDisable(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   isMqttEnabled = false;
@@ -1319,29 +1350,29 @@ void handleMqttDisable() {
   jsonResponse["message"] = "MQTT disabled.";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 #else
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "no_change";
   jsonResponse["message"] = "MQTT is disabled in firmware.";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 #endif
 }
 
 /**
  * @brief Handles the POST request to toggle MQTT.
  */
-void handleMqttToggle() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleMqttToggle(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   if (isMqttEnabled) {
-    handleMqttDisable();
+    handleMqttDisable(request);
   } else {
-    handleMqttEnable();
+    handleMqttEnable(request);
   }
 #else
   DynamicJsonDocument jsonResponse(256);
@@ -1349,16 +1380,16 @@ void handleMqttToggle() {
   jsonResponse["message"] = "MQTT is disabled in firmware.";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 #endif
 }
 
 /**
  * @brief Handles the POST request to turn the LED on.
  */
-void handleLedOn() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleLedOn(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
@@ -1371,15 +1402,15 @@ void handleLedOn() {
   jsonResponse["message"] = "LED turned on.";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 }
 
 /**
  * @brief Handles the POST request to turn the LED off.
  */
-void handleLedOff() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleLedOff(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
@@ -1388,15 +1419,15 @@ void handleLedOff() {
   jsonResponse["message"] = "LED turned off.";
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 }
 
 /**
  * @brief Handles the GET request to return the LED color and state.
  */
-void handleLedStatus() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleLedStatus(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
@@ -1405,19 +1436,19 @@ void handleLedStatus() {
   jsonResponse["brightness"] = ledBrightness;
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 }
 
 /**
  * @brief Handles the POST request to set the LED brightness.
  */
-void handleLedBrightness() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleLedBrightness(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
 
-  if (server.hasArg("plain")) {
-    String brightnessStr = server.arg("plain");
+  if (request->hasParam("plain", true)) {
+    String brightnessStr = request->getParam("plain", true)->value();
     int newBrightness = brightnessStr.toInt();
 
     // Check for conversion errors and valid range
@@ -1427,7 +1458,7 @@ void handleLedBrightness() {
       jsonResponse["message"] = "Invalid brightness value. Body must be a plain text integer between 0 and 255.";
       String output;
       serializeJson(jsonResponse, output);
-      server.send(400, "application/json", output);
+      request->send(400, "application/json", output);
     } else {
       ledBrightness = newBrightness;
       FastLED.setBrightness(ledBrightness);
@@ -1438,7 +1469,7 @@ void handleLedBrightness() {
       jsonResponse["message"] = "LED brightness set to " + String(ledBrightness) + ".";
       String output;
       serializeJson(jsonResponse, output);
-      server.send(200, "application/json", output);
+      request->send(200, "application/json", output);
     }
   } else {
     DynamicJsonDocument jsonResponse(256);
@@ -1446,16 +1477,16 @@ void handleLedBrightness() {
     jsonResponse["message"] = "Missing request body. Please provide a plain text integer value.";
     String output;
     serializeJson(jsonResponse, output);
-    server.send(400, "application/json", output);
+    request->send(400, "application/json", output);
   }
 }
 
 /**
  * @brief Handles the POST request to toggle the LED on and off.
  */
-void handleLedToggle() {
-  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return;
+void handleLedToggle(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
@@ -1475,8 +1506,123 @@ void handleLedToggle() {
   FastLED.show();
   String output;
   serializeJson(jsonResponse, output);
-  server.send(200, "application/json", output);
+  request->send(200, "application/json", output);
 }
+
+/**
+ * @brief Handles file uploads.
+ */
+void handleUpload(AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
+  if (!index) {
+    if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+      return request->requestAuthentication();
+    }
+    if (isInMscMode) {
+      request->send(400, "application/json", "{\"status\":\"error\",\"message\":\"Cannot upload in MSC mode.\"}");
+      return;
+    }
+    String path = "/";
+    if (filename.startsWith("/")) {
+      path += filename;
+    } else {
+      path += filename;
+    }
+    request->_tempFile = SD_MMC.open(path, FILE_WRITE);
+    if (!request->_tempFile) {
+      request->send(500, "application/json", "{\"status\":\"error\",\"message\":\"Failed to open file for writing.\"}");
+    }
+  }
+  if (len) {
+    request->_tempFile.write(data, len);
+  }
+  if (final) {
+    request->_tempFile.close();
+    DynamicJsonDocument jsonResponse(256);
+    jsonResponse["status"] = "success";
+    jsonResponse["message"] = "File uploaded successfully.";
+    String output;
+    serializeJson(jsonResponse, output);
+    request->send(200, "application/json", output);
+  }
+}
+
+/**
+ * @brief Handles the GET request to return the current mode (MSC or FTP).
+ */
+void handleSwitchToMscGet(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
+  }
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "success";
+  jsonResponse["mode"] = isInMscMode ? "USB MSC" : "Application (FTP Server)";
+  String output;
+  serializeJson(jsonResponse, output);
+  request->send(200, "application/json", output);
+}
+
+/**
+ * @brief Handles the GET request to return the current mode (MSC or FTP).
+ */
+void handleSwitchToFtpGet(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
+  }
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "success";
+  jsonResponse["mode"] = isInMscMode ? "USB MSC" : "Application (FTP Server)";
+  String output;
+  serializeJson(jsonResponse, output);
+  request->send(200, "application/json", output);
+}
+
+/**
+ * @brief Handles the GET request to return the display status.
+ */
+void handleDisplayStatus(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
+  }
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "success";
+  jsonResponse["display_status"] = isDisplayOn ? "on" : "off";
+  String output;
+  serializeJson(jsonResponse, output);
+  request->send(200, "application/json", output);
+}
+
+/**
+ * @brief Handles the GET request to return the MQTT status.
+ */
+void handleMqttStatus(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
+  }
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "success";
+  jsonResponse["mqtt_enabled"] = isMqttEnabled;
+  jsonResponse["mqtt_connected"] = mqttClient.connected();
+  jsonResponse["mqtt_state"] = mqttClient.state();
+  String output;
+  serializeJson(jsonResponse, output);
+  request->send(200, "application/json", output);
+}
+
+/**
+ * @brief Handles the GET request to return the LED brightness.
+ */
+void handleLedBrightnessGet(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
+  }
+  DynamicJsonDocument jsonResponse(256);
+  jsonResponse["status"] = "success";
+  jsonResponse["brightness"] = ledBrightness;
+  String output;
+  serializeJson(jsonResponse, output);
+  request->send(200, "application/json", output);
+}
+
 
 // --- FTP Server ---
 
@@ -1624,9 +1770,9 @@ void callback(char *topic, byte *payload, unsigned int length) {
 
   if (strcmp(topic, MqttTopics::DISPLAY_SET) == 0) {
     if (strcmp(message, "ON") == 0) {
-      handleDisplayOn();
+      displayOn();
     } else if (strcmp(message, "OFF") == 0) {
-      handleDisplayOff();
+      displayOff();
     }
   }
 #endif

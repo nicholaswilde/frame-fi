@@ -10,7 +10,7 @@ tags:
 [![ci](https://img.shields.io/github/actions/workflow/status/nicholaswilde/frame-fi/ci.yaml?label=ci&style=for-the-badge&branch=v0.1.0)](https://github.com/nicholaswilde/frame-fi/actions/workflows/ci.yaml)
 
 
-FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any digital picture frame. It enables you to remotely manage your photo library via FTP or access the SD card directly in USB Mass Storage mode.
+FrameFi transforms a <[LILYGO T-Dongle S3][1]> into a versatile adapter for any digital picture frame. It enables you to remotely manage your photo library via FTP or access the SD card directly in USB Mass Storage mode.
 
 !!! warning "Development Version"
 
@@ -134,7 +134,7 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
     - **REST API:** A built-in web server provides endpoints to check device status, switch modes, control the display, and restart the device.
     - **MQTT Integration:** Publish device status and control the display via MQTT, enabling seamless integration with Home Assistant or other automation platforms.
 - **:material-palette: User Interface & Experience:**
-    - **Onboard LCD Display:** A vibrant color display shows the current mode, network information (IP, MAC), and SD card usage with a visual bar graph. Styled with the [Catppuccin][3] color theme.
+    - **Onboard LCD Display:** A vibrant color display shows the current mode, network information (IP, MAC), and SD card usage with a visual bar graph. Styled with the <[Catppuccin][3]> color theme.
     - **Simple Physical Controls:**
         - A single button press toggles between FTP and MSC modes.
         - A long press (3 seconds) resets Wi-Fi and device configuration.
@@ -156,7 +156,7 @@ FrameFi transforms a [LILYGO T-Dongle S3][1] into a versatile adapter for any di
 
 ## :pencil:Author
 
-This project was started in 2025 by [Nicholas Wilde][2].
+This project was started in 2025 by <[Nicholas Wilde][2]>.
 
 ## :link: References
 

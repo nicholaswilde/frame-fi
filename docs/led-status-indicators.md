@@ -41,3 +41,5 @@ You can adjust the brightness of the status LED in two ways:
 
 !!! note
     If the `LED_BRIGHTNESS` flag is not defined, the brightness will default to `13` (approximately 5%). The value set via the API will override the build flag value after the first API call.
+
+## :link: References

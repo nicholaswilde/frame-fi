@@ -5,13 +5,13 @@ tags:
 ---
 # :simple-homeassistant: Home Assistant Integration
 
-This page provides an example of how to integrate FrameFi with [Home Assistant][1] using MQTT.
+This page provides an example of how to integrate FrameFi with <[Home Assistant][1]> using MQTT.
 
 ## :package: Prerequisites
 
 - MQTT is enabled and configured on your FrameFi device.
 - You have a running MQTT broker that is accessible by both Home Assistant and your FrameFi.
-- You have the [MQTT integration][2] set up in Home Assistant.
+- You have the <[MQTT integration][2]> set up in Home Assistant.
 
 ## :gear: Configuration
 

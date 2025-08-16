@@ -16,7 +16,7 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
     - Alternatively, use the web API by sending a `POST` request to `/mode/ftp`.
 
 2.  **Connect with an FTP Client:**
-    - Use any standard FTP client (e.g., [FileZilla][2], [WinSCP][3], or the command-line `ftp`).
+    - Use any standard FTP client (e.g., <[FileZilla][2]>, <[WinSCP][3]>, or the command-line `ftp`).
     - **Host:** The IP address of your device (shown on the LCD).
     - **Port:** `21` (the default FTP port).
     - **Username:** The username you configured in the WiFiManager setup page (default: `user`).
@@ -68,7 +68,7 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
 
 ## :link: References
 
-- [lftp][1]
+- <[lftp][1]>
 
 [1]: <https://lftp.yar.ru/>
 [2]: <https://filezilla-project.org/>

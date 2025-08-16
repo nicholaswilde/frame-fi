@@ -77,6 +77,6 @@ This project uses a `Taskfile.yml` for common development tasks. After installin
 
 ## :link: References
 
-- [Task][1]
+- <[Task][1]>
 
 [1]: <https://taskfile.dev/>

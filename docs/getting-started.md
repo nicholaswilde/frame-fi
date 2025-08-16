@@ -47,7 +47,7 @@ The microSD card must be formatted as **FAT32**.
     ```
     
 !!! note
-    This project uses [`WiFiManager`][1] to handle Wi-Fi connections via a captive portal, so you don't need to hardcode your network credentials. The `WIFI_SSID` and `WIFI_PASSWORD` fields in `secrets.h` are placeholders for a potential future feature and are not currently used.
+    This project uses <[`WiFiManager`][1]> to handle Wi-Fi connections via a captive portal, so you don't need to hardcode your network credentials. The `WIFI_SSID` and `WIFI_PASSWORD` fields in `secrets.h` are placeholders for a potential future feature and are not currently used.
 
 ### :satellite: Wi-Fi and MQTT Setup
 
@@ -81,7 +81,7 @@ In the WiFiManager setup page, you can also configure the following:
 
 ### :lock: Secrets Management
 
-This project uses [sops][2] for encrypting and decrypting secrets. The following files are encrypted:
+This project uses <[sops][2]> for encrypting and decrypting secrets. The following files are encrypted:
 
 - `include/secrets.h`
 - `scripts/.env`
@@ -112,7 +112,7 @@ To decrypt the files, run the following command:
 #### Encrypting Secrets
 
 !!! note
-    Before encrypting any files, you must add your GPG key's fingerprint or other public key information to the [`.sops.yaml`][3] file at the root of the project. This authorizes you to encrypt and decrypt the files.
+    Before encrypting any files, you must add your GPG key's fingerprint or other public key information to the <[`.sops.yaml`][3]> file at the root of the project. This authorizes you to encrypt and decrypt the files.
 
 To encrypt the files after making changes, run the following command:
 

@@ -130,8 +130,8 @@ You can customize the color scheme of the display by selecting a [Catppuccin the
 
 ## :link: References
 
-- [TFT_eSPI][1]
-- [Catppuccin][2]
+- <[TFT_eSPI][1]>
+- <[Catppuccin][2]>
 
 [1]: <https://github.com/Bodmer/TFT_eSPI>
 [2]: <https://catppuccin.com/palette/>
