@@ -319,8 +319,9 @@ void setupLed() {
   ledBrightness = 13;  // 5% of 255
 #endif
   FastLED.setBrightness(ledBrightness);
-  // --- Turn the LED on based on initial mode ---
-  setLedState("on");
+  // --- Turn the LED on ---
+  leds[0] = CRGB::Yellow;
+  FastLED.show();
 }
 
 /**
@@ -987,7 +988,8 @@ void enterMscMode() {
   HWSerial.println("\n--- Entering MSC Mode ---");
 
   // --- Turn the LED on ---
-  setLedState("on");
+  leds[0] = CRGB::Green;
+  FastLED.show();
     
   // --- Stop FTP Server ---
   ftpServer.end();
@@ -1031,7 +1033,8 @@ bool enterFtpMode() {
 #endif
 
   // --- Turn the LED on ---
-  setLedState("on");
+  leds[0] = CRGB::Purple;
+  FastLED.show();
   
   // --- Stop USB MSC ---
   MSC.end();
@@ -1247,7 +1250,7 @@ void setLedState(const char* state) {
     if (isInMscMode) {
       leds[0] = CRGB::Green;
     } else {
-      leds[0] = CRGB::Orange;
+      leds[0] = CRGB::Purple;
     }
   } else if (strcmp(state, "off") == 0) {
     leds[0] = CRGB::Black;
@@ -1256,7 +1259,7 @@ void setLedState(const char* state) {
       if (isInMscMode) {
         leds[0] = CRGB::Green;
       } else {
-        leds[0] = CRGB::Orange;
+        leds[0] = CRGB::Purple;
       }
     } else {
       leds[0] = CRGB::Black;
@@ -1431,13 +1434,16 @@ void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, un
   if (ftpOperation == FTP_UPLOAD || ftpOperation == FTP_DOWNLOAD) {
     // --- Blink LED by turning it OFF briefly, then back ON ---
     // --- This leaves the LED in the ON state after the pulse ---
-    setLedState("off");
+    leds[0] = CRGB::Black;
+    FastLED.show();
     delay(50);
-    setLedState("on");
+    leds[0] = CRGB::Purple;
+    FastLED.show();
   } else if (ftpOperation == FTP_UPLOAD_STOP || ftpOperation == FTP_DOWNLOAD_STOP || ftpOperation == FTP_TRANSFER_ERROR) {
     // --- Ensure LED is solid orange after any transfer completion or error ---
-    setLedState("on");
-
+    leds[0] = CRGB::Purple;
+    FastLED.show();
+    
     // --- Update storage info on the screen ---
     DeviceInfo info;
     getDeviceInfo(info);
