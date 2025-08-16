@@ -178,8 +178,7 @@ void handleRestart(AsyncWebServerRequest *request);
 void handleDisplayToggle(AsyncWebServerRequest *request);
 void handleDisplayOn(AsyncWebServerRequest *request);
 void handleDisplayOff(AsyncWebServerRequest *request);
-void displayOn();
-void displayOff();
+void setDisplayState(bool on);
 void handleWifiReset(AsyncWebServerRequest *request);
 void handleMqttEnable(AsyncWebServerRequest *request);
 void handleMqttDisable(AsyncWebServerRequest *request);
@@ -208,7 +207,7 @@ void drawHeader(const char* title, uint16_t bannerColor);
 void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB);
 void drawInfoScreen(const char* title, const char* message, const char* version, uint16_t headerColor);
 void drawApModeScreen(const char* ap_ssid, const char* ap_ip);
-void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB);
+void drawModeScreen(const char* mode, uint16_t headerColor, const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB, bool mqttConnected);
 void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB, bool mqttConnected);
 void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB, bool mqttConnected);
 void drawMqttStatusIcon(bool mqttConnected, int x, int y);
@@ -349,11 +348,7 @@ void setupDisplay() {
   tft.init();
   tft.setRotation(DISPLAY_ORIENTATION); // Adjust rotation as needed
   tft.fillScreen(CATPPUCCIN_BASE);
-  if (isDisplayOn) {
-    digitalWrite(TFT_LEDA, LOW); // Turn display on
-  } else {
-    digitalWrite(TFT_LEDA, HIGH); // Turn display off
-  }
+  setDisplayState(isDisplayOn);
 #else
   digitalWrite(TFT_LEDA, HIGH);
 #endif
@@ -1181,25 +1176,12 @@ void handleRestart(AsyncWebServerRequest *request) {
 }
 
 /**
- * @brief Turns the display on.
+ * @brief Sets the display state (on/off).
  */
-void displayOn() {
+void setDisplayState(bool on) {
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-  digitalWrite(TFT_LEDA, LOW);
-  isDisplayOn = true;
-#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
-  publishMqttStatus();
-#endif
-#endif
-}
-
-/**
- * @brief Turns the display off.
- */
-void displayOff() {
-#if defined(LCD_ENABLED) && LCD_ENABLED == 1
-  digitalWrite(TFT_LEDA, HIGH);
-  isDisplayOn = false;
+  digitalWrite(TFT_LEDA, on ? LOW : HIGH);
+  isDisplayOn = on;
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
   publishMqttStatus();
 #endif
@@ -1213,7 +1195,7 @@ void handleDisplayOn(AsyncWebServerRequest *request) {
   if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
     return request->requestAuthentication();
   }
-  displayOn();
+  setDisplayState(true);
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
@@ -1238,7 +1220,7 @@ void handleDisplayOff(AsyncWebServerRequest *request) {
   if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
     return request->requestAuthentication();
   }
-  displayOff();
+  setDisplayState(false);
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
@@ -1264,22 +1246,17 @@ void handleDisplayToggle(AsyncWebServerRequest *request) {
     return request->requestAuthentication();
   }
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
-  isDisplayOn = !isDisplayOn;
+  setDisplayState(!isDisplayOn);
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
   if (isDisplayOn) {
-    digitalWrite(TFT_LEDA, LOW);
     jsonResponse["message"] = "Display toggled on.";
   } else {
-    digitalWrite(TFT_LEDA, HIGH);
     jsonResponse["message"] = "Display toggled off.";
   }
   String output;
   serializeJson(jsonResponse, output);
   request->send(200, "application/json", output);
-#if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
-  publishMqttStatus();
-#endif
 #else
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "no_change";
@@ -1790,9 +1767,9 @@ void callback(char *topic, byte *payload, unsigned int length) {
 
   if (strcmp(topic, MqttTopics::DISPLAY_SET) == 0) {
     if (strcmp(message, "ON") == 0) {
-      displayOn();
+      setDisplayState(true);
     } else if (strcmp(message, "OFF") == 0) {
-      displayOff();
+      setDisplayState(false);
     }
   }
 #endif
@@ -2051,11 +2028,11 @@ void drawMqttStatusIcon(bool mqttConnected, int x, int y) {
 }
 
 /**
- * @brief Displays the FTP mode screen, adapting to the current orientation.
+ * @brief Displays the main screen for a given mode (FTP or MSC).
  */
-void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB, bool mqttConnected) {
+void drawModeScreen(const char* mode, uint16_t headerColor, const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB, bool mqttConnected) {
   tft.fillScreen(CATPPUCCIN_BASE);
-  drawHeader("FrameFi", CATPPUCCIN_GREEN);
+  drawHeader("FrameFi", headerColor);
 
   uint8_t rotation = tft.getRotation();
   bool isLandscape = (rotation == 1 || rotation == 3);
@@ -2069,7 +2046,7 @@ void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSize
   if (isLandscape) {
     tft.print("Mode:  ");
     tft.setTextColor(CATPPUCCIN_GREEN);
-    tft.print("FTP");
+    tft.print(mode);
     // --- Draw MQTT status icon ---
     if (isMqttEnabled) {
       drawMqttStatusIcon(mqttConnected, tft.getCursorX() + 8, y_pos + 3);
@@ -2093,7 +2070,7 @@ void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSize
     y_pos += 12;
     tft.setCursor(x_pos, y_pos);
     tft.setTextColor(CATPPUCCIN_GREEN);
-    tft.print("FTP");
+    tft.print(mode);
     // --- Draw MQTT status icon ---
     if (isMqttEnabled) {
       drawMqttStatusIcon(mqttConnected, tft.getCursorX() + 8, y_pos + 3);
@@ -2127,77 +2104,15 @@ void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSize
 }
 
 /**
- * @brief Displays the USB MSC mode screen, adapting to the current orientation.
+ * @brief Displays the FTP mode screen.
+ */
+void drawFtpModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB, bool mqttConnected) {
+  drawModeScreen("FTP", CATPPUCCIN_GREEN, ip, mac, files, totalSizeMB, freeSizeMB, mqttConnected);
+}
+
+/**
+ * @brief Displays the USB MSC mode screen.
  */
 void drawUsbMscModeScreen(const char* ip, const char* mac, int files, int totalSizeMB, float freeSizeMB, bool mqttConnected) {
-  tft.fillScreen(CATPPUCCIN_BASE);
-  drawHeader("FrameFi", CATPPUCCIN_MAUVE);
-
-  uint8_t rotation = tft.getRotation();
-  bool isLandscape = (rotation == 1 || rotation == 3);
-
-  int y_pos = 17;
-  int x_pos = 5;
-
-  // --- Draw Network Info ---
-  tft.setCursor(x_pos, y_pos);
-  tft.setTextColor(CATPPUCCIN_MAUVE);
-  if (isLandscape) {
-    tft.print("Mode:  ");
-    tft.setTextColor(CATPPUCCIN_GREEN);
-    tft.print("USB MSC");
-    // --- Draw MQTT status icon ---
-    if (isMqttEnabled) {
-      drawMqttStatusIcon(mqttConnected, tft.getCursorX() + 8, y_pos + 3);
-    }
-    y_pos += 12;
-
-    tft.setCursor(x_pos, y_pos);
-    tft.setTextColor(CATPPUCCIN_MAUVE);
-    tft.print("IP:    ");
-    tft.setTextColor(CATPPUCCIN_YELLOW);
-    tft.print(ip);
-    y_pos += 12;
-
-    tft.setCursor(x_pos, y_pos);
-    tft.setTextColor(CATPPUCCIN_MAUVE);
-    tft.print("MAC:   ");
-    tft.setTextColor(CATPPUCCIN_YELLOW);
-    tft.print(mac);
-  } else { // Portrait
-    tft.print("Mode:");
-    y_pos += 12;
-    tft.setCursor(x_pos, y_pos);
-    tft.setTextColor(CATPPUCCIN_GREEN);
-    tft.print("USB MSC");
-    // --- Draw MQTT status icon ---
-    if (isMqttEnabled) {
-      drawMqttStatusIcon(mqttConnected, tft.getCursorX() + 8, y_pos + 3);
-    }
-    y_pos += 12;
-
-    tft.setCursor(x_pos, y_pos);
-    tft.setTextColor(CATPPUCCIN_MAUVE);
-    tft.print("IP:");
-    y_pos += 12;
-    tft.setCursor(x_pos, y_pos);
-    tft.setTextColor(CATPPUCCIN_YELLOW);
-    String ipStr = String(ip);
-    ipStr.replace(".", "");
-    tft.print(ipStr);
-    y_pos += 12;
-
-    tft.setCursor(x_pos, y_pos);
-    tft.setTextColor(CATPPUCCIN_MAUVE);
-    tft.print("MAC:");
-    y_pos += 12;
-    tft.setCursor(x_pos, y_pos);
-    tft.setTextColor(CATPPUCCIN_YELLOW);
-    String macStr = String(mac);
-    macStr.replace(":", "");
-    tft.print(macStr);
-  }
-
-  // --- Draw Storage Info ---
-  drawStorageInfo(files, totalSizeMB, freeSizeMB);
+  drawModeScreen("USB MSC", CATPPUCCIN_MAUVE, ip, mac, files, totalSizeMB, freeSizeMB, mqttConnected);
 }
