@@ -65,6 +65,10 @@ tasks:
     desc: Switch the device to USB Mass Storage (MSC) mode via API call.
     cmds:
       - curl -X POST http://{{.FTP_HOST}}/mode/msc
+  sftp:
+    desc: Switch the device to FTP mode via API call.
+    cmds:
+      - curl -X POST http://{{.FTP_HOST}}/mode/ftp
   restart:
     desc: Restart the device via API call.
     cmds:
@@ -91,6 +95,11 @@ tasks:
           msg: 'jq is not installed. Please install it to run this task.'
       cmds:
         - curl -s -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X GET http://{{.FTP_HOST}}/ | jq '.'
+  test-api:
+    desc: Run the API test script.
+    dir: scripts
+    cmds:
+      - bash test-api.sh
   
   prune:
     desc: Prune unused PlatformIO files to save space.

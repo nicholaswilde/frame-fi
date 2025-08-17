@@ -30,3 +30,11 @@ tasks:
     desc: Toggle the display via API call (authenticated).
     cmds:
       - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X POST http://{{.FTP_HOST}}/display/toggle
+  status:
+    desc: Get the display status via API call (unauthenticated).
+    cmds:
+      - curl -X GET http://{{.FTP_HOST}}/display/status
+  status-a:
+    desc: Get the display status via API call (authenticated).
+    cmds:
+      - curl -u {{.WEB_SERVER_USER}}:{{.WEB_SERVER_PASSWORD}} -X GET http://{{.FTP_HOST}}/display/status
