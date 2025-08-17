@@ -602,7 +602,7 @@ Specific endpoints may return additional details in the JSON response body to fu
     === "Unauthenticated"
 
         ```sh
-        curl -X POST --H 'Content-Type: text/plain' d '128' http://<DEVICE_IP>/led/brightness
+        curl -X POST -H 'Content-Type: text/plain' -d '128' http://<DEVICE_IP>/led/brightness
         ```
 
     === "Authenticated"
