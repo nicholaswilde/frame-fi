@@ -11,9 +11,8 @@
 
 #include "Arduino.h"
 #include <WiFi.h>
-#define _ESP_ASYNC_WEBSERVER_H_
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
-#include <ESPAsyncWebServer.h>
+#include <WebServer.h>
 #undef FF_MAX_LFN
 #include <SimpleFTPServer.h>
 #include <SPI.h>
@@ -99,19 +98,20 @@ namespace Mode {
 }
  
 // --- Create objects ---
-AsyncWebServer server(80);
+WebServer server(80);
 OneButton button(BTN_PIN, true); // true for active low
 FtpServer ftpServer;
 CRGB leds[NUM_LEDS];
 USBMSC MSC;
 USBCDC USBSerial;
+File uploadFile;
 TFT_eSPI tft = TFT_eSPI();
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
 #define HWSerial    Serial0
 #define MOUNT_POINT "/sdcard"
-sdmmc_card_t *card;
+ sdmmc_card_t *card;
 
 bool shouldSaveConfig = false;
 
@@ -172,30 +172,30 @@ void setupApiRoutes();
 void setupSerial();
 void enterMscMode();
 bool enterFtpMode();
-void handleStatus(AsyncWebServerRequest *request);
-// void handleModeSwitch(AsyncWebServerRequest *request, bool toMsc);
-void handleRestart(AsyncWebServerRequest *request);
-void handleDisplayAction(AsyncWebServerRequest *request, const char* action);
+void handleStatus();
+void handleRestart();
+void handleDisplayAction(const char* action);
 void setDisplayState(bool on);
-void handleWifiReset(AsyncWebServerRequest *request);
-void handleMqttAction(AsyncWebServerRequest *request, const char* action);
+void handleWifiReset();
+void handleMqttAction(const char* action);
 void manageMqttState(const char* state);
-void sendJsonResponse(AsyncWebServerRequest *request, const char* status, const char* message);
-void handleLedStatus(AsyncWebServerRequest *request);
-void handleLedAction(AsyncWebServerRequest *request, const char* action);
-void handleLedBrightness(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
+void sendJsonResponse(const char* status, const char* message);
+void handleLedStatus();
+void handleLedAction(const char* action);
+void handleLedBrightness();
 void setLedState(const char* state);
-void handleUpload(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
-void handleGetMode(AsyncWebServerRequest *request);
-void handleDisplayStatus(AsyncWebServerRequest *request);
-void handleMqttStatus(AsyncWebServerRequest *request);
-void handleLedBrightnessGet(AsyncWebServerRequest *request);
+void handleUpload();
+void handleUploadData();
+void handleGetMode();
+void handleDisplayStatus();
+void handleMqttStatus();
+void handleLedBrightnessGet();
 void toggleMode();
 void resetWifiSettings();
 void mscInit();
 void sdInit();
-void handleSwitchToMsc(AsyncWebServerRequest *request);
-void handleSwitchToFtp(AsyncWebServerRequest *request);
+void handleSwitchToMsc();
+void handleSwitchToFtp();
 void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, unsigned int transferredSize);
 static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize);
 static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize);
@@ -406,6 +406,7 @@ void startInitialMode() {
  * @brief Main loop that runs repeatedly.
  */
 void loop() {
+  server.handleClient();
   handleButton();
 
   // --- Handle pending mode switch from API calls ---
@@ -945,28 +946,22 @@ void setupApiRoutes() {
   server.on("/mode/ftp", HTTP_POST, handleSwitchToFtp);
   server.on("/mode/ftp", HTTP_GET, handleGetMode);
   server.on("/device/restart", HTTP_POST, handleRestart);
-  server.on("/display/toggle", HTTP_POST, [](AsyncWebServerRequest *request){ handleDisplayAction(request, "toggle"); });
-  server.on("/display/on", HTTP_POST, [](AsyncWebServerRequest *request){ handleDisplayAction(request, "on"); });
-  server.on("/display/off", HTTP_POST, [](AsyncWebServerRequest *request){ handleDisplayAction(request, "off"); });
+  server.on("/display/toggle", HTTP_POST, [](){ handleDisplayAction("toggle"); });
+  server.on("/display/on", HTTP_POST, [](){ handleDisplayAction("on"); });
+  server.on("/display/off", HTTP_POST, [](){ handleDisplayAction("off"); });
   server.on("/display/status", HTTP_GET, handleDisplayStatus);
   server.on("/wifi/reset", HTTP_POST, handleWifiReset);
-  server.on("/mqtt/enable", HTTP_POST, [](AsyncWebServerRequest *request){ handleMqttAction(request, "enable"); });
-  server.on("/mqtt/disable", HTTP_POST, [](AsyncWebServerRequest *request){ handleMqttAction(request, "disable"); });
-  server.on("/mqtt/toggle", HTTP_POST, [](AsyncWebServerRequest *request){ handleMqttAction(request, "toggle"); });
+  server.on("/mqtt/enable", HTTP_POST, [](){ handleMqttAction("enable"); });
+  server.on("/mqtt/disable", HTTP_POST, [](){ handleMqttAction("disable"); });
+  server.on("/mqtt/toggle", HTTP_POST, [](){ handleMqttAction("toggle"); });
   server.on("/mqtt/status", HTTP_GET, handleMqttStatus);
   server.on("/led/status", HTTP_GET, handleLedStatus);
-  server.on("/led/toggle", HTTP_POST, [](AsyncWebServerRequest *request){ handleLedAction(request, "toggle"); });
-  server.on("/led/on", HTTP_POST, [](AsyncWebServerRequest *request){ handleLedAction(request, "on"); });
-  server.on("/led/off", HTTP_POST, [](AsyncWebServerRequest *request){ handleLedAction(request, "off"); });
+  server.on("/led/toggle", HTTP_POST, [](){ handleLedAction("toggle"); });
+  server.on("/led/on", HTTP_POST, [](){ handleLedAction("on"); });
+  server.on("/led/off", HTTP_POST, [](){ handleLedAction("off"); });
   server.on("/led/brightness", HTTP_GET, handleLedBrightnessGet);
-  server.on("/led/brightness", HTTP_POST, [](AsyncWebServerRequest * request) {
-    // Do nothing here, the body handler will take care of it
-  }, NULL, handleLedBrightness);
-  server.on(
-    "/upload", HTTP_PUT, [](AsyncWebServerRequest *request) {
-      request->send(200);
-    },
-    handleUpload);
+  server.on("/led/brightness", HTTP_POST, handleLedBrightness);
+  server.on("/upload", HTTP_PUT, handleUpload, handleUploadData);
 }
 
 void updateDisplayAndMqtt() {
@@ -1078,9 +1073,9 @@ bool enterFtpMode() {
 /**
  * @brief Handles requests to the root URL ("/"). Sends a JSON status object.
  */
-void handleStatus(AsyncWebServerRequest *request) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleStatus() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
   DeviceInfo info;
   getDeviceInfo(info);
@@ -1107,37 +1102,15 @@ void handleStatus(AsyncWebServerRequest *request) {
 
   String output;
   serializeJson(jsonResponse, output);
-  request->send(200, "application/json", output);
+  server.send(200, "application/json", output);
 }
-
-// /**
- // * @brief Handles the POST request to switch mode.
- // */
-// void handleModeSwitch(AsyncWebServerRequest *request, bool toMsc) {
-    // if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-        // return request->requestAuthentication();
-    // }
-// 
-    // const char* targetModeStr = toMsc ? "MSC" : "Application (FTP)";
-    // const char* currentModeStr = isInMscMode ? "MSC" : "Application (FTP)";
-// 
-    // if (isInMscMode == toMsc) {
-        // String message = "Already in " + String(currentModeStr) + " mode.";
-        // sendJsonResponse(request, "no_change", message.c_str());
-    // } else {
-        // String message = "Attempting to switch to " + String(targetModeStr) + " mode.";
-        // sendJsonResponse(request, "success", message.c_str());
-        // pendingModeSwitch = true;
-        // targetMscMode = toMsc;
-    // }
-// }
 
 /**
  * @brief Handles the POST request to switch to MSC mode.
  */
-void handleSwitchToMsc(AsyncWebServerRequest *request) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleSwitchToMsc() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
   if (isInMscMode) {
     DynamicJsonDocument jsonResponse(256);
@@ -1145,14 +1118,14 @@ void handleSwitchToMsc(AsyncWebServerRequest *request) {
     jsonResponse["message"] = "Already in MSC mode.";
     String output;
     serializeJson(jsonResponse, output);
-    request->send(200, "application/json", output);
+    server.send(200, "application/json", output);
   } else {
     DynamicJsonDocument jsonResponse(256);
     jsonResponse["status"] = "success";
     jsonResponse["message"] = "Attempting to switch to MSC mode.";
     String output;
     serializeJson(jsonResponse, output);
-    request->send(200, "application/json", output);
+    server.send(200, "application/json", output);
     pendingModeSwitch = true;
     targetMscMode = true;
   }  
@@ -1161,9 +1134,9 @@ void handleSwitchToMsc(AsyncWebServerRequest *request) {
 /**
  * @brief Handles the POST request to switch back to Application (FTP) mode.
  */
-void handleSwitchToFtp(AsyncWebServerRequest *request) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleSwitchToFtp() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
   if (isInMscMode) {
     DynamicJsonDocument jsonResponse(256);
@@ -1171,7 +1144,7 @@ void handleSwitchToFtp(AsyncWebServerRequest *request) {
     jsonResponse["message"] = "Attempting to switch to Application (FTP) mode.";
     String output;
     serializeJson(jsonResponse, output);
-    request->send(200, "application/json", output);
+    server.send(200, "application/json", output);
     pendingModeSwitch = true;
     targetMscMode = false;
   }
@@ -1181,23 +1154,23 @@ void handleSwitchToFtp(AsyncWebServerRequest *request) {
     jsonResponse["message"] = "Already in Application (FTP) mode.";
     String output;
     serializeJson(jsonResponse, output);
-    request->send(200, "application/json", output);
+    server.send(200, "application/json", output);
   }
 }
 
 /**
  * @brief Handles the POST request to restart the device.
  */
-void handleRestart(AsyncWebServerRequest *request) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleRestart() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
   jsonResponse["message"] = "Restarting device...";
   String output;
   serializeJson(jsonResponse, output);
-  request->send(200, "application/json", output);
+  server.send(200, "application/json", output);
   delay(100);
   ESP.restart();
 }
@@ -1218,9 +1191,9 @@ void setDisplayState(bool on) {
 /**
  * @brief Handles the POST request for display actions (on/off/toggle).
  */
-void handleDisplayAction(AsyncWebServerRequest *request, const char* action) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleDisplayAction(const char* action) {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   String message;
@@ -1234,20 +1207,20 @@ void handleDisplayAction(AsyncWebServerRequest *request, const char* action) {
     setDisplayState(!isDisplayOn);
     message = isDisplayOn ? "Display toggled on." : "Display toggled off.";
   }
-  sendJsonResponse(request, "success", message.c_str());
+  sendJsonResponse("success", message.c_str());
 #else
-  sendJsonResponse(request, "no_change", "Display is disabled in firmware.");
+  sendJsonResponse("no_change", "Display is disabled in firmware.");
 #endif
 }
 
 /**
  * @brief Handles the POST request to reset WiFi settings.
  */
-void handleWifiReset(AsyncWebServerRequest *request) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleWifiReset() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
-  sendJsonResponse(request, "success", "Resetting WiFi and restarting...");
+  sendJsonResponse("success", "Resetting WiFi and restarting...");
   delay(200);
   resetWifiSettings();
 }
@@ -1255,13 +1228,13 @@ void handleWifiReset(AsyncWebServerRequest *request) {
 /**
  * @brief Sends a standardized JSON response.
  */
-void sendJsonResponse(AsyncWebServerRequest *request, const char* status, const char* message) {
+void sendJsonResponse(const char* status, const char* message) {
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = status;
   jsonResponse["message"] = message;
   String output;
   serializeJson(jsonResponse, output);
-  request->send(200, "application/json", output);
+  server.send(200, "application/json", output);
 }
 
 /**
@@ -1291,13 +1264,13 @@ void manageMqttState(const char* state) {
 /**
  * @brief Handles the POST request for MQTT actions (enable/disable/toggle).
  */
-void handleMqttAction(AsyncWebServerRequest *request, const char* action) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleMqttAction(const char* action) {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
   manageMqttState(action);
   String message = "MQTT " + String(action) + "d.";
-  sendJsonResponse(request, "success", message.c_str());
+  sendJsonResponse("success", message.c_str());
 }
 
 /**
@@ -1329,24 +1302,24 @@ void setLedState(const char* state) {
 /**
  * @brief Handles the POST request for LED actions (on/off/toggle).
  */
-void handleLedAction(AsyncWebServerRequest *request, const char* action) {
-    if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-        return request->requestAuthentication();
+void handleLedAction(const char* action) {
+    if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+        return server.requestAuthentication();
     }
     setLedState(action);
     String message = "LED turned " + String(action) + ".";
     if (strcmp(action, "toggle") == 0) {
         message = "LED toggled.";
     }
-    sendJsonResponse(request, "success", message.c_str());
+    sendJsonResponse("success", message.c_str());
 }
 
 /**
  * @brief Handles the GET request to return the LED color and state.
  */
-void handleLedStatus(AsyncWebServerRequest *request) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleLedStatus() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
@@ -1355,106 +1328,106 @@ void handleLedStatus(AsyncWebServerRequest *request) {
   jsonResponse["brightness"] = ledBrightness;
   String output;
   serializeJson(jsonResponse, output);
-  request->send(200, "application/json", output);
+  server.send(200, "application/json", output);
 }
 
 /**
  * @brief Handles the POST request to set the LED brightness.
  */
-void handleLedBrightness(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleLedBrightness() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
 
-  if (index == 0) { // Process only the first chunk
-    String brightnessStr = "";
-    for (size_t i = 0; i < len; i++) {
-      brightnessStr += (char)data[i];
-    }
-    int newBrightness = brightnessStr.toInt();
+  String brightnessStr = server.arg("plain");
+  int newBrightness = brightnessStr.toInt();
 
-    // Check for conversion errors and valid range
-    if ((newBrightness == 0 && brightnessStr != "0") || newBrightness < 0 || newBrightness > 255) {
-      sendJsonResponse(request, "error", "Invalid brightness value. Body must be a plain text integer between 0 and 255.");
-    } else {
-      ledBrightness = newBrightness;
-      FastLED.setBrightness(ledBrightness);
-      FastLED.show();
-      saveConfig();
-      String message = "LED brightness set to " + String(ledBrightness) + ".";
-      sendJsonResponse(request, "success", message.c_str());
-    }
+  // Check for conversion errors and valid range
+  if ((newBrightness == 0 && brightnessStr != "0") || newBrightness < 0 || newBrightness > 255) {
+    sendJsonResponse("error", "Invalid brightness value. Body must be a plain text integer between 0 and 255.");
+  } else {
+    ledBrightness = newBrightness;
+    FastLED.setBrightness(ledBrightness);
+    FastLED.show();
+    saveConfig();
+    String message = "LED brightness set to " + String(ledBrightness) + ".";
+    sendJsonResponse("success", message.c_str());
   }
 }
 
 /**
  * @brief Handles file uploads.
  */
-void handleUpload(AsyncWebServerRequest *request, const String &filename, size_t index, uint8_t *data, size_t len, bool final) {
-  if (!index) {
-    if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-      return request->requestAuthentication();
+void handleUpload() {
+  if (uploadFile) {
+    uploadFile.close();
+  }
+  sendJsonResponse("success", "File uploaded successfully.");
+}
+
+void handleUploadData() {
+  HTTPUpload& upload = server.upload();
+  if (upload.status == UPLOAD_FILE_START) {
+    if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+      return server.requestAuthentication();
     }
     if (isInMscMode) {
-      request->send(400, "application/json", "{\"status\":\"error\",\"message\":\"Cannot upload in MSC mode.\"}");
+      server.send(400, "application/json", "{\"status\":\"error\",\"message\":\"Cannot upload in MSC mode.\"}");
       return;
     }
     String path = "/";
-    if (filename.startsWith("/")) {
-      path += filename;
+    if (upload.filename.startsWith("/")) {
+      path += upload.filename;
     } else {
-      path += filename;
+      path += upload.filename;
     }
-    request->_tempFile = SD_MMC.open(path, FILE_WRITE);
-    if (!request->_tempFile) {
-      request->send(500, "application/json", "{\"status\":\"error\",\"message\":\"Failed to open file for writing.\"}");
+    uploadFile = SD_MMC.open(path, FILE_WRITE);
+    if (!uploadFile) {
+      server.send(500, "application/json", "{\"status\":\"error\",\"message\":\"Failed to open file for writing.\"}");
     }
-  }
-  if (len) {
-    request->_tempFile.write(data, len);
-  }
-  if (final) {
-    request->_tempFile.close();
-    sendJsonResponse(request, "success", "File uploaded successfully.");
+  } else if (upload.status == UPLOAD_FILE_WRITE) {
+    if (uploadFile) {
+      uploadFile.write(upload.buf, upload.currentSize);
+    }
   }
 }
 
 /**
  * @brief Handles the GET request to return the current mode (MSC or FTP).
  */
-void handleGetMode(AsyncWebServerRequest *request) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleGetMode() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
   jsonResponse["mode"] = isInMscMode ? "USB MSC" : "Application (FTP Server)";
   String output;
   serializeJson(jsonResponse, output);
-  request->send(200, "application/json", output);
+  server.send(200, "application/json", output);
 }
 
 /**
  * @brief Handles the GET request to return the display status.
  */
-void handleDisplayStatus(AsyncWebServerRequest *request) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleDisplayStatus() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
   jsonResponse["display_status"] = isDisplayOn ? "on" : "off";
   String output;
   serializeJson(jsonResponse, output);
-  request->send(200, "application/json", output);
+  server.send(200, "application/json", output);
 }
 
 /**
  * @brief Handles the GET request to return the MQTT status.
  */
-void handleMqttStatus(AsyncWebServerRequest *request) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleMqttStatus() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
@@ -1463,22 +1436,22 @@ void handleMqttStatus(AsyncWebServerRequest *request) {
   jsonResponse["mqtt_state"] = mqttClient.state();
   String output;
   serializeJson(jsonResponse, output);
-  request->send(200, "application/json", output);
+  server.send(200, "application/json", output);
 }
 
 /**
  * @brief Handles the GET request to return the LED brightness.
  */
-void handleLedBrightnessGet(AsyncWebServerRequest *request) {
-  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-    return request->requestAuthentication();
+void handleLedBrightnessGet() {
+  if (strlen(webServerConfig.user) > 0 && !server.authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return server.requestAuthentication();
   }
   DynamicJsonDocument jsonResponse(256);
   jsonResponse["status"] = "success";
   jsonResponse["brightness"] = ledBrightness;
   String output;
   serializeJson(jsonResponse, output);
-  request->send(200, "application/json", output);
+  server.send(200, "application/json", output);
 }
 
 
@@ -1733,7 +1706,7 @@ void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB) {
     tft.print(usedSizeGB, 2);
     tft.print("GB (");
     tft.print((int)usedPercentage);
-    tft.print("%)");
+    tft.print(" %)");
     y_pos += 12;
 
     // --- Draw capacity bar ---
@@ -1781,7 +1754,7 @@ void drawStorageInfo(int files, int totalSizeMB, float freeSizeMB) {
     tft.print(usedSizeGB, 2);
     tft.print("GB (");
     tft.print((int)usedPercentage);
-    tft.print("%)");
+    tft.print(" %)");
     y_pos += 12;
 
     // --- Draw capacity bar ---
