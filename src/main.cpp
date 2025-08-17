@@ -14,6 +14,7 @@
 #define _ESP_ASYNC_WEBSERVER_H_
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <ESPAsyncWebServer.h>
+#undef FF_MAX_LFN
 #include <SimpleFTPServer.h>
 #include <SPI.h>
 #include <SD.h>
@@ -172,7 +173,7 @@ void setupSerial();
 void enterMscMode();
 bool enterFtpMode();
 void handleStatus(AsyncWebServerRequest *request);
-void handleModeSwitch(AsyncWebServerRequest *request, bool toMsc);
+// void handleModeSwitch(AsyncWebServerRequest *request, bool toMsc);
 void handleRestart(AsyncWebServerRequest *request);
 void handleDisplayAction(AsyncWebServerRequest *request, const char* action);
 void setDisplayState(bool on);
@@ -182,7 +183,7 @@ void manageMqttState(const char* state);
 void sendJsonResponse(AsyncWebServerRequest *request, const char* status, const char* message);
 void handleLedStatus(AsyncWebServerRequest *request);
 void handleLedAction(AsyncWebServerRequest *request, const char* action);
-void handleLedBrightness(AsyncWebServerRequest *request);
+void handleLedBrightness(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
 void setLedState(const char* state);
 void handleUpload(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final);
 void handleGetMode(AsyncWebServerRequest *request);
@@ -193,6 +194,8 @@ void toggleMode();
 void resetWifiSettings();
 void mscInit();
 void sdInit();
+void handleSwitchToMsc(AsyncWebServerRequest *request);
+void handleSwitchToFtp(AsyncWebServerRequest *request);
 void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, unsigned int transferredSize);
 static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize);
 static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize);
@@ -937,9 +940,9 @@ void toggleMode() {
  */
 void setupApiRoutes() {
   server.on("/", HTTP_GET, handleStatus);
-  server.on("/mode/msc", HTTP_POST, [](AsyncWebServerRequest *request){ handleModeSwitch(request, true); });
+  server.on("/mode/msc", HTTP_POST, handleSwitchToMsc);
   server.on("/mode/msc", HTTP_GET, handleGetMode);
-  server.on("/mode/ftp", HTTP_POST, [](AsyncWebServerRequest *request){ handleModeSwitch(request, false); });
+  server.on("/mode/ftp", HTTP_POST, handleSwitchToFtp);
   server.on("/mode/ftp", HTTP_GET, handleGetMode);
   server.on("/device/restart", HTTP_POST, handleRestart);
   server.on("/display/toggle", HTTP_POST, [](AsyncWebServerRequest *request){ handleDisplayAction(request, "toggle"); });
@@ -955,8 +958,10 @@ void setupApiRoutes() {
   server.on("/led/toggle", HTTP_POST, [](AsyncWebServerRequest *request){ handleLedAction(request, "toggle"); });
   server.on("/led/on", HTTP_POST, [](AsyncWebServerRequest *request){ handleLedAction(request, "on"); });
   server.on("/led/off", HTTP_POST, [](AsyncWebServerRequest *request){ handleLedAction(request, "off"); });
-  server.on("/led/brightness", HTTP_POST, handleLedBrightness);
   server.on("/led/brightness", HTTP_GET, handleLedBrightnessGet);
+  server.on("/led/brightness", HTTP_POST, [](AsyncWebServerRequest * request) {
+    // Do nothing here, the body handler will take care of it
+  }, NULL, handleLedBrightness);
   server.on(
     "/upload", HTTP_PUT, [](AsyncWebServerRequest *request) {
       request->send(200);
@@ -1105,26 +1110,79 @@ void handleStatus(AsyncWebServerRequest *request) {
   request->send(200, "application/json", output);
 }
 
+// /**
+ // * @brief Handles the POST request to switch mode.
+ // */
+// void handleModeSwitch(AsyncWebServerRequest *request, bool toMsc) {
+    // if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+        // return request->requestAuthentication();
+    // }
+// 
+    // const char* targetModeStr = toMsc ? "MSC" : "Application (FTP)";
+    // const char* currentModeStr = isInMscMode ? "MSC" : "Application (FTP)";
+// 
+    // if (isInMscMode == toMsc) {
+        // String message = "Already in " + String(currentModeStr) + " mode.";
+        // sendJsonResponse(request, "no_change", message.c_str());
+    // } else {
+        // String message = "Attempting to switch to " + String(targetModeStr) + " mode.";
+        // sendJsonResponse(request, "success", message.c_str());
+        // pendingModeSwitch = true;
+        // targetMscMode = toMsc;
+    // }
+// }
+
 /**
- * @brief Handles the POST request to switch mode.
+ * @brief Handles the POST request to switch to MSC mode.
  */
-void handleModeSwitch(AsyncWebServerRequest *request, bool toMsc) {
-    if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
-        return request->requestAuthentication();
-    }
-
-    const char* targetModeStr = toMsc ? "MSC" : "Application (FTP)";
-    const char* currentModeStr = isInMscMode ? "MSC" : "Application (FTP)";
-
-    if (isInMscMode == toMsc) {
-        String message = "Already in " + String(currentModeStr) + " mode.";
-        sendJsonResponse(request, "no_change", message.c_str());
-    } else {
-        String message = "Attempting to switch to " + String(targetModeStr) + " mode.";
-        sendJsonResponse(request, "success", message.c_str());
-        pendingModeSwitch = true;
-        targetMscMode = toMsc;
-    }
+void handleSwitchToMsc(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
+  }
+  if (isInMscMode) {
+    DynamicJsonDocument jsonResponse(256);
+    jsonResponse["status"] = "no_change";
+    jsonResponse["message"] = "Already in MSC mode.";
+    String output;
+    serializeJson(jsonResponse, output);
+    request->send(200, "application/json", output);
+  } else {
+    DynamicJsonDocument jsonResponse(256);
+    jsonResponse["status"] = "success";
+    jsonResponse["message"] = "Attempting to switch to MSC mode.";
+    String output;
+    serializeJson(jsonResponse, output);
+    request->send(200, "application/json", output);
+    pendingModeSwitch = true;
+    targetMscMode = true;
+  }  
+}
+ 
+/**
+ * @brief Handles the POST request to switch back to Application (FTP) mode.
+ */
+void handleSwitchToFtp(AsyncWebServerRequest *request) {
+  if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
+    return request->requestAuthentication();
+  }
+  if (isInMscMode) {
+    DynamicJsonDocument jsonResponse(256);
+    jsonResponse["status"] = "success";
+    jsonResponse["message"] = "Attempting to switch to Application (FTP) mode.";
+    String output;
+    serializeJson(jsonResponse, output);
+    request->send(200, "application/json", output);
+    pendingModeSwitch = true;
+    targetMscMode = false;
+  }
+  else {
+    DynamicJsonDocument jsonResponse(256);
+    jsonResponse["status"] = "no_change";
+    jsonResponse["message"] = "Already in Application (FTP) mode.";
+    String output;
+    serializeJson(jsonResponse, output);
+    request->send(200, "application/json", output);
+  }
 }
 
 /**
@@ -1303,13 +1361,16 @@ void handleLedStatus(AsyncWebServerRequest *request) {
 /**
  * @brief Handles the POST request to set the LED brightness.
  */
-void handleLedBrightness(AsyncWebServerRequest *request) {
+void handleLedBrightness(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
   if (strlen(webServerConfig.user) > 0 && !request->authenticate(webServerConfig.user, webServerConfig.pass)) {
     return request->requestAuthentication();
   }
 
-  if (request->hasParam("plain", true)) {
-    String brightnessStr = request->getParam("plain", true)->value();
+  if (index == 0) { // Process only the first chunk
+    String brightnessStr = "";
+    for (size_t i = 0; i < len; i++) {
+      brightnessStr += (char)data[i];
+    }
     int newBrightness = brightnessStr.toInt();
 
     // Check for conversion errors and valid range
@@ -1323,8 +1384,6 @@ void handleLedBrightness(AsyncWebServerRequest *request) {
       String message = "LED brightness set to " + String(ledBrightness) + ".";
       sendJsonResponse(request, "success", message.c_str());
     }
-  } else {
-    sendJsonResponse(request, "error", "Missing request body. Please provide a plain text integer value.");
   }
 }
 
