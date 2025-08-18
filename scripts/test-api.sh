@@ -493,16 +493,42 @@ function verify_posts() {
   verify_mqtt_actions
 }
 
+function run_usb_msc_tests(){
+  log "INFO" "=== USB MSC MODE Tests ==="
+  verify_gets
+  verify_posts  
+}
+
+function run_ftp_tests() {
+  log "INFO" "=== FTP MODE Tests ==="
+  log "INFO" "Switching to FTP mode"
+  request_and_verify "POST" "/mode/ftp" "" ""
+  sleep 10
+  verify_gets
+  verify_posts
+  log "INFO" "Switching back to USB MSC mode"
+  request_and_verify "POST" "/mode/msc" "" ""
+  sleep 10
+}
+
 # Main function to orchestrate the script execution
 function main() {
+  local START_TIME
+  START_TIME=$(date +%s)
+  log "INFO" "=== Starting "$0" ==="
   check_dependencies
   load_vars
   check_device_status
   check_initial_mode
   check_initial_display_and_led_status
-  verify_gets
-  verify_posts
-  log "SUCCESS" "All API tests completed successfully."
+  run_usb_msc_tests
+  run_ftp_tests
+
+  local END_TIME
+  END_TIME=$(date +%s)
+  local DURATION=$((END_TIME - START_TIME))
+  log "INFO" "Script finished in $(($DURATION / 60)) minutes and $(($DURATION % 60)) seconds."
+  log "SUCCESS" "=== All API tests completed successfully. ==="
 }
 
 # Call main to start the script
