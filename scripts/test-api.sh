@@ -493,10 +493,43 @@ function verify_posts() {
   verify_mqtt_actions
 }
 
+function verify_file_upload() {
+  local EXPECTED_STATUS="$1" # "success" or "error"
+  log "INFO" "Verifying file upload via web server (expecting ${EXPECTED_STATUS})..."
+
+  # Create a dummy file to upload
+  local DUMMY_FILE="test-upload.txt"
+  local DUMMY_FILENAME="test-on-device.txt"
+  local DUMMY_CONTENT="This is a test file for web upload."
+  echo "${DUMMY_CONTENT}" > "${DUMMY_FILE}"
+
+  log "INFO" "Uploading '${DUMMY_FILE}' to the device as '${DUMMY_FILENAME}'..."
+
+  # Upload the file using curl with POST and multipart/form-data
+  local RESPONSE
+  RESPONSE=$(curl -s -X POST -F "file=@${DUMMY_FILE};filename=${DUMMY_FILENAME}" "http://${FTP_HOST}/upload")
+
+  # Clean up the dummy file
+  rm "${DUMMY_FILE}"
+
+  log "INFO" "Upload response: ${RESPONSE}"
+
+  # Verify the response
+  local STATUS
+  STATUS=$(echo "${RESPONSE}" | jq -r '.status')
+  if [ "${STATUS}" != "${EXPECTED_STATUS}" ]; then
+    log "ERRO" "File upload returned unexpected status. Got: '${STATUS}', Expected: '${EXPECTED_STATUS}'. Message: $(echo "${RESPONSE}" | jq -r '.message')"
+    exit 1
+  fi
+
+  log "SUCCESS" "File upload test completed with expected status '${EXPECTED_STATUS}'."
+}
+
 function run_usb_msc_tests(){
   log "INFO" "=== USB MSC MODE Tests ==="
   verify_gets
-  verify_posts  
+  verify_posts
+  verify_file_upload "error"
 }
 
 function run_ftp_tests() {
@@ -506,6 +539,7 @@ function run_ftp_tests() {
   sleep 10
   verify_gets
   verify_posts
+  verify_file_upload "success"
   log "INFO" "Switching back to USB MSC mode"
   request_and_verify "POST" "/mode/msc" "" ""
   sleep 10

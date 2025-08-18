@@ -64,7 +64,7 @@ When the device is in **FTP Server Mode**, you can access the microSD card over 
 
 !!! tip "Using Web API"
 
-    You can also upload images using the [Web API](api.md#put-upload).
+    You can also upload images using the [Web API](api.md#post-upload).
 
 !!! tip "Using lftp"
 

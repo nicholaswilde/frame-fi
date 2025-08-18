@@ -629,7 +629,7 @@ Specific endpoints may return additional details in the JSON response body to fu
         {"status":"error","message":"Invalid brightness value. Body must be a plain text integer between 0 and 255."}
         ```
 
-**`PUT /upload`**: Uploads a file to the device's SD card. The request body should be the raw file content.
+**`POST /upload`**: Uploads a file to the device's SD card using `multipart/form-data`.
 
 !!! warning "Cannot Upload in MSC Mode"
 
@@ -640,13 +640,13 @@ Specific endpoints may return additional details in the JSON response body to fu
     === "Unauthenticated"
 
         ```sh
-        curl -X PUT --data-binary @/path/to/your/image.jpg http://<DEVICE_IP>/upload?filename=image.jpg
+        curl -X POST -F "file=@/path/to/your/image.jpg;filename=image.jpg" http://<DEVICE_IP>/upload
         ```
 
     === "Authenticated"
 
         ```sh
-        curl -u <USERNAME>:<PASSWORD> -X PUT --data-binary @/path/to/your/image.jpg http://<DEVICE_IP>/upload?filename=image.jpg
+        curl -u <USERNAME>:<PASSWORD> -X POST -F "file=@/path/to/your/image.jpg;filename=image.jpg" http://<DEVICE_IP>/upload
         ```
 
 !!! success "Example Responses"

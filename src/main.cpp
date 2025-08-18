@@ -961,7 +961,7 @@ void setupApiRoutes() {
   server.on("/led/off", HTTP_POST, [](){ handleLedAction("off"); });
   server.on("/led/brightness", HTTP_GET, handleLedBrightnessGet);
   server.on("/led/brightness", HTTP_POST, handleLedBrightness);
-  server.on("/upload", HTTP_PUT, handleUpload, handleUploadData);
+  server.on("/upload", HTTP_POST, handleUpload, handleUploadData);
 }
 
 void updateDisplayAndMqtt() {
@@ -1388,6 +1388,7 @@ void handleUploadData() {
   } else if (upload.status == UPLOAD_FILE_WRITE) {
     if (uploadFile) {
       uploadFile.write(upload.buf, upload.currentSize);
+      yield();
     }
   }
 }
