@@ -23,7 +23,7 @@ The web server can be protected by basic authentication. You can set the usernam
 
     To make the web server unauthenticated, make the `user` and `password` blank in the WiFiManager setup page.
 
-## Error Handling
+## :warning: Error Handling
 
 This API uses standard HTTP status codes to indicate the success or failure of a request. Common status codes include:
 
@@ -36,7 +36,7 @@ This API uses standard HTTP status codes to indicate the success or failure of a
 
 Specific endpoints may return additional details in the JSON response body to further clarify the error.
 
-## Web Server Commands
+## :globe_with_meridians: Web Server Commands
 
 !!! tip
 
@@ -510,7 +510,7 @@ Specific endpoints may return additional details in the JSON response body to fu
         ```sh
         curl -X POST http://<DEVICE_IP>/led/on
         ```
-
+    
     === "Authenticated"
 
         ```sh
@@ -532,7 +532,7 @@ Specific endpoints may return additional details in the JSON response body to fu
         ```sh
         curl -X POST http://<DEVICE_IP>/led/off
         ```
-
+    
     === "Authenticated"
 
         ```sh
