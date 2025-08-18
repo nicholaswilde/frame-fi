@@ -92,9 +92,14 @@ Run the automated API tests to verify the device's web API functionality.
         ```shell
         bash scripts/test-api.sh
         ```
+??? abstract "test-api.sh"
 
+    ```bash
+    --8<-- "scripts/test-api.sh"
+    ```
+    
 ## :link: References
 
-- <[Task][1]>
+- [Task][1]
 
 [1]: <https://taskfile.dev/>

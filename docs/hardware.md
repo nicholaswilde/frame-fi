@@ -10,6 +10,6 @@ tags:
 
 ## :link: References
 
-- <[LILYGO T-Dongle S3][1]>
+- [LILYGO T-Dongle S3][1]
 
 [1]: <https://lilygo.cc/products/t-dongle-s3>
