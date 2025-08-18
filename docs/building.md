@@ -75,6 +75,24 @@ This project uses a `Taskfile.yml` for common development tasks. After installin
         task -l
         ```
 
+## :test_tube: Testing the API
+
+Run the automated API tests to verify the device's web API functionality.
+
+!!! code ""
+
+    === "Task"
+
+        ```shell
+        task test-api
+        ```
+
+    === "Bash"
+
+        ```shell
+        bash scripts/test-api.sh
+        ```
+
 ## :link: References
 
 - <[Task][1]>

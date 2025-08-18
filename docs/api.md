@@ -38,6 +38,10 @@ Specific endpoints may return additional details in the JSON response body to fu
 
 ## Web Server Commands
 
+!!! tip
+
+    Run the [`test-api.sh`][1] script to automate API tests to verify the device's web API functionality.
+
 **`GET /`**: Returns the current mode, display status, and SD card information.
 
 !!! code ""
@@ -666,3 +670,5 @@ Specific endpoints may return additional details in the JSON response body to fu
         ```
 
 ## :link: References
+
+[1]: <./building.md#testing-the-api>
