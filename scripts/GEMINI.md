@@ -53,14 +53,10 @@ set -o pipefail
 CONSTANT="value"
 readonly CONSTANT
 
-RED=$(tput setaf 1)
-YELLOW=$(tput setaf 1)
-BLUE=$(tput setaf 1)
-RESET$(tput setaf 1)
-readonly RED
-readonly YELLOW
-readonly BLUE
-readonly RESET
+readonly BLUE=$(tput setaf 4)
+readonly RED=$(tput setaf 1)
+readonly YELLOW=$(tput setaf 3)
+readonly RESET=$(tput sgr0)
 
 # Logging function
 function log() {
