@@ -103,9 +103,9 @@ function process_data() {
 
 # Main function to orchestrate the script execution
 function main() {
-  echo "Starting script..."
+  log "INFO" "Starting script..."
   process_data
-  echo "Script finished."
+  log "INFO" "Script finished."
 }
 
 # Call main to start the script
