@@ -54,7 +54,45 @@ CONSTANT="value"
 readonly CONSTANT
 
 RED=$(tput setaf 1)
+YELLOW=$(tput setaf 1)
+BLUE=$(tput setaf 1)
+RESET$(tput setaf 1)
 readonly RED
+readonly YELLOW
+readonly BLUE
+readonly RESET
+
+# Logging function
+function log() {
+  local type="$1"
+  local message="$2"
+  local color="$RESET"
+
+  case "$type" in
+    INFO)
+      color="$BLUE";;
+    WARN)
+      color="$YELLOW";;
+    ERRO)
+      color="$RED";;
+  esac
+
+  echo -e "${color}${type}${RESET}[$(date +'%Y-%m-%d %H:%M:%S')] ${message}"
+}
+
+
+# Checks if a command exists.
+function commandExists() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+function check_dependencies() {
+  # --- check for dependencies ---
+  if ! commandExists curl || ! commandExists grep || ! commandExists unzip || ! commandExists esptool ; then
+    log "ERRO" "Required dependencies (curl, grep, unzip, esptool) are not installed." >&2
+    exit 1
+  fi  
+}
 
 # This is a helper function
 function _helper_function() {
