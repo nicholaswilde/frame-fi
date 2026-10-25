@@ -1,6 +1,6 @@
-# C++ Style Guide: GEMINI Standard
+# C++ Style Guide
 
-This document outlines the standard coding conventions for C++ projects following the GEMINI standard. Consistency in code is crucial for readability and maintainability.
+This document outlines the standard coding conventions for C++ projects. Consistency in code is crucial for readability and maintainability.
 
 ---
 

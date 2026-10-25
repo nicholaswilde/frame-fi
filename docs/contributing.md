@@ -40,7 +40,7 @@ We welcome pull requests. If you'd like to contribute code, please follow these 
 
 ### :scroll: Code Style
 
-This project follows the [GEMINI C++ Style Guide](../GEMINI.md). Please ensure your code adheres to these standards.
+This project follows the [C++ Style Guide](../src/AGENTS.md). Please ensure your code adheres to these standards.
 
 !!! tip "Key points"
 
@@ -50,7 +50,7 @@ This project follows the [GEMINI C++ Style Guide](../GEMINI.md). Please ensure y
 
 ### :book: Documentation Style
 
-All documentation is written in Markdown and generated using MkDocs with the Material theme. Please follow the [Markdown Documentation Guidelines](./GEMINI.md).
+All documentation is written in Markdown and generated using MkDocs with the Material theme. Please follow the [Markdown Documentation Guidelines](./AGENTS.md).
 
 !!! tip "Key points"
 

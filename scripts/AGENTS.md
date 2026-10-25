@@ -1,4 +1,4 @@
-# Bash Scripts Guidelines for Gemini
+# Bash Scripts Guidelines
 
 **Context:** This directory contains all project bash scripts.
 

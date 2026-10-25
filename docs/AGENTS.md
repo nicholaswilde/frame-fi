@@ -1,4 +1,4 @@
-# Markdown Documentation Guidelines for Gemini
+# Markdown Documentation Guidelines
 
 **Context:** This directory contains all project documentation in Markdown format.
 

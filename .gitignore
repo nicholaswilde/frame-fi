@@ -30,3 +30,9 @@ package.json
 
 opencode.json
 test.sh
+
+# Agent tooling
+.codegraph/
+.serena/
+.rtk/*
+!.rtk/filters.toml
