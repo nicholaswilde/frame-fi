@@ -1465,15 +1465,19 @@ void handleLedBrightnessGet() {
  */
 void ftpTransferCallback(FtpTransferOperation ftpOperation, const char* name, unsigned int transferredSize) {
   if (ftpOperation == FTP_UPLOAD || ftpOperation == FTP_DOWNLOAD) {
-    // --- Blink LED by turning it OFF briefly, then back ON ---
-    // --- This leaves the LED in the ON state after the pulse ---
-    leds[0] = CRGB::Black;
-    FastLED.show();
-    delay(50);
-    leds[0] = CRGB::Purple;
-    FastLED.show();
+    // --- Non-blocking LED activity blink during transfer ---
+    static unsigned long lastBlinkTime = 0;
+    static bool ledState = true;
+    unsigned long now = millis();
+    if (now - lastBlinkTime >= 150) {
+      lastBlinkTime = now;
+      ledState = !ledState;
+      leds[0] = ledState ? CRGB::Purple : CRGB::Black;
+      FastLED.show();
+    }
+    yield();
   } else if (ftpOperation == FTP_UPLOAD_STOP || ftpOperation == FTP_DOWNLOAD_STOP || ftpOperation == FTP_TRANSFER_ERROR) {
-    // --- Ensure LED is solid orange after any transfer completion or error ---
+    // --- Ensure LED is restored to solid purple after any transfer completion or error ---
     leds[0] = CRGB::Purple;
     FastLED.show();
     
