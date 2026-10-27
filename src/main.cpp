@@ -236,6 +236,9 @@ void setup() {
   displayBootScreen();
   loadConfig();
 
+  // --- Start in initial mode immediately so USB host detects storage without waiting for WiFi ---
+  startInitialMode();
+
   // --- Connect to WiFi and configure services ---
   connectToWiFi();
 
@@ -243,15 +246,23 @@ void setup() {
     saveConfig();
   }
 
-  setupWebServer();
-  
+  if (WiFi.status() == WL_CONNECTED) {
+    setupWebServer();
+    
 #if defined(MQTT_ENABLED) && MQTT_ENABLED == 1
-  setupMqtt();
-  reconnect(); // Attempt initial MQTT connection
+    setupMqtt();
+    reconnect(); // Attempt initial MQTT connection
 #endif
 
-  // --- Start in initial mode ---
-  startInitialMode();
+    // --- Update display and MQTT with connected network info ---
+    updateDisplayAndMqtt();
+  } else {
+    HWSerial.println("Continuing in MSC mode without WiFi connection.");
+    // --- Ensure LED and display reflect MSC mode without WiFi ---
+    leds[0] = CRGB::Green;
+    FastLED.show();
+    updateAndDrawMscScreen();
+  }
 }
 
 /**
@@ -360,7 +371,6 @@ void displayBootScreen() {
   // --- Show boot screen ---
 #if defined(LCD_ENABLED) && LCD_ENABLED == 1
   drawInfoScreen("FrameFi", "Booting...", APP_VERSION, CATPPUCCIN_BLUE);
-  delay(2000); // Keep boot screen visible for 2 seconds
 #endif
 }
 
@@ -391,8 +401,7 @@ void startInitialMode() {
     USBSerial.begin();
     USB.begin();
     HWSerial.println("\n✅ Started in MSC mode. Connect USB to a computer.");
-    // --- Display initial mode screen ---
-    enterMscMode();
+    isInMscMode = true;
     
     // --- Display MSC mode screen ---
     updateAndDrawMscScreen();
@@ -406,7 +415,9 @@ void startInitialMode() {
  * @brief Main loop that runs repeatedly.
  */
 void loop() {
-  server.handleClient();
+  if (WiFi.status() == WL_CONNECTED) {
+    server.handleClient();
+  }
   handleButton();
 
   // --- Handle pending mode switch from API calls ---
@@ -444,20 +455,22 @@ void handleMqtt() {
     }
     return;
   }
-  if (!mqttClient.connected()) {
-    long now = millis();
-    if (now - lastReconnectAttempt > reconnectInterval) {
-      lastReconnectAttempt = now;
-      reconnect();
+  if (WiFi.status() == WL_CONNECTED) {
+    if (!mqttClient.connected()) {
+      long now = millis();
+      if (now - lastReconnectAttempt > reconnectInterval) {
+        lastReconnectAttempt = now;
+        reconnect();
+      }
+    } else {
+      mqttClient.loop();
     }
-  } else {
-    mqttClient.loop();
-  }
 
-  unsigned long currentMillis = millis();
-  if (currentMillis - lastMqttPublish >= mqttPublishInterval) {
-    lastMqttPublish = currentMillis;
-    publishMqttStatus();
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastMqttPublish >= mqttPublishInterval) {
+      lastMqttPublish = currentMillis;
+      publishMqttStatus();
+    }
   }
 #endif
 }
@@ -622,15 +635,8 @@ void getDeviceInfo(DeviceInfo& info) {
 
 void setupSerial() {
   Serial.begin(115200);
-  unsigned long start = millis();
-  while (!Serial) {
-    if (millis() - start > 2000) { // 2-second timeout
-      break;
-    }
-  }
   HWSerial.setDebugOutput(true);
   HWSerial.println(APP_VERSION);
-  delay(100);
 }
 
 // --- USB Mass Storage Control ---
@@ -796,6 +802,8 @@ void connectToWiFi() {
   wm.setSaveConfigCallback(saveConfigCallback);
     
   wm.setParamsPage(true);
+  wm.setConfigPortalTimeout(180);
+  wm.setConnectTimeout(10);
 
   const char* headhtml = "<script>function f2(id){var x = document.getElementById(id);x.type ==='password'?x.type='text':x.type='password';}</script>";
   wm.setCustomHeadElement(headhtml);
@@ -858,27 +866,12 @@ void connectToWiFi() {
 #endif
   });
 
-  // --- Blink blue while connecting ---
-  unsigned long startConnecting = millis();
-  bool connecting = true;
-  while (connecting && (millis() - startConnecting < 180000)) { // 3-minute timeout
-    leds[0] = CRGB::Blue;
-    FastLED.show();
-    delay(100);
-    leds[0] = CRGB::Black;
-    FastLED.show();
-    delay(400);
-    if (wm.autoConnect(ap_ssid, ap_password)) {
-      connecting = false;
-    }
-  }
-
-  if (WiFi.status() != WL_CONNECTED) {
-    HWSerial.println("Failed to connect and hit timeout. Restarting...");
-    ESP.restart();
+  // --- Connect to WiFi or enter AP config portal if connection fails ---
+  if (!wm.autoConnect(ap_ssid, ap_password)) {
+    HWSerial.println("Failed to connect to WiFi and hit timeout.");
   } else {
     HWSerial.println("\nWiFi connected!");
-    HWSerial.printf("Connected to: %s\n", WIFI_SSID);
+    HWSerial.printf("Connected to: %s\n", WiFi.SSID().c_str());
     HWSerial.printf("IP Address: %s\n", WiFi.localIP().toString().c_str());
   }
   
