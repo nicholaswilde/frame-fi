@@ -15,12 +15,15 @@ This document provides a comprehensive overview of the FrameFi project and instr
 - Monitor serial output: `task monitor` or `pio device monitor`
 - Flash release firmware: `./scripts/flash.sh <SERIAL_PORT>`
 
+<!-- rtk-begin -->
 ### RTK Command Guidelines
 - **Git Operations**: Prefix `git` commands with `rtk` (e.g., `rtk git status`, `rtk git diff`, `rtk git log`, `rtk git commit`, `rtk git push`).
 - **GitHub CLI**: Prefix `gh` commands with `rtk` (e.g., `rtk gh issue list | cat`, `rtk gh pr status | cat`). Always pipe `gh` commands to `cat` to bypass interactive pagers.
 - **File & Directory Inspection**: Use `rtk ls`, `rtk tree`, `rtk find`, or `rtk read` when listing or reading files to get token-optimized output.
 - **Searching**: Use `rtk grep` or `rtk rg` for line search pattern matching.
 - **Build & Test Outputs**: Use `rtk err` or `rtk test` when running build commands to filter output to errors/failures only.
+- **Exceptions**: Inside `ctx_execute` / `ctx_batch_execute` sandbox code, skip `rtk` (only printed output enters context). Drop `rtk` when exact raw bytes or patch required (`git diff` patch).
+<!-- rtk-end -->
 
 ### What To Do Next
 - When asked "what to do next" (or similar), **always check the remote repository issues first** using `gh`:
@@ -36,14 +39,18 @@ This document provides a comprehensive overview of the FrameFi project and instr
 ### Issue Resolution & Testing
 - When addressing or fixing GitHub issues, verify changes with manual or automated test scripts (e.g. `scripts/test-api.sh`, `scripts/test-ftp.sh`) to prevent regressions.
 
-### Context-Mode MCP Integration
-This project uses `context-mode` for token-optimized command execution, file inspection, and searching.
-- **Call Pattern**: Invoke tools via `call_mcp_tool` with `ServerName: "context-mode"`:
-  - `ctx_execute`: Run commands (shell, JavaScript, Python) in-sandbox. For shell commands, pass `language: "shell"` and prefix commands with `rtk` (e.g. `rtk git status`, `rtk gh issue list | cat`).
-  - `ctx_execute_file`: Inspect, summarize, or extract data from files in-sandbox (`language: "javascript"`, `FILE_CONTENT`) without dumping raw content into context. (Native `read_file` is reserved for targeted exact-byte inspection right before `edit_file`).
-  - `ctx_batch_execute`: Batch execute multiple repository inspection commands and query results.
-  - `ctx_search` & `ctx_index`: Search and index codebase content and session memory.
-  - `ctx_doctor`: Verify context-mode health and runtime status.
+<!-- context-mode-begin -->
+### Context-Mode Routing Guidelines
+- **Derive, Do Not Dump**: Do NOT use `ctx_execute_file` or `ctx_execute` to dump whole file or full config. Print only specific value, matches, count, or known line range needed.
+- **Tool Call Surface**: When using MCP wrappers, call `call_mcp_tool` with `ServerName: "context-mode_context-mode"` (or `"context-mode"`) and `ToolName: "ctx_execute"`, `"ctx_execute_file"`, `"ctx_batch_execute"`, `"ctx_fetch_and_index"`, `"ctx_search"`, or `"ctx_index"`.
+- **Mandatory Routing**:
+  - For analyze/count/filter/compare/search/parse/transform tasks, write code with `ctx_execute` and print only final answer.
+  - For analyzing/exploring inside file, use `ctx_execute_file`. Use native `read_file` only when editing requires exact bytes or small known range.
+  - Use `ctx_batch_execute` for multi-command repository reconnaissance.
+  - Use `ctx_execute` for shell commands whose output may exceed short fixed answer.
+  - Use `ctx_fetch_and_index` for web content, then `ctx_search` to query it.
+  - Return only derived answers, concise summaries, selected snippets, or file paths.
+<!-- context-mode-end -->
 
 ### Serena MCP & CodeGraph Integration
 - **Serena MCP**: Use for semantic code exploration, LSP symbol navigation, and surgical edits (`get_symbols_overview`, `find_symbol`, `find_declaration`, `find_referencing_symbols`).
